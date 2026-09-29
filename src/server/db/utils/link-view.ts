@@ -25,6 +25,19 @@ export const getProfileLinkViews = async (linkId: string) => {
   return views[0]?.count ?? 0;
 };
 
+export const getProfileLinkViewsSince = async (
+  linkId: string,
+  days: number
+) => {
+  const since = new Date(Date.now() - days * 86_400_000);
+  const rows = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(linkView)
+    .where(and(eq(linkView.linkId, linkId), gte(linkView.createdAt, since)));
+
+  return Number(rows[0]?.count ?? 0);
+};
+
 export const recordLinkView = async (
   linkId: string,
   {

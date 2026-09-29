@@ -57,6 +57,31 @@ export const getPublicPersonalityBySlug = async (slug: string) => {
   return row ? withSlug(row) : null;
 };
 
+export const getProfileDetails = async (linkId: string) => {
+  const row = await db.query.link.findFirst({
+    where: (table, { eq: equals }) => equals(table.id, linkId),
+    columns: { id: true },
+    with: {
+      category: { columns: { id: true, name: true, slug: true } },
+      socialLinks: {
+        columns: {
+          id: true,
+          platform: true,
+          url: true,
+          label: true,
+          sortOrder: true,
+        },
+        orderBy: (table, { asc }) => asc(table.sortOrder),
+      },
+    },
+  });
+
+  return {
+    category: row?.category ?? null,
+    socialLinks: row?.socialLinks ?? [],
+  };
+};
+
 export const searchPublicPersonalities = async (input: {
   query?: string;
   categorySlug?: string;

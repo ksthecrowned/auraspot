@@ -6,7 +6,7 @@ import {
   supportCommissionBps,
 } from '@/lib/money';
 import { getCheckoutProvider } from '@/server/payments/provider';
-import { and, eq } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, sql } from 'drizzle-orm';
 import { db } from '../db';
 import {
   ledgerEntry,
@@ -783,4 +783,48 @@ export const listPublicSupporterNames = async (personalityId: string) => {
       rows.flatMap((row) => (row.displayName ? [row.displayName] : []))
     ),
   ];
+};
+
+export const getSupportersPreview = async (
+  personalityId: string,
+  limit = 5
+) => {
+  const succeeded = and(
+    eq(support.personalityId, personalityId),
+    eq(payment.status, 'success')
+  );
+
+  const [countRows, publicRows] = await Promise.all([
+    db
+      .select({ count: sql<number>`count(distinct ${support.id})` })
+      .from(support)
+      .innerJoin(payment, eq(payment.supportId, support.id))
+      .where(succeeded),
+    db
+      .select({ displayName: support.displayName })
+      .from(support)
+      .innerJoin(payment, eq(payment.supportId, support.id))
+      .where(
+        and(
+          succeeded,
+          eq(support.isPublic, true),
+          isNotNull(support.displayName)
+        )
+      )
+      .orderBy(desc(support.createdAt))
+      .limit(limit * 4),
+  ]);
+
+  const names = [
+    ...new Set(
+      publicRows.flatMap((row) =>
+        row.displayName?.trim() ? [row.displayName.trim()] : []
+      )
+    ),
+  ].slice(0, limit);
+
+  return {
+    count: Number(countRows[0]?.count ?? 0),
+    recent: names.map((displayName) => ({ displayName })),
+  };
 };

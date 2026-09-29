@@ -30,10 +30,12 @@ import {
   getDeviceBreakdown,
   getEmailSubscribers,
   getGeoBreakdown,
+  getProfileDetails,
   getProfileLinkById,
   getProfileLinkByLink,
   getProfileLinkUniqueViews,
   getProfileLinkViews,
+  getProfileLinkViewsSince,
   getProfileLinksOfUser,
   getTopCards,
   getTopReferrers,
@@ -48,6 +50,7 @@ import {
 } from '@/server/db';
 import { db } from '@/server/db/db';
 import { link } from '@/server/db/schema';
+import { getSupportersPreview } from '@/server/db/utils/support';
 import type { LinkBento } from '@/types';
 import { and, desc, eq, lt } from 'drizzle-orm';
 import { after } from 'next/server';
@@ -148,8 +151,19 @@ export const profileLinkRouter = createTRPCRouter({
         ? await isProfileLinkEditor(authedUserId, profileLink)
         : false;
 
+      const [details, supporters, monthlyViews] = await Promise.all([
+        getProfileDetails(profileLink.id),
+        getSupportersPreview(profileLink.id),
+        canEdit
+          ? getProfileLinkViewsSince(profileLink.id, 30)
+          : Promise.resolve(undefined),
+      ]);
+
       return {
         ...profileLink,
+        ...details,
+        supporters,
+        ...(monthlyViews === undefined ? {} : { monthlyViews }),
         canEdit,
         isPremium: true,
       };
