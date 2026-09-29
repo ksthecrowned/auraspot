@@ -22,7 +22,9 @@ function bentoToLayoutItem(
   b: z.infer<typeof BentoSchema>,
   breakpoint: 'sm' | 'md'
 ) {
-  const { w, h } = sizeToGrid(b.size[breakpoint], breakpoint);
+  // One size per block on every device: cards render their content from
+  // size.md, so the mobile grid follows it too (wide sizes go full width).
+  const { w, h } = sizeToGrid(b.size.md, breakpoint);
   return {
     i: b.id,
     x: b.position[breakpoint]?.x ?? 0,

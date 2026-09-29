@@ -37,7 +37,7 @@ export default function ManageSize({
   const { link } = useParams<{ link: string }>();
   const { viewport } = usePreview();
   const isMobile = viewport === 'mobile' || window.innerWidth < 600;
-  const size = isMobile ? bento.size.sm : bento.size.md;
+  const size = bento.size.md;
 
   const sizeOptions = allowedSizes
     ? ALL_SIZE_OPTIONS.filter((o) => allowedSizes.includes(o.key))
@@ -79,15 +79,12 @@ export default function ManageSize({
 
   const handleSizeClick = (key: string) => {
     const sizeKey = key as '2x2' | '4x1' | '4x2' | '2x4' | '4x4';
-    const breakpoint = isMobile ? 'sm' : 'md';
+    // The same size applies on mobile and desktop.
     updateBento({
       link,
       bento: {
         ...bento,
-        size: {
-          ...bento.size,
-          [breakpoint]: sizeKey,
-        },
+        size: { sm: sizeKey, md: sizeKey },
       },
     });
   };
