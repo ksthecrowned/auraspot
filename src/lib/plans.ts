@@ -76,7 +76,7 @@ export const PLANS: {
       { text: 'Unlimited profile links' },
       { text: 'Everything in Pro' },
       { text: '500 AI credits/month' },
-      { text: 'Remove OpenBio branding' },
+      { text: 'Remove AuraSpot branding' },
       { text: 'Export analytics (CSV)' },
       { text: 'Priority support' },
     ],

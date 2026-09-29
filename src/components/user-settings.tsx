@@ -1,10 +1,7 @@
 import EmailDigestToggle from '@/components/email-digest-toggle';
-import { PricingCards } from '@/components/pricing';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { auth } from '@/lib/auth';
 import type { RouterOutputs } from '@/trpc/react';
 import { headers } from 'next/headers';
@@ -44,37 +41,6 @@ export default async function UserSettings({
 
         <div className="space-y-2">
           <EmailDigestToggle defaultEnabled={user.emailDigest} />
-        </div>
-
-        <div className="flex flex-col space-y-2">
-          <Label>Plan</Label>
-
-          <span className="text-sm">
-            You are currently subscribed to the{' '}
-            <Badge className="mr-1 lowercase">{user.plan}</Badge>
-            plan.
-          </span>
-
-          <Tabs
-            defaultValue="monthly"
-            className="mt-8 flex w-full flex-col items-center"
-          >
-            <TabsList className="w-full md:mr-auto md:w-max">
-              <TabsTrigger value="monthly">Monthly</TabsTrigger>
-              <TabsTrigger value="annually" className="gap-x-2">
-                Annually
-                <Badge>2 months free</Badge>
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="monthly" className="mt-4 w-full">
-              <PricingCards billing="monthly" user={user} />
-            </TabsContent>
-
-            <TabsContent value="annually" className="mt-4 w-full">
-              <PricingCards billing="annually" user={user} />
-            </TabsContent>
-          </Tabs>
         </div>
       </div>
     </div>

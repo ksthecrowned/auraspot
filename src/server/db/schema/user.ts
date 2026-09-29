@@ -7,6 +7,7 @@ import {
   timestamp,
 } from 'drizzle-orm/pg-core';
 import { link } from './link';
+import { personalityClaim, personalityManager } from './personality';
 
 export const user = pgTable('user', {
   id: text('id').primaryKey(),
@@ -17,7 +18,6 @@ export const user = pgTable('user', {
   plan: text('plan', { enum: ['free', 'pro', 'business'] })
     .default('free')
     .notNull(),
-  polarCustomerId: text('polar_customer_id').unique(),
   subscriptionId: text('subscription_id'),
   subscriptionEndsAt: timestamp('subscription_ends_at', { withTimezone: true }),
   trialEndsAt: timestamp('trial_ends_at', { withTimezone: true }),
@@ -34,6 +34,13 @@ export const user = pgTable('user', {
 
 export const userRelations = relations(user, ({ many }) => ({
   links: many(link),
+  managedPersonalities: many(personalityManager, {
+    relationName: 'personalityManager',
+  }),
+  personalityClaims: many(personalityClaim, { relationName: 'claimant' }),
+  reviewedPersonalityClaims: many(personalityClaim, {
+    relationName: 'claimReviewer',
+  }),
 }));
 
 export const session = pgTable('session', {

@@ -1,47 +1,22 @@
-import { AI_CREDITS, LINK_LIMITS, type PlanName } from '@/lib/plans';
-
-export const isUserPremium = ({
-  plan,
-  subscriptionEndsAt,
-  trialEndsAt,
-}: {
+export const isUserPremium = (_user: {
   plan: string;
   subscriptionEndsAt?: Date | null;
   trialEndsAt?: Date | null;
 }) => {
-  const now = new Date();
-  // Active subscription (pro or business)
-  if (
-    (plan === 'pro' || plan === 'business') &&
-    subscriptionEndsAt &&
-    subscriptionEndsAt > now
-  ) {
-    return true;
-  }
-  // Active trial
-  if (trialEndsAt && trialEndsAt > now) {
-    return true;
-  }
-  return false;
+  return true;
 };
 
-export const isBusinessPlan = ({
-  plan,
-  subscriptionEndsAt,
-}: {
+export const isBusinessPlan = (_user: {
   plan: string;
   subscriptionEndsAt?: Date | null;
 }) => {
-  const now = new Date();
-  return (
-    plan === 'business' && !!subscriptionEndsAt && subscriptionEndsAt > now
-  );
+  return true;
 };
 
-export const getLinkLimit = (plan: string): number => {
-  return LINK_LIMITS[(plan as PlanName) ?? 'free'] ?? 1;
+export const getLinkLimit = (_plan: string): number => {
+  return Number.POSITIVE_INFINITY;
 };
 
-export const getAiCreditLimit = (plan: string): number => {
-  return AI_CREDITS[(plan as PlanName) ?? 'free'] ?? 0;
+export const getAiCreditLimit = (_plan: string): number => {
+  return 1_000_000;
 };

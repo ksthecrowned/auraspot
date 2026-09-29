@@ -2,6 +2,7 @@
 
 import LinkQRModal from '@/components/modals/link-qr-modal';
 import { Button } from '@/components/ui/button';
+import { ROOT_DOMAIN } from '@/lib/site';
 import { type RouterOutputs, api } from '@/trpc/react';
 import { BarChart3, ExternalLink, Eye, QrCode, Trash2 } from 'lucide-react';
 import Image from 'next/image';
@@ -33,7 +34,9 @@ export function DashboardLinkCard({ link }: { link: ProfileLink }) {
       </div>
       <div className="p-4">
         <h3 className="font-cal text-lg">{link.name}</h3>
-        <p className="text-muted-foreground text-sm">openbio.app/{link.link}</p>
+        <p className="text-muted-foreground text-sm">
+          {ROOT_DOMAIN}/{link.link}
+        </p>
         <div className="mt-3 flex items-center gap-x-3 text-muted-foreground text-xs">
           <span className="flex items-center gap-x-1">
             <Eye className="h-3.5 w-3.5" />
@@ -52,7 +55,7 @@ export function DashboardLinkCard({ link }: { link: ProfileLink }) {
             <BarChart3 className="h-4 w-4" />
           </Button>
         </Link>
-        <LinkQRModal profileLink={link} linkSlug={link.link}>
+        <LinkQRModal linkSlug={link.link}>
           <Button variant="ghost" size="icon" className="h-8 w-8">
             <QrCode className="h-4 w-4" />
           </Button>

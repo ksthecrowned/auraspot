@@ -1,7 +1,6 @@
 import { DashboardTabs } from '@/components/dashboard/dashboard-tabs';
 import { EmptyState } from '@/components/dashboard/empty-state';
 import { DashboardLinkCard } from '@/components/dashboard/link-card';
-import UpgradeCelebration from '@/components/dashboard/upgrade-celebration';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Skeleton } from '@/components/ui/skeleton';
 import UserSettings from '@/components/user-settings';
@@ -21,18 +20,11 @@ export default async function Page() {
 
   return (
     <div className="flex w-full flex-col gap-y-6">
-      <UpgradeCelebration />
       <div className="flex items-center justify-between">
         <h1 className="font-cal text-3xl">Dashboard</h1>
-        {user.plan !== 'free' || links.length === 0 ? (
-          <Link href="/claim-link">
-            <GradientButton>Create new</GradientButton>
-          </Link>
-        ) : (
-          <GradientButton disabled className="text-xs opacity-50 sm:text-sm">
-            Upgrade to add more
-          </GradientButton>
-        )}
+        <Link href="/claim-link">
+          <GradientButton>Create new</GradientButton>
+        </Link>
       </div>
 
       <DashboardTabs
