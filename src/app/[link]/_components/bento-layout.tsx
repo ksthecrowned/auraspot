@@ -32,6 +32,55 @@ function bentoToLayoutItem(
   };
 }
 
+type LayoutItem = ReturnType<typeof bentoToLayoutItem>;
+
+// Stored positions only give the order (row, then column). Each block then
+// takes the first free spot, so the grid always fills its full width.
+// Heights can be 0.5 (4x1 banners), so occupancy is tracked in half rows.
+type Area = { x: number; row: number; w: number; rows: number };
+
+function cellsOf({ x, row, w, rows }: Area) {
+  const cells: string[] = [];
+  for (let dx = 0; dx < w; dx++) {
+    for (let dy = 0; dy < rows; dy++) {
+      cells.push(`${x + dx}:${row + dy}`);
+    }
+  }
+  return cells;
+}
+
+function firstFreeArea(
+  taken: Set<string>,
+  cols: number,
+  w: number,
+  rows: number
+): Area {
+  for (let row = 0; ; row++) {
+    for (let x = 0; x + w <= cols; x++) {
+      const area = { x, row, w, rows };
+      if (cellsOf(area).every((cell) => !taken.has(cell))) {
+        return area;
+      }
+    }
+  }
+}
+
+function packLayout(items: LayoutItem[], cols: number): LayoutItem[] {
+  const taken = new Set<string>();
+
+  return [...items]
+    .sort((a, b) => a.y - b.y || a.x - b.x)
+    .map((item) => {
+      const w = Math.min(item.w, cols);
+      const rows = Math.max(1, Math.round(item.h * 2));
+      const area = firstFreeArea(taken, cols, w, rows);
+      for (const cell of cellsOf(area)) {
+        taken.add(cell);
+      }
+      return { ...item, x: area.x, y: area.row / 2, w };
+    });
+}
+
 function findChangedPositions(
   bentos: z.infer<typeof BentoSchema>[],
   newLayouts: Layouts
@@ -91,8 +140,14 @@ export default function BentoLayout({
 
   const layouts = useMemo(
     () => ({
-      sm: bentos.map((b) => bentoToLayoutItem(b, 'sm')),
-      md: bentos.map((b) => bentoToLayoutItem(b, 'md')),
+      sm: packLayout(
+        bentos.map((b) => bentoToLayoutItem(b, 'sm')),
+        2
+      ),
+      md: packLayout(
+        bentos.map((b) => bentoToLayoutItem(b, 'md')),
+        4
+      ),
     }),
     [bentos]
   );
