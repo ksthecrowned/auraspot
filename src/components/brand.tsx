@@ -1,8 +1,5 @@
 import { cn } from '@/lib/utils';
-import { Outfit } from 'next/font/google';
 import { useId } from 'react';
-
-const outfit = Outfit({ subsets: ['latin'], weight: '700' });
 
 // Vector version of public/logo.svg. Keep both in sync.
 export function AuraOrb({ className }: { className?: string }) {
@@ -53,7 +50,7 @@ export function Wordmark({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        outfit.className,
+        'font-bold font-brand',
         'inline-flex items-baseline text-foreground leading-none tracking-tight',
         className
       )}

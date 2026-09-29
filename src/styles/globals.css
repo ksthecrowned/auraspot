@@ -44,6 +44,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --font-sans: var(--font-inter, "Inter"), sans-serif;
   --font-cal: var(--font-calsans, "Cal Sans"), sans-serif;
+  --font-brand: var(--font-outfit, "Outfit"), sans-serif;
   --animate-fade-up: fade-up 0.5s ease-out both;
   --animate-fade-in: fade-in 0.3s ease-out both;
 }
@@ -151,4 +152,60 @@
   to {
     opacity: 1;
   }
+}
+
+/* ---- AuraSpot profile ---- */
+.aura-halo {
+  background: radial-gradient(
+    circle at 50% 42%,
+    color-mix(in oklab, var(--aura-accent, #f75fc0) 34%, transparent),
+    color-mix(in oklab, #b43cf0 18%, transparent) 40%,
+    color-mix(in oklab, #3fd8ff 12%, transparent) 60%,
+    transparent 72%
+  );
+  filter: blur(14px);
+}
+
+.aura-ring {
+  background: linear-gradient(
+    145deg,
+    #fdba8c 0%,
+    var(--aura-accent, #f75fc0) 38%,
+    #b43cf0 72%,
+    #5b6cff 100%
+  );
+}
+
+.aura-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  background: color-mix(in oklab, var(--foreground) 6%, transparent);
+  color: color-mix(in oklab, var(--foreground) 80%, transparent);
+}
+
+.aura-cta {
+  background: linear-gradient(
+    100deg,
+    var(--aura-accent, #f75fc0),
+    #b43cf0 55%,
+    #5b6cff
+  );
+  color: #fff;
+}
+
+/* Restyle every bento card root (they all share rounded-2xl + border + bg-card). */
+.aura-space .react-grid-item .rounded-2xl.border.bg-card {
+  border-radius: 1.25rem;
+  border-color: color-mix(in oklab, var(--foreground) 8%, transparent);
+  box-shadow: 0 1px 2px color-mix(in oklab, var(--foreground) 5%, transparent),
+    0 8px 24px -12px color-mix(in oklab, #b43cf0 25%, transparent);
+}
+
+.aura-space .react-grid-item .font-cal {
+  font-family: var(--font-brand);
+  font-weight: 700;
 }

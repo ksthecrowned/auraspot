@@ -10,7 +10,7 @@ import { TailwindIndicator } from '@/components/tailwind-indicator';
 import { Toaster } from '@/components/ui/toaster';
 import { Analytics } from '@vercel/analytics/react';
 import type { Metadata, Viewport } from 'next';
-import { Geist } from 'next/font/google';
+import { Geist, Outfit } from 'next/font/google';
 import LocalFont from 'next/font/local';
 import type { ReactNode } from 'react';
 
@@ -22,6 +22,11 @@ const geist = Geist({
 const calSans = LocalFont({
   src: '../../public/fonts/CalSans-SemiBold.ttf',
   variable: '--font-calsans',
+});
+const outfit = Outfit({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  variable: '--font-outfit',
 });
 
 export const metadata: Metadata = {
@@ -48,7 +53,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geist.variable} ${calSans.variable} font-sans`}>
+      <body
+        className={`${geist.variable} ${calSans.variable} ${outfit.variable} font-sans`}
+      >
         <Background />
 
         <ClientProviders>{children}</ClientProviders>
