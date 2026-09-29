@@ -6,6 +6,7 @@ import {
   personalityManager,
   socialLink,
 } from '../schema';
+import { invalidateProfileLinkCache } from './link';
 
 function withSlug<T extends { link: string }>(row: T) {
   return { ...row, slug: row.link };
@@ -431,6 +432,7 @@ async function grantPersonalityManagement(
       updatedAt: new Date(),
     })
     .where(eq(link.id, personalityId));
+  await invalidateProfileLinkCache(personalityId);
 }
 
 export const reviewPersonalityClaim = async (input: {
@@ -511,6 +513,7 @@ export const setPersonalityVerification = async (input: {
   if (!row) {
     return { error: 'not-found' as const };
   }
+  await invalidateProfileLinkCache(row.id);
   return { personality: row };
 };
 

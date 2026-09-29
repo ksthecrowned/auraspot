@@ -124,6 +124,18 @@ export const canModifyProfileLink = async ({
   return canModify;
 };
 
+// Call after writing link columns outside updateProfileLink (admin, claims):
+// the public page reads the row from this cache.
+export const invalidateProfileLinkCache = async (linkId: string) => {
+  const row = await db.query.link.findFirst({
+    where: (table, { eq: equals }) => equals(table.id, linkId),
+    columns: { link: true },
+  });
+  if (row) {
+    await redis.del(`profile-link:${row.link}`);
+  }
+};
+
 export const isProfileLinkEditor = async (
   userId: string,
   profileLink: { id: string; userId: string }

@@ -10,6 +10,7 @@ import {
   support,
   withdrawal,
 } from '../schema';
+import { invalidateProfileLinkCache } from './link';
 
 const LIKE_ESCAPE_RE = /[%_\\]/g;
 
@@ -123,6 +124,7 @@ export const setPersonalityPublication = async (input: {
   if (!row) {
     return { ok: false as const, error: 'not-found' as const };
   }
+  await invalidateProfileLinkCache(row.id);
   return { ok: true as const, personality: row };
 };
 
@@ -319,6 +321,7 @@ export const reviewPersonalityReport = async (input: {
       .update(link)
       .set({ status: 'suspended', updatedAt: new Date() })
       .where(eq(link.id, report.personalityId));
+    await invalidateProfileLinkCache(report.personalityId);
   }
   const updated = await db
     .update(personalityReport)
