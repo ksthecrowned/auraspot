@@ -1,3 +1,4 @@
+import { CONTACT_EMAIL } from '@/lib/site';
 import Link from 'next/link';
 
 export default function Page() {
@@ -39,7 +40,7 @@ export default function Page() {
       <h2>Limitation Of Liability</h2>
 
       <p>
-        In no event shall OpenBio, nor its directors, employees, partners,
+        In no event shall AuraSpot, nor its directors, employees, partners,
         agents, suppliers, or affiliates, be liable for any indirect,
         incidental, special, consequential or punitive damages, including
         without limitation, loss of profits, data, use, goodwill, or other
@@ -65,7 +66,7 @@ export default function Page() {
       </p>
 
       <p>
-        OpenBio its subsidiaries, affiliates, and its licensors do not warrant
+        AuraSpot its subsidiaries, affiliates, and its licensors do not warrant
         that a) the Service will function uninterrupted, secure or available at
         any particular time or location; b) any errors or defects will be
         corrected; c) the Service is free of viruses or other harmful
@@ -108,7 +109,7 @@ export default function Page() {
 
       <p>
         If you have any questions about these Terms, You can contact us:{' '}
-        <Link href="mailto:vanxh@openbio.app">vanxh@openbio.app</Link>
+        <Link href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Link>
       </p>
     </div>
   );

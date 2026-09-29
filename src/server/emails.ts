@@ -1,6 +1,7 @@
 'use server';
 
 import { env } from '@/env.mjs';
+import { ROOT_DOMAIN, SITE_NAME } from '@/lib/site';
 import type { ReactElement } from 'react';
 import { Resend } from 'resend';
 
@@ -15,7 +16,7 @@ export interface Email {
 
 export const sendEmail = async (email: Email) => {
   return await resend.emails.send({
-    from: 'Vanxh <hello@vanxh.dev>',
+    from: env.EMAIL_FROM ?? `${SITE_NAME} <hello@${ROOT_DOMAIN}>`,
     ...email,
   });
 };

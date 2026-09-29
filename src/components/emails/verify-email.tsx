@@ -1,3 +1,5 @@
+import { LOGO_URL, SITE_URL } from '@/lib/site';
+
 interface VerifyEmailProps {
   url: string;
 }
@@ -32,8 +34,8 @@ export default function VerifyEmail({ url }: VerifyEmailProps) {
         >
           {/* biome-ignore lint/nursery/noImgElement: email template */}
           <img
-            src="https://openbio.app/openbio.png"
-            alt="OpenBio"
+            src={LOGO_URL}
+            alt="AuraSpot"
             width="32"
             height="32"
             style={{ borderRadius: '8px' }}
@@ -46,7 +48,7 @@ export default function VerifyEmail({ url }: VerifyEmailProps) {
               letterSpacing: '-0.01em',
             }}
           >
-            OpenBio
+            AuraSpot
           </span>
         </div>
 
@@ -71,7 +73,7 @@ export default function VerifyEmail({ url }: VerifyEmailProps) {
               margin: '0 0 12px 0',
             }}
           >
-            Thanks for signing up for OpenBio! Please verify your email address
+            Thanks for signing up for AuraSpot! Please verify your email address
             by clicking the button below.
           </p>
 
@@ -110,7 +112,7 @@ export default function VerifyEmail({ url }: VerifyEmailProps) {
               margin: 0,
             }}
           >
-            If you didn&apos;t create an OpenBio account, you can safely ignore
+            If you didn&apos;t create an AuraSpot account, you can safely ignore
             this email.
           </p>
         </div>
@@ -128,10 +130,10 @@ export default function VerifyEmail({ url }: VerifyEmailProps) {
         >
           <p style={{ margin: 0 }}>
             <a
-              href="https://openbio.app"
+              href={SITE_URL}
               style={{ color: '#7c3aed', textDecoration: 'none' }}
             >
-              OpenBio
+              AuraSpot
             </a>{' '}
             &middot; Your link-in-bio page
           </p>

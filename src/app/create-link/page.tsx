@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import OpenBioLogo from '@/public/openbio.png';
+import { ROOT_DOMAIN } from '@/lib/site';
+import Logo from '@/public/logo.png';
 import { api } from '@/trpc/react';
 import { AtSign, Loader2, Sparkles } from 'lucide-react';
 import Image from 'next/image';
@@ -177,12 +178,12 @@ export default function Page() {
           <div className="space-y-6 p-8">
             <div className="flex items-center gap-3">
               <Link href="/">
-                <Image src={OpenBioLogo} alt="OpenBio" width={36} height={36} />
+                <Image src={Logo} alt="AuraSpot" width={36} height={36} />
               </Link>
               <div>
                 <h1 className="font-cal text-xl">Set up your page</h1>
                 <p className="text-muted-foreground text-xs">
-                  openbio.app/{link}
+                  {ROOT_DOMAIN}/{link}
                 </p>
               </div>
             </div>
@@ -357,7 +358,7 @@ export default function Page() {
                   {/* Footer */}
                   <div className="mt-4 text-center">
                     <span className="text-[8px] text-muted-foreground/50">
-                      openbio.app/{link || 'username'}
+                      {ROOT_DOMAIN}/{link || 'username'}
                     </span>
                   </div>
                 </div>

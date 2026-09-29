@@ -9,45 +9,26 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
-import { toast } from '@/components/ui/use-toast';
 import { THEME_PRESETS } from '@/lib/themes';
 import { cn } from '@/lib/utils';
 import { api } from '@/trpc/react';
-import { Check, Lock, Moon, Paintbrush, Palette, Type } from 'lucide-react';
+import { Check, Moon, Paintbrush, Palette, Type } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { type ReactNode, useState } from 'react';
 
-function showProUpsell() {
-  toast({
-    title: 'Pro feature',
-    description: 'Upgrade to Pro to unlock this feature.',
-  });
-}
-
-function SectionHeader({
-  icon,
-  title,
-  locked,
-}: {
-  icon: ReactNode;
-  title: string;
-  locked?: boolean;
-}) {
+function SectionHeader({ icon, title }: { icon: ReactNode; title: string }) {
   return (
     <div className="flex items-center gap-2">
       <span className="text-muted-foreground">{icon}</span>
       <p className="font-medium text-sm">{title}</p>
-      {locked && <Lock className="h-3 w-3 text-muted-foreground" />}
     </div>
   );
 }
 
 export default function ThemeSettingsModal({
   children,
-  isPremium,
 }: {
   children: ReactNode;
-  isPremium: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -111,7 +92,6 @@ export default function ThemeSettingsModal({
               />
               <div className="grid grid-cols-2 gap-2">
                 {THEME_PRESETS.map((preset) => {
-                  const isLocked = preset.pro && !isPremium;
                   const isActive = theme === preset.name;
                   const colors = darkMode
                     ? preset.colors.dark
@@ -124,14 +104,9 @@ export default function ThemeSettingsModal({
                         'relative flex items-center gap-3 rounded-xl border-2 px-3 py-2.5 text-left text-sm transition-all',
                         isActive
                           ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-border/80 hover:bg-muted/30',
-                        isLocked && 'opacity-60'
+                          : 'border-border hover:border-border/80 hover:bg-muted/30'
                       )}
                       onClick={() => {
-                        if (isLocked) {
-                          showProUpsell();
-                          return;
-                        }
                         setTheme(preset.name);
                       }}
                     >
@@ -155,9 +130,6 @@ export default function ThemeSettingsModal({
                       {isActive && (
                         <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
                       )}
-                      {isLocked && (
-                        <Lock className="h-3 w-3 shrink-0 text-muted-foreground" />
-                      )}
                     </button>
                   );
                 })}
@@ -170,18 +142,12 @@ export default function ThemeSettingsModal({
                 <SectionHeader
                   icon={<Moon className="h-4 w-4" />}
                   title="Dark Mode"
-                  locked={!isPremium}
                 />
                 <Switch
                   checked={darkMode}
                   onCheckedChange={(checked) => {
-                    if (!isPremium) {
-                      showProUpsell();
-                      return;
-                    }
                     setDarkMode(checked);
                   }}
-                  disabled={!isPremium}
                 />
               </div>
             </div>
@@ -191,39 +157,28 @@ export default function ThemeSettingsModal({
               <SectionHeader
                 icon={<Paintbrush className="h-4 w-4" />}
                 title="Accent Color"
-                locked={!isPremium}
               />
               <div className="flex items-center gap-2">
                 <div className="relative">
                   <input
                     type="color"
-                    className="h-9 w-9 shrink-0 cursor-pointer rounded-xl border border-border bg-transparent disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-9 w-9 shrink-0 cursor-pointer rounded-xl border border-border bg-transparent"
                     value={accentColor || '#000000'}
-                    disabled={!isPremium}
                     onChange={(e) => {
-                      if (!isPremium) {
-                        showProUpsell();
-                        return;
-                      }
                       setAccentColor(e.target.value);
                     }}
                   />
                 </div>
                 <input
                   type="text"
-                  className="h-9 w-full rounded-xl border border-border bg-card px-3 font-mono text-sm disabled:cursor-not-allowed disabled:opacity-50"
+                  className="h-9 w-full rounded-xl border border-border bg-card px-3 font-mono text-sm"
                   placeholder="#000000"
                   value={accentColor}
-                  disabled={!isPremium}
                   onChange={(e) => {
-                    if (!isPremium) {
-                      showProUpsell();
-                      return;
-                    }
                     setAccentColor(e.target.value);
                   }}
                 />
-                {isPremium && accentColor && (
+                {accentColor && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -242,20 +197,14 @@ export default function ThemeSettingsModal({
               <SectionHeader
                 icon={<Type className="h-4 w-4" />}
                 title="Footer Text"
-                locked={!isPremium}
               />
               <input
                 type="text"
-                className="h-9 w-full rounded-xl border border-border bg-card px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Made with OpenBio"
+                className="h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"
+                placeholder="Made with AuraSpot"
                 value={customFooter}
-                disabled={!isPremium}
                 maxLength={100}
                 onChange={(e) => {
-                  if (!isPremium) {
-                    showProUpsell();
-                    return;
-                  }
                   setCustomFooter(e.target.value);
                 }}
               />

@@ -1,3 +1,5 @@
+import { LOGO_URL, SITE_URL } from '@/lib/site';
+
 interface WelcomeEmailProps {
   name?: string;
 }
@@ -32,8 +34,8 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
         >
           {/* biome-ignore lint/nursery/noImgElement: email template */}
           <img
-            src="https://openbio.app/openbio.png"
-            alt="OpenBio"
+            src={LOGO_URL}
+            alt="AuraSpot"
             width="32"
             height="32"
             style={{ borderRadius: '8px' }}
@@ -46,7 +48,7 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
               letterSpacing: '-0.01em',
             }}
           >
-            OpenBio
+            AuraSpot
           </span>
         </div>
 
@@ -60,7 +62,7 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
               margin: '0 0 16px 0',
             }}
           >
-            Welcome to OpenBio{name ? `, ${name}` : ''}!
+            Welcome to AuraSpot{name ? `, ${name}` : ''}!
           </h1>
 
           <p
@@ -71,7 +73,7 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
               margin: '0 0 12px 0',
             }}
           >
-            Thanks for signing up! OpenBio helps you create a beautiful
+            Thanks for signing up! AuraSpot helps you create a beautiful
             link-in-bio page in minutes — share all your important links, social
             profiles, and content in one place.
           </p>
@@ -90,7 +92,7 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
 
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <a
-              href="https://openbio.app/claim-link"
+              href={`${SITE_URL}/claim-link`}
               style={{
                 display: 'inline-block',
                 padding: '12px 32px',
@@ -134,10 +136,10 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
         >
           <p style={{ margin: 0 }}>
             <a
-              href="https://openbio.app"
+              href={SITE_URL}
               style={{ color: '#7c3aed', textDecoration: 'none' }}
             >
-              OpenBio
+              AuraSpot
             </a>{' '}
             &middot; Your link-in-bio page
           </p>

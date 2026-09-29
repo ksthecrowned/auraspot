@@ -1,3 +1,5 @@
+import { LOGO_URL, ROOT_DOMAIN, SITE_URL } from '@/lib/site';
+
 interface AnalyticsDigestProps {
   name: string;
   profileLink: string;
@@ -19,7 +21,7 @@ export default function AnalyticsDigest({
   newSubscribers,
   unsubscribeUrl,
 }: AnalyticsDigestProps) {
-  const profileUrl = `https://openbio.app/${profileLink}`;
+  const profileUrl = `${SITE_URL}/${profileLink}`;
   const clickRate = views > 0 ? Math.round((clicks / views) * 100) : 0;
 
   return (
@@ -51,8 +53,8 @@ export default function AnalyticsDigest({
         >
           {/* biome-ignore lint/nursery/noImgElement: email template rendered by Resend, not Next.js */}
           <img
-            src="https://openbio.app/openbio.png"
-            alt="OpenBio"
+            src={LOGO_URL}
+            alt="AuraSpot"
             width="32"
             height="32"
             style={{ borderRadius: '8px' }}
@@ -65,7 +67,7 @@ export default function AnalyticsDigest({
               letterSpacing: '-0.01em',
             }}
           >
-            OpenBio
+            AuraSpot
           </span>
         </div>
 
@@ -87,7 +89,7 @@ export default function AnalyticsDigest({
               href={profileUrl}
               style={{ color: '#7c3aed', textDecoration: 'none' }}
             >
-              openbio.app/{profileLink}
+              {ROOT_DOMAIN}/{profileLink}
             </a>{' '}
             performed this week.
           </p>
@@ -276,7 +278,7 @@ export default function AnalyticsDigest({
         {/* CTA */}
         <div style={{ padding: '0 28px 28px 28px', textAlign: 'center' }}>
           <a
-            href={'https://openbio.app/app'}
+            href={`${SITE_URL}/app`}
             style={{
               display: 'inline-block',
               padding: '12px 32px',
@@ -306,10 +308,10 @@ export default function AnalyticsDigest({
           <p style={{ margin: '0 0 6px 0' }}>
             Sent by{' '}
             <a
-              href="https://openbio.app"
+              href={SITE_URL}
               style={{ color: '#7c3aed', textDecoration: 'none' }}
             >
-              OpenBio
+              AuraSpot
             </a>{' '}
             &middot; Your link-in-bio page
           </p>

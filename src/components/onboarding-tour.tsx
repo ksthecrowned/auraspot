@@ -50,7 +50,7 @@ const TOUR_STEPS: TourStep[] = [
   },
 ];
 
-const STORAGE_KEY = 'openbio-tour-completed';
+const STORAGE_KEY = 'auraspot-tour-completed';
 
 function getTargetRect(selector: string): DOMRect | null {
   const el = document.querySelector(selector);

@@ -1,33 +1,22 @@
+import { CONTACT_EMAIL, SITE_NAME } from '@/lib/site';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
 export default function HomeFooter() {
   const footerLinks = {
-    Developer: [
+    Discover: [
       {
-        href: '/twitter',
-        label: 'Twitter',
-      },
-    ],
-    Links: [
-      {
-        href: '/github',
-        label: 'Github',
+        href: '/personalities',
+        label: 'Personnalités',
       },
       {
-        href: 'https://funart.app',
-        label: 'FunArt',
-      },
-    ],
-    Resources: [
-      {
-        href: 'https://openbio.openstatus.dev',
-        label: 'Status',
+        href: '/explore',
+        label: 'Explore',
       },
     ],
     Company: [
       {
-        href: 'mailto:vanxh@openbio.app?subject=Need%20help%20with%20OpenBio',
+        href: `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Need help with ${SITE_NAME}`)}`,
         label: 'Support',
       },
       {
@@ -42,7 +31,7 @@ export default function HomeFooter() {
   };
 
   return (
-    <footer className="bottom-0 grid w-full max-w-3xl grid-cols-2 gap-6 rounded-lg border border-border bg-background/95 p-4 backdrop-blur supports-backdrop-blur:bg-background/60 md:grid-cols-4 md:p-6">
+    <footer className="bottom-0 grid w-full max-w-3xl grid-cols-2 gap-6 rounded-lg border border-border bg-background/95 p-4 backdrop-blur supports-backdrop-blur:bg-background/60 md:p-6">
       {Object.keys(footerLinks).map((key) => (
         <div key={key} className="flex flex-col gap-y-3 text-sm">
           <p className="font-semibold">{key}</p>

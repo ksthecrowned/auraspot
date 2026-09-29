@@ -1,10 +1,12 @@
-export const TITLE = 'OpenBio';
-export const DESCRIPTION = 'Create beautiful link in bio pages for free.';
+import { SITE_NAME, SITE_URL, TAGLINE } from '@/lib/site';
+
+export const TITLE = SITE_NAME;
+export const DESCRIPTION = TAGLINE;
 
 export const defaultMetadata = {
   title: TITLE,
   description: DESCRIPTION,
-  metadataBase: new URL('https://www.openbio.app'),
+  metadataBase: new URL(SITE_URL),
 };
 
 export const twitterMetadata = {

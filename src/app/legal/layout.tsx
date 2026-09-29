@@ -10,14 +10,14 @@ import type React from 'react';
 
 export const metadata: Metadata = {
   ...defaultMetadata,
-  title: 'Legal - OpenBio',
+  title: 'Legal - AuraSpot',
   twitter: {
     ...twitterMetadata,
-    title: 'Legal - OpenBio',
+    title: 'Legal - AuraSpot',
   },
   openGraph: {
     ...ogMetadata,
-    title: 'Legal - OpenBio',
+    title: 'Legal - AuraSpot',
   },
 };
 

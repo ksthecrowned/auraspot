@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import OpenBioLogo from '@/public/openbio.png';
+import Logo from '@/public/logo.png';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -20,8 +20,8 @@ export function NavbarShell({
         )}
       >
         <Link href="/" className="flex items-center gap-x-2">
-          <Image src={OpenBioLogo} alt="OpenBio" width={28} height={28} />
-          <span className="font-cal text-base">OpenBio</span>
+          <Image src={Logo} alt="AuraSpot" width={28} height={28} />
+          <span className="font-cal text-base">AuraSpot</span>
         </Link>
         <div className="ml-auto flex items-center gap-x-3">{children}</div>
       </nav>

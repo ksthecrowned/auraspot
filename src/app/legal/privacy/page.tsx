@@ -1,3 +1,4 @@
+import { CONTACT_EMAIL } from '@/lib/site';
 import Link from 'next/link';
 
 export default function Page() {
@@ -58,7 +59,7 @@ export default function Page() {
 
       <p>
         If you have any questions about this Privacy Policy, You can contact us:{' '}
-        <Link href="mailto:vanxh@openbio.app">vanxh@openbio.app</Link>
+        <Link href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</Link>
       </p>
     </div>
   );

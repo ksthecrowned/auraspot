@@ -5,8 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Explore Profiles | OpenBio',
-  description: 'Discover creative profiles built with OpenBio',
+  title: 'Explore Profiles | AuraSpot',
+  description: 'Discover creative profiles built with AuraSpot',
 };
 
 function stripHtml(html: string) {
@@ -21,7 +21,7 @@ export default async function ExplorePage() {
       <div className="mb-10 max-w-xl">
         <h1 className="font-cal text-4xl md:text-5xl">Explore</h1>
         <p className="mt-3 text-lg text-muted-foreground">
-          Discover creative profiles built with OpenBio. Get inspired, connect
+          Discover creative profiles built with AuraSpot. Get inspired, connect
           with creators, and build your own.
         </p>
         <Link

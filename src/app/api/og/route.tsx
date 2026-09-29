@@ -1,23 +1,22 @@
+import { TAGLINE } from '@/lib/site';
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
 
 export async function GET(req: Request) {
   const [calSans, inter] = await Promise.all([
-    fetch('https://openbio.app/fonts/CalSans-SemiBold.ttf').then((res) =>
+    fetch(new URL('/fonts/CalSans-SemiBold.ttf', req.url)).then((res) =>
       res.arrayBuffer()
     ),
-    fetch('https://openbio.app/fonts/Inter-Regular.ttf').then((res) =>
+    fetch(new URL('/fonts/Inter-Regular.ttf', req.url)).then((res) =>
       res.arrayBuffer()
     ),
   ]);
 
   const { searchParams } = new URL(req.url);
 
-  const title = searchParams.get('title') ?? 'OpenBio';
-  const description =
-    searchParams.get('description') ??
-    'Create beautiful link in bio pages for free.';
+  const title = searchParams.get('title') ?? 'AuraSpot';
+  const description = searchParams.get('description') ?? TAGLINE;
 
   return new ImageResponse(
     <div tw="relative flex flex-col bg-white text-black items-center justify-center w-full h-full">

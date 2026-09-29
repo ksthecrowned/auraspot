@@ -1,14 +1,16 @@
+import { SITE_URL } from '@/lib/site';
 import { db } from '@/server/db/db';
 import { link } from '@/server/db/schema';
 import { eq } from 'drizzle-orm';
 import type { MetadataRoute } from 'next';
 
-const BASE_URL = 'https://www.openbio.app';
+const BASE_URL = SITE_URL;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     '/',
     '/explore',
+    '/personalities',
     '/legal/privacy',
     '/legal/terms',
     '/claim-link',

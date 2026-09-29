@@ -1,4 +1,5 @@
 import { Skeleton } from '@/components/ui/skeleton';
+import { ROOT_DOMAIN } from '@/lib/site';
 import type { RouterOutputs } from '@/trpc/react';
 import { api } from '@/trpc/server';
 import { Eye } from 'lucide-react';
@@ -43,7 +44,7 @@ export default async function ProfileLinkCard({
         <span className="font-cal text-lg">{link.name}</span>
       </div>
       <span className="text-muted-foreground text-sm">
-        openbio.app/{link.link}
+        {ROOT_DOMAIN}/{link.link}
       </span>
 
       <div className="mt-4 flex items-center gap-x-4 text-muted-foreground">

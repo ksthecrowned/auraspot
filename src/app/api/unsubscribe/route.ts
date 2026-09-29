@@ -1,3 +1,4 @@
+import { SITE_URL } from '@/lib/site';
 import { db } from '@/server/db/db';
 import { user } from '@/server/db/schema';
 import { eq } from 'drizzle-orm';
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
   <div style="text-align: center; max-width: 400px; padding: 40px;">
     <h1 style="font-size: 24px; margin-bottom: 8px;">Unsubscribed</h1>
     <p style="color: #71717a; font-size: 14px;">You won't receive weekly digest emails anymore. You can re-enable them from your dashboard settings.</p>
-    <a href="https://openbio.app/app" style="display: inline-block; margin-top: 16px; color: #7c3aed; text-decoration: none; font-size: 14px;">Go to dashboard</a>
+    <a href="${SITE_URL}/app" style="display: inline-block; margin-top: 16px; color: #7c3aed; text-decoration: none; font-size: 14px;">Go to dashboard</a>
   </div>
 </body>
 </html>`,

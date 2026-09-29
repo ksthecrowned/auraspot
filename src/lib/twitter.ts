@@ -39,7 +39,7 @@ export async function fetchTweet(tweetId: string): Promise<TweetData | null> {
     `https://cdn.syndication.twimg.com/tweet-result?${params.toString()}`,
     {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; OpenBio/1.0)',
+        'User-Agent': 'Mozilla/5.0 (compatible; AuraSpot/1.0)',
       },
     }
   );

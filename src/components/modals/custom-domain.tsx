@@ -14,27 +14,19 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
+import { ROOT_DOMAIN } from '@/lib/site';
 import { cn } from '@/lib/utils';
 import { api } from '@/trpc/react';
 import {
   AlertCircle,
   CheckCircle2,
   Copy,
-  Crown,
   Loader2,
-  Lock,
   RefreshCw,
   Trash2,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { type ReactNode, useState } from 'react';
-
-function showProUpsell() {
-  toast({
-    title: 'Pro feature',
-    description: 'Upgrade to Pro to unlock custom domains.',
-  });
-}
 
 function cleanDomain(raw: string) {
   return raw
@@ -123,10 +115,8 @@ function DomainStatus({
 
 export default function CustomDomainModal({
   children,
-  isPremium,
 }: {
   children: ReactNode;
-  isPremium: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -175,8 +165,7 @@ export default function CustomDomainModal({
     });
 
   const save = () => {
-    if (!profileLink || !isPremium) {
-      showProUpsell();
+    if (!profileLink) {
       return;
     }
 
@@ -210,28 +199,10 @@ export default function CustomDomainModal({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <div className="flex items-center gap-2">
-            <DialogTitle className="font-cal text-xl">
-              Custom Domain
-            </DialogTitle>
-            <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted px-2 py-0.5 font-medium text-muted-foreground text-xs">
-              <Crown className="h-3 w-3" />
-              PRO
-            </span>
-          </div>
+          <DialogTitle className="font-cal text-xl">Custom Domain</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
-          {!isPremium && (
-            <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/50 px-4 py-3">
-              <Lock className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <p className="text-muted-foreground text-sm">
-                Custom domains are a Pro feature. Upgrade to connect your own
-                domain.
-              </p>
-            </div>
-          )}
-
           <div className="space-y-2">
             <Label htmlFor="custom-domain" className="font-medium text-sm">
               Domain
@@ -241,7 +212,6 @@ export default function CustomDomainModal({
               placeholder="bio.mydomain.com"
               value={domain}
               onChange={(e) => setDomain(e.target.value)}
-              disabled={!isPremium}
               className="rounded-xl border border-border bg-card p-3"
             />
             <p className="text-muted-foreground text-xs">
@@ -249,7 +219,7 @@ export default function CustomDomainModal({
             </p>
           </div>
 
-          {isPremium && cleaned && (
+          {cleaned && (
             <div className="space-y-3">
               <Label className="font-medium text-sm">DNS Configuration</Label>
 
@@ -290,7 +260,7 @@ export default function CustomDomainModal({
           )}
 
           <div className="flex items-center justify-end gap-3">
-            {isPremium && hasDomain && (
+            {hasDomain && (
               <Button
                 variant="outline"
                 size="icon"
@@ -311,21 +281,19 @@ export default function CustomDomainModal({
             <Button
               onClick={save}
               className={cn('rounded-xl px-6', !domainChanged && 'opacity-50')}
-              disabled={isPending || !isPremium || !domainChanged}
+              disabled={isPending || !domainChanged}
             >
               {isPending ? 'Saving...' : 'Save changes'}
             </Button>
           </div>
 
-          {isPremium && (
-            <p className="text-muted-foreground text-xs">
-              Your subdomain{' '}
-              <span className="font-medium text-foreground">
-                {link}.openbio.app
-              </span>{' '}
-              will always work alongside your custom domain.
-            </p>
-          )}
+          <p className="text-muted-foreground text-xs">
+            Your subdomain{' '}
+            <span className="font-medium text-foreground">
+              {link}.{ROOT_DOMAIN}
+            </span>{' '}
+            will always work alongside your custom domain.
+          </p>
         </div>
       </DialogContent>
     </Dialog>

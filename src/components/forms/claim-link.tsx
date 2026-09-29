@@ -3,6 +3,7 @@
 import { claimLink } from '@/app/actions/claim-link';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { useDebounce } from '@/hooks/use-debounce';
+import { ROOT_DOMAIN } from '@/lib/site';
 import { api } from '@/trpc/react';
 import { Check, Loader2, X } from 'lucide-react';
 import { useState } from 'react';
@@ -42,7 +43,7 @@ export default function ClaimLinkForm() {
   return (
     <form className="space-y-4" action={handleAction}>
       <div className="flex h-12 items-center gap-x-1 rounded-xl border border-input bg-background px-4 shadow-sm focus-within:ring-2 focus-within:ring-violet-500/50">
-        <span className="text-muted-foreground text-sm">openbio.app/</span>
+        <span className="text-muted-foreground text-sm">{ROOT_DOMAIN}/</span>
         <input
           className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           autoFocus

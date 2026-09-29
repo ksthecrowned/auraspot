@@ -1,3 +1,4 @@
+import { SITE_URL } from '@/lib/site';
 import type { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
@@ -9,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/app/', '/api/'],
       },
     ],
-    sitemap: 'https://www.openbio.app/sitemap.xml',
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }

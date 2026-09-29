@@ -22,8 +22,9 @@ import {
 } from '@/components/ui/tooltip';
 import { toast } from '@/components/ui/use-toast';
 import { QRCodeSVG, getQRAsCanvas } from '@/lib/qr';
+import { LOGO_URL, ROOT_DOMAIN, SITE_URL } from '@/lib/site';
 import { cn } from '@/lib/utils';
-import { Check, CircleHelp, Copy, Crown, Download } from 'lucide-react';
+import { Check, CircleHelp, Copy, Download } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import type React from 'react';
 import { useRef, useState } from 'react';
@@ -42,15 +43,12 @@ const PRESET_COLORS = [
 
 export default function LinkQRModal({
   children,
-  profileLink,
   linkSlug,
 }: {
   children: React.ReactNode;
-  profileLink: Record<string, unknown> & { isPremium?: boolean | null };
   linkSlug?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [showUpgradePopover, setShowUpgradePopover] = useState(false);
 
   const params = useParams<{ link: string }>();
   const link = linkSlug ?? params.link;
@@ -60,7 +58,7 @@ export default function LinkQRModal({
   const [fgColor, setFgColor] = useState('#000000');
 
   const qrConfig = {
-    value: `https://openbio.app/${link}`,
+    value: `${SITE_URL}/${link}`,
     size: 140,
     bgColor: '#ffffff',
     fgColor,
@@ -69,7 +67,7 @@ export default function LinkQRModal({
     imageSettings: {
       height: 40,
       width: 40,
-      src: 'https://openbio.app/openbio.png',
+      src: LOGO_URL,
       excavate: true,
     },
   };
@@ -92,7 +90,7 @@ export default function LinkQRModal({
       }
       const url = URL.createObjectURL(blob);
       downloadRef.current.href = url;
-      downloadRef.current.download = `openbio-${link}.png`;
+      downloadRef.current.download = `auraspot-${link}.png`;
       downloadRef.current.click();
       URL.revokeObjectURL(url);
       toast({
@@ -128,10 +126,6 @@ export default function LinkQRModal({
   };
 
   const handleLogoToggle = (checked: boolean) => {
-    if (!profileLink.isPremium && checked) {
-      setShowUpgradePopover(true);
-      return;
-    }
     setShowLogo(checked);
   };
 
@@ -141,13 +135,7 @@ export default function LinkQRModal({
       <DialogContent className="sm:max-w-xl">
         <TooltipProvider>
           <DialogHeader>
-            <div className="flex items-center gap-2">
-              <DialogTitle className="font-cal text-xl">QR Code</DialogTitle>
-              <span className="inline-flex items-center gap-1 rounded-md border border-border bg-muted px-2 py-0.5 font-medium text-muted-foreground text-xs">
-                <Crown className="h-3 w-3" />
-                PRO
-              </span>
-            </div>
+            <DialogTitle className="font-cal text-xl">QR Code</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6">
@@ -162,7 +150,8 @@ export default function LinkQRModal({
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>
-                        This QR code links to your profile at openbio.app/{link}
+                        This QR code links to your profile at {ROOT_DOMAIN}/
+                        {link}
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -204,32 +193,12 @@ export default function LinkQRModal({
                     <CircleHelp className="h-3.5 w-3.5 text-muted-foreground" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Show the OpenBio logo in the center of the QR code</p>
+                    <p>Show the AuraSpot logo in the center of the QR code</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
               <div className="relative">
                 <Switch checked={showLogo} onCheckedChange={handleLogoToggle} />
-                {showLogo && (
-                  <Crown className="pointer-events-none absolute top-0.75 right-0.75 h-3.5 w-3.5 text-blue-500/30" />
-                )}
-                {showUpgradePopover && (
-                  <div className="absolute top-full right-0 z-50 mt-2 w-64 rounded-xl border border-border bg-popover p-4 text-center shadow-md">
-                    <p className="text-sm">
-                      You need to be on the Pro plan and above to customize your
-                      QR Code logo.
-                    </p>
-                    <Button
-                      className="mt-3 w-full rounded-xl"
-                      onClick={() => {
-                        setShowUpgradePopover(false);
-                        window.location.href = '/app?tab=settings';
-                      }}
-                    >
-                      Upgrade to Pro
-                    </Button>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -330,7 +299,7 @@ export default function LinkQRModal({
           {/* biome-ignore lint/a11y/useValidAnchor: programmatic download */}
           <a
             className="hidden"
-            download={`openbio-${link}.png`}
+            download={`auraspot-${link}.png`}
             ref={downloadRef}
           />
         </TooltipProvider>

@@ -1,8 +1,8 @@
+import { ROOT_DOMAIN } from '@/lib/site';
 import { neon } from '@neondatabase/serverless';
 import { getSessionCookie } from 'better-auth/cookies';
 import { type NextRequest, NextResponse } from 'next/server';
 
-const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? 'openbio.app';
 const IP_REGEX = /^\d+\.\d+\.\d+\.\d+/;
 
 const PASSTHROUGH_PREFIXES = ['/api', '/trpc', '/_next', '/app'];
@@ -76,7 +76,7 @@ export async function proxy(request: NextRequest) {
   const hostname = request.headers.get('host') ?? request.nextUrl.hostname;
   const pathname = request.nextUrl.pathname;
 
-  // --- Subdomain rewrite: vanxh.openbio.app → /vanxh ---
+  // --- Subdomain rewrite: jane.auraspot.me → /jane ---
   const subdomain = getSubdomain(hostname);
   if (subdomain) {
     if (isPassthrough(pathname)) {
