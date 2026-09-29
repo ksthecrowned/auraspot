@@ -98,6 +98,38 @@ export function toSocialUrl(
   return `${PLATFORM_PREFIX[platform]}${handle}`;
 }
 
+const SOCIAL_HOSTS: Record<string, string> = {
+  'instagram.com': 'instagram',
+  'x.com': 'twitter',
+  'twitter.com': 'twitter',
+  'youtube.com': 'youtube',
+  'youtu.be': 'youtube',
+  'tiktok.com': 'tiktok',
+  'facebook.com': 'facebook',
+  'fb.com': 'facebook',
+  'github.com': 'github',
+  'linkedin.com': 'linkedin',
+  't.me': 'telegram',
+  'telegram.me': 'telegram',
+  'discord.com': 'discord',
+  'discord.gg': 'discord',
+  'twitch.tv': 'twitch',
+};
+
+const LEADING_WWW_RE = /^(www\.|m\.)/;
+
+// Social network behind a URL, or null for any other website.
+export function socialPlatformOf(url: string): string | null {
+  try {
+    const host = new URL(url).hostname
+      .toLowerCase()
+      .replace(LEADING_WWW_RE, '');
+    return SOCIAL_HOSTS[host] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function firstNameOf(name: string): string {
   const trimmed = name.trim();
   const [first] = trimmed.split(WHITESPACE_RE);

@@ -1,11 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../db';
-import {
-  link,
-  personalityClaim,
-  personalityManager,
-  socialLink,
-} from '../schema';
+import { link, personalityClaim, personalityManager } from '../schema';
 import { invalidateProfileLinkCache } from './link';
 
 function withSlug<T extends { link: string }>(row: T) {
@@ -86,30 +81,6 @@ export const getProfileDetails = async (linkId: string) => {
     category: row?.category ?? null,
     socialLinks: row?.socialLinks ?? [],
   };
-};
-
-export const replaceSocialLinks = async (
-  personalityId: string,
-  links: { platform: string; url: string }[]
-) => {
-  // neon-http has no transactions: delete then insert, links are cheap to rebuild.
-  await db
-    .delete(socialLink)
-    .where(eq(socialLink.personalityId, personalityId));
-  if (links.length === 0) {
-    return [];
-  }
-  return db
-    .insert(socialLink)
-    .values(
-      links.map((item, index) => ({
-        personalityId,
-        platform: item.platform,
-        url: item.url,
-        sortOrder: index,
-      }))
-    )
-    .returning({ id: socialLink.id });
 };
 
 export const searchPublicPersonalities = async (input: {

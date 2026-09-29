@@ -18,7 +18,6 @@ import {
 const rateLimitedProcedure = createRateLimitedProcedure(generalLimit);
 const rateLimitedSubscribe = createRateLimitedProcedure(subscribeLimit);
 const rateLimitedFetch = createRateLimitedProcedure(fetchLimit);
-import { toSocialUrl } from '@/lib/personality';
 import {
   addEmailSubscriber,
   addProfileLinkBento,
@@ -46,7 +45,6 @@ import {
   isProfileLinkEditor,
   recordLinkClick,
   recordLinkView,
-  replaceSocialLinks,
   updateProfileLink,
   updateProfileLinkBento,
 } from '@/server/db';
@@ -54,7 +52,6 @@ import { db } from '@/server/db/db';
 import { link } from '@/server/db/schema';
 import { getSupportersPreview } from '@/server/db/utils/support';
 import type { LinkBento } from '@/types';
-import { TRPCError } from '@trpc/server';
 import { and, desc, eq, lt } from 'drizzle-orm';
 import { after } from 'next/server';
 import * as z from 'zod';
@@ -66,7 +63,6 @@ import {
   GetByLinkSchema,
   GetLinkViewsSchema,
   LinkAvailableSchema,
-  SetSocialLinksSchema,
   UpdateLinkBentoSchema,
   UpdateLinkDetailsSchema,
   UpdateLinkSchema,
@@ -349,25 +345,6 @@ export const profileLinkRouter = createTRPCRouter({
         categoryId: input.categoryId,
         location: input.location || null,
       });
-    }),
-
-  setSocialLinks: protectedProcedure
-    .input(SetSocialLinksSchema)
-    .mutation(async ({ input, ctx }) => {
-      await assertCanEditProfileLink({ userId: ctx.user.id, linkId: input.id });
-
-      const links = input.links.map((item) => {
-        const url = toSocialUrl(item.platform, item.value);
-        if (!url) {
-          throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: `Lien invalide pour ${item.platform} : ${item.value}`,
-          });
-        }
-        return { platform: item.platform, url };
-      });
-
-      return replaceSocialLinks(input.id, links);
     }),
 
   delete: protectedProcedure
