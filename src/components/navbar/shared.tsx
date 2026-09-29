@@ -1,6 +1,5 @@
+import { Wordmark } from '@/components/brand';
 import { cn } from '@/lib/utils';
-import Logo from '@/public/logo.png';
-import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
@@ -19,9 +18,8 @@ export function NavbarShell({
           className
         )}
       >
-        <Link href="/" className="flex items-center gap-x-2">
-          <Image src={Logo} alt="AuraSpot" width={28} height={28} />
-          <span className="font-cal text-base">AuraSpot</span>
+        <Link href="/" className="flex items-center">
+          <Wordmark className="text-xl" />
         </Link>
         <div className="ml-auto flex items-center gap-x-3">{children}</div>
       </nav>
