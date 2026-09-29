@@ -71,12 +71,13 @@ function getTimeLeft(targetDate: string, repeat = 'none'): TimeLeft {
   };
 }
 
+// Null until mounted: the server and the browser render at different
+// instants (and locales), so the time left is only computed client-side.
 function useCountdown(targetDate: string, repeat = 'none') {
-  const [timeLeft, setTimeLeft] = useState<TimeLeft>(() =>
-    getTimeLeft(targetDate, repeat)
-  );
+  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
 
   useEffect(() => {
+    setTimeLeft(getTimeLeft(targetDate, repeat));
     const timer = setInterval(() => {
       setTimeLeft(getTimeLeft(targetDate, repeat));
     }, 1000);
@@ -322,6 +323,10 @@ export default function CountdownCard({
           </p>
         </div>
       );
+    }
+
+    if (!timeLeft) {
+      return <div className="h-full w-full" />;
     }
 
     if (mdSize === '4x4') {
