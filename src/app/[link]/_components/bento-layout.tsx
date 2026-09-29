@@ -141,7 +141,7 @@ export default function BentoLayout({
           : undefined
       }
       isResizable={false}
-      isDraggable={profileLink?.isOwner && !preview}
+      isDraggable={profileLink?.canEdit && !preview}
       onDragStart={() => {
         pushSnapshot();
         hasDragged.current = true;

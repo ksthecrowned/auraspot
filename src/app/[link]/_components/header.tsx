@@ -62,7 +62,7 @@ export default function ProfileLinkHeader({
     api.profileLink.update.useMutation();
 
   useEffect(() => {
-    if (!profileLink?.isOwner) {
+    if (!profileLink?.canEdit) {
       return;
     }
 
@@ -91,7 +91,7 @@ export default function ProfileLinkHeader({
           'focus:outline-none dark:prose-invert prose-p:text-foreground prose-headings:font-cal mx-auto lg:prose-lg lg:prose-p:m-0',
       },
     },
-    editable: profileLink?.isOwner && !preview,
+    editable: profileLink?.canEdit && !preview,
     onUpdate: ({ editor }) => {
       setBio(editor.getHTML());
     },
@@ -101,14 +101,14 @@ export default function ProfileLinkHeader({
     return null;
   }
 
-  const isEditable = profileLink.isOwner && !preview;
+  const isEditable = profileLink.canEdit && !preview;
 
   return (
     <div className="flex flex-col gap-y-4" data-tour="profile-header">
       <div className="flex items-start justify-between">
         <ProfileLinkAvatar profileLink={profileLink} />
 
-        {profileLink.isOwner && (
+        {profileLink.canEdit && (
           <div className="flex flex-row flex-wrap items-center justify-end gap-2">
             <Button
               size="icon"
@@ -174,7 +174,7 @@ export default function ProfileLinkHeader({
           </div>
         )}
 
-        {!profileLink.isOwner && (
+        {!profileLink.canEdit && (
           <div className="flex items-center gap-2">
             <Button
               variant="outline"

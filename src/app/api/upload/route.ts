@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth';
 import { redis } from '@/lib/redis';
-import { db, eq } from '@/server/db';
+import { db, eq, isProfileLinkEditor } from '@/server/db';
 import { link } from '@/server/db/schema';
 import { del, put } from '@vercel/blob';
 import { type NextRequest, NextResponse } from 'next/server';
@@ -27,10 +27,12 @@ export async function POST(request: NextRequest) {
 
   const profileLink = await db.query.link.findFirst({
     where: (l, { eq }) => eq(l.id, profileLinkId),
-    columns: { image: true, userId: true },
+    columns: { id: true, image: true, userId: true },
   });
 
-  if (!profileLink || profileLink.userId !== session.user.id) {
+  if (
+    !(profileLink && (await isProfileLinkEditor(session.user.id, profileLink)))
+  ) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 

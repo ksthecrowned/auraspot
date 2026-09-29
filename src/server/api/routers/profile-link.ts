@@ -21,6 +21,7 @@ const rateLimitedFetch = createRateLimitedProcedure(fetchLimit);
 import {
   addEmailSubscriber,
   addProfileLinkBento,
+  assertCanEditProfileLink,
   canModifyProfileLink,
   createProfileLink,
   deleteProfileLink,
@@ -39,6 +40,7 @@ import {
   getTotalClicks,
   getViewsOverTime,
   isProfileLinkAvailable,
+  isProfileLinkEditor,
   recordLinkClick,
   recordLinkView,
   updateProfileLink,
@@ -142,9 +144,13 @@ export const profileLinkRouter = createTRPCRouter({
         })
       );
 
+      const canEdit = authedUserId
+        ? await isProfileLinkEditor(authedUserId, profileLink)
+        : false;
+
       return {
         ...profileLink,
-        isOwner: authedUserId === profileLink.userId,
+        canEdit,
         isPremium: true,
       };
     }),
@@ -193,7 +199,7 @@ export const profileLinkRouter = createTRPCRouter({
   subscribers: protectedProcedure
     .input(z.object({ linkId: z.string() }))
     .query(async ({ input, ctx }) => {
-      await canModifyProfileLink({
+      await assertCanEditProfileLink({
         userId: ctx.user.id,
         linkId: input.linkId,
       });
@@ -208,7 +214,7 @@ export const profileLinkRouter = createTRPCRouter({
       })
     )
     .query(async ({ input, ctx }) => {
-      await canModifyProfileLink({
+      await assertCanEditProfileLink({
         userId: ctx.user.id,
         linkId: input.linkId,
       });
@@ -293,7 +299,7 @@ export const profileLinkRouter = createTRPCRouter({
         throw new Error('User not found');
       }
 
-      await canModifyProfileLink({
+      await assertCanEditProfileLink({
         userId: user.id,
         linkId: input.id,
       });
@@ -346,7 +352,7 @@ export const profileLinkRouter = createTRPCRouter({
         throw new Error('User not found');
       }
 
-      await canModifyProfileLink({
+      await assertCanEditProfileLink({
         userId: user.id,
         link: input.link,
       });
@@ -366,7 +372,7 @@ export const profileLinkRouter = createTRPCRouter({
         throw new Error('User not found');
       }
 
-      await canModifyProfileLink({
+      await assertCanEditProfileLink({
         userId: user.id,
         link: input.link,
       });
@@ -386,7 +392,7 @@ export const profileLinkRouter = createTRPCRouter({
         throw new Error('User not found');
       }
 
-      await canModifyProfileLink({
+      await assertCanEditProfileLink({
         userId: user.id,
         link: input.link,
       });

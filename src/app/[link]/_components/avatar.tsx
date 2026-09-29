@@ -54,17 +54,17 @@ export default function ProfileLinkAvatar({ profileLink }: Props) {
     accept: { 'image/png': [], 'image/jpeg': [] },
   });
 
-  if (!profileLink.isOwner && !profileLink.image) {
+  if (!profileLink.canEdit && !profileLink.image) {
     return null;
   }
 
   return (
     <div
-      {...(profileLink.isOwner ? getRootProps() : {})}
+      {...(profileLink.canEdit ? getRootProps() : {})}
       className={cn(
         'flex h-[100px] w-[100px] flex-col items-center justify-center gap-y-1 rounded-full border border-border bg-background/50 shadow-lg ring-4 ring-background md:h-[150px] md:w-[150px]',
-        !profileLink.image && profileLink.isOwner && 'border-dashed',
-        profileLink.isOwner && 'cursor-pointer',
+        !profileLink.image && profileLink.canEdit && 'border-dashed',
+        profileLink.canEdit && 'cursor-pointer',
         img && 'border-0 border-transparent bg-transparent'
       )}
     >
@@ -80,14 +80,14 @@ export default function ProfileLinkAvatar({ profileLink }: Props) {
         />
       )}
 
-      {profileLink.isOwner && !img && (
+      {profileLink.canEdit && !img && (
         <>
           <UploadCloud className="h-8 w-8 text-muted-foreground" />
           <p className="font-semibold text-muted-foreground text-sm">Upload</p>
         </>
       )}
 
-      {profileLink.isOwner && <input {...getInputProps()} />}
+      {profileLink.canEdit && <input {...getInputProps()} />}
     </div>
   );
 }

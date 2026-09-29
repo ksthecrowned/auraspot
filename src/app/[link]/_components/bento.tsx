@@ -33,7 +33,7 @@ export default function Bento({
           >
             <BentoCard
               bento={b}
-              editable={profileLink.isOwner && !preview}
+              editable={profileLink.canEdit && !preview}
               linkId={profileLink.id}
             />
           </div>

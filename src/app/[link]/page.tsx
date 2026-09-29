@@ -74,7 +74,7 @@ export default async function Page({ params }: Props) {
     notFound();
   }
 
-  if (profileLink.status === 'suspended' && !profileLink.isOwner) {
+  if (profileLink.status === 'suspended' && !profileLink.canEdit) {
     notFound();
   }
 
@@ -126,7 +126,7 @@ export default async function Page({ params }: Props) {
                     slug={profileLink.link}
                     location={profileLink.location}
                     verificationStatus={profileLink.verificationStatus}
-                    isOwner={profileLink.isOwner}
+                    isOwner={profileLink.canEdit}
                   />
 
                   <Suspense
@@ -144,7 +144,7 @@ export default async function Page({ params }: Props) {
                     <Bento profileLink={profileLink} />
                   </Suspense>
 
-                  {profileLink.isOwner && (
+                  {profileLink.canEdit && (
                     <>
                       <ActionBar />
                       <OnboardingTour />

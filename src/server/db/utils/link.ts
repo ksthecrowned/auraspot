@@ -124,6 +124,49 @@ export const canModifyProfileLink = async ({
   return canModify;
 };
 
+export const isProfileLinkEditor = async (
+  userId: string,
+  profileLink: { id: string; userId: string }
+) => {
+  if (profileLink.userId === userId) {
+    return true;
+  }
+
+  const manager = await db.query.personalityManager.findFirst({
+    where: (table, { and, eq: equals }) =>
+      and(
+        equals(table.personalityId, profileLink.id),
+        equals(table.userId, userId)
+      ),
+    columns: { id: true },
+  });
+
+  return Boolean(manager);
+};
+
+export const assertCanEditProfileLink = async ({
+  userId,
+  linkId,
+  link: linkSlug,
+}: {
+  userId: string;
+  linkId?: string;
+  link?: string;
+}) => {
+  let profileLink: InferSelectModel<typeof link> | undefined | null = null;
+  if (linkId) {
+    profileLink = await getProfileLinkById(linkId);
+  } else if (linkSlug) {
+    profileLink = await getProfileLinkByLink(linkSlug);
+  }
+
+  if (!(profileLink && (await isProfileLinkEditor(userId, profileLink)))) {
+    throw new Error("You can't modify this profile link");
+  }
+
+  return profileLink;
+};
+
 export const updateProfileLink = async (data: {
   id: string;
   name?: string;
