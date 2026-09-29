@@ -1,3 +1,4 @@
+import { PERSONALITY_PLATFORMS } from '@/lib/personality';
 import { BentoSchema, ValidLinkSchema } from '@/types';
 import * as z from 'zod';
 
@@ -56,4 +57,22 @@ export const DeleteLinkBentoSchema = z.object({
 export const UpdateLinkBentoSchema = z.object({
   link: z.string(),
   bento: BentoSchema,
+});
+
+export const UpdateLinkDetailsSchema = z.object({
+  id: z.string().uuid(),
+  categoryId: z.string().uuid().nullable(),
+  location: z.string().trim().max(80).nullable(),
+});
+
+export const SetSocialLinksSchema = z.object({
+  id: z.string().uuid(),
+  links: z
+    .array(
+      z.object({
+        platform: z.enum(PERSONALITY_PLATFORMS),
+        value: z.string().trim().min(1).max(200),
+      })
+    )
+    .max(12),
 });

@@ -177,6 +177,8 @@ export const updateProfileLink = async (data: {
   customDomain?: string | null;
   customFooter?: string | null;
   isPublic?: boolean;
+  categoryId?: string | null;
+  location?: string | null;
 }) => {
   const result = await db
     .update(link)
