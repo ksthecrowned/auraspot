@@ -102,7 +102,7 @@ export default function ActionBar() {
   return (
     <>
       <div className="-translate-x-1/2 container fixed bottom-6 left-1/2 z-50 mx-auto md:bottom-10">
-        <div className="mx-auto flex w-max items-center gap-x-2 rounded-xl border border-border/50 bg-background/90 px-2 py-2 shadow-lg backdrop-blur-sm">
+        <div className="mx-auto flex w-max items-center gap-x-2 rounded-full border border-border/60 bg-background/90 px-3 py-2 shadow-[0_10px_40px_-12px_rgba(180,60,240,0.45)] backdrop-blur-md">
           <NextLink href="/app" className={btnClass} title="Back to dashboard">
             <ArrowLeft size={14} />
           </NextLink>
