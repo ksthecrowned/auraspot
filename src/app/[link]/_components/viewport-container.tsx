@@ -40,7 +40,7 @@ export default function ViewportContainer({
     <div
       className={cn(
         'mx-auto h-full w-full transition-all duration-300',
-        isMobile ? 'max-w-sm' : 'max-w-3xl'
+        isMobile ? 'max-w-sm' : 'max-w-6xl'
       )}
     >
       {children}

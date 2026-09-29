@@ -4,20 +4,22 @@ import {
   twitterMetadata,
 } from '@/app/shared-metadata';
 import OnboardingTour from '@/components/onboarding-tour';
-import { Skeleton } from '@/components/ui/skeleton';
 import { SITE_URL } from '@/lib/site';
 import { api } from '@/trpc/server';
-import { ArrowRight } from 'lucide-react';
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Suspense, cache } from 'react';
+import { type CSSProperties, Suspense, cache } from 'react';
 import ActionBar from './_components/action-bar';
-import Bento from './_components/bento';
 import { BentoHistoryProvider } from './_components/bento-history';
-import ProfileLinkHeader from './_components/header';
+import Community from './_components/community';
+import OfficialSocials from './_components/official-socials';
 import { PreviewProvider } from './_components/preview-context';
-import ProfilePublicMeta from './_components/profile-public-meta';
+import ProfileAbout from './_components/profile-about';
+import ProfileFooter from './_components/profile-footer';
+import ProfileHero from './_components/profile-hero';
+import ProfileSpace from './_components/profile-space';
+import ProfileTopBar from './_components/profile-top-bar';
+import SupportButton from './_components/support-button';
 import ThemeWrapper from './_components/theme-wrapper';
 import ViewportContainer from './_components/viewport-container';
 
@@ -96,11 +98,18 @@ export default async function Page({ params }: Props) {
           name: profileLink.location,
         },
       }),
-      sameAs: profileLink.bento
-        .filter((b) => b.type === 'link' && b.href)
-        .map((b) => (b as { href: string }).href),
+      sameAs: [
+        ...profileLink.socialLinks.map((social) => social.url),
+        ...profileLink.bento
+          .filter((b) => b.type === 'link' && b.href)
+          .map((b) => (b as { href: string }).href),
+      ],
     },
   };
+
+  const accentStyle = profileLink.accentColor
+    ? ({ '--aura-accent': profileLink.accentColor } as CSSProperties)
+    : undefined;
 
   return (
     <>
@@ -118,58 +127,47 @@ export default async function Page({ params }: Props) {
           <Suspense>
             <BentoHistoryProvider>
               <ViewportContainer>
-                <div className="flex flex-col gap-y-6">
-                  <div className="animate-fade-in">
-                    <ProfileLinkHeader profileLink={profileLink} />
+                <div className="@container animate-fade-in" style={accentStyle}>
+                  <ProfileTopBar profileLink={profileLink} />
+
+                  <div className="mt-8 grid @4xl:grid-cols-[340px_minmax(0,1fr)] @4xl:gap-12 gap-8">
+                    <aside className="@4xl:sticky @4xl:top-8 flex flex-col gap-5 @4xl:self-start">
+                      <ProfileHero profileLink={profileLink} />
+                      <OfficialSocials profileLink={profileLink} />
+                      <SupportButton
+                        slug={profileLink.link}
+                        name={profileLink.name}
+                        canEdit={profileLink.canEdit}
+                        variant="inline"
+                      />
+                    </aside>
+
+                    <main className="flex min-w-0 flex-col gap-8">
+                      <Community
+                        name={profileLink.name}
+                        supporters={profileLink.supporters}
+                      />
+                      <ProfileAbout profileLink={profileLink} />
+                      <ProfileSpace profileLink={profileLink} />
+                    </main>
                   </div>
-                  <ProfilePublicMeta
+
+                  <ProfileFooter customFooter={profileLink.customFooter} />
+
+                  <SupportButton
                     slug={profileLink.link}
-                    location={profileLink.location}
-                    verificationStatus={profileLink.verificationStatus}
-                    isOwner={profileLink.canEdit}
+                    name={profileLink.name}
+                    canEdit={profileLink.canEdit}
+                    variant="sticky"
                   />
-
-                  <Suspense
-                    fallback={
-                      <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-                        {Array.from({ length: 24 }).map((_, i) => (
-                          <Skeleton
-                            key={i}
-                            className="aspect-square h-full w-full"
-                          />
-                        ))}
-                      </div>
-                    }
-                  >
-                    <Bento profileLink={profileLink} />
-                  </Suspense>
-
-                  {profileLink.canEdit && (
-                    <>
-                      <ActionBar />
-                      <OnboardingTour />
-                    </>
-                  )}
-
-                  <footer className="animate-fade-in py-8 text-center">
-                    {profileLink.customFooter ? (
-                      <p className="text-muted-foreground text-xs">
-                        {profileLink.customFooter}
-                      </p>
-                    ) : (
-                      <Link
-                        href="/claim-link"
-                        className="group inline-flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-4 py-2 text-muted-foreground text-sm backdrop-blur-sm transition-all hover:border-primary hover:text-foreground"
-                      >
-                        Create your own free page on
-                        <span className="font-semibold text-foreground">
-                          AuraSpot
-                        </span>
-                        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                      </Link>
-                    )}
-                  </footer>
                 </div>
+
+                {profileLink.canEdit && (
+                  <>
+                    <ActionBar />
+                    <OnboardingTour />
+                  </>
+                )}
               </ViewportContainer>
             </BentoHistoryProvider>
           </Suspense>
