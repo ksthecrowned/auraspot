@@ -1,8 +1,8 @@
 import type { BentoSchema } from '@/types';
 export { PositionSchema, SizeSchema, BentoSchema } from '@/types';
-import { relations } from 'drizzle-orm';
 import {
   boolean,
+  index,
   json,
   pgTable,
   text,
@@ -10,45 +10,61 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import type * as z from 'zod';
-import { linkClick } from './link-click';
-import { linkView } from './link-view';
-import { user } from './user';
+import { category } from './category';
 
-export const link = pgTable('link', {
-  id: uuid('id').primaryKey().defaultRandom(),
+export const linkClaimStatuses = ['unclaimed', 'claimed'] as const;
+export const linkVerificationStatuses = ['unverified', 'verified'] as const;
+export const linkPublicationStatuses = ['active', 'suspended'] as const;
 
-  link: text('link').unique().notNull(),
+export const link = pgTable(
+  'link',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
 
-  image: text('image'),
-  name: text('name').notNull(),
-  bio: text('bio'),
+    link: text('link').unique().notNull(),
 
-  bento: json('bento')
-    .$type<z.infer<typeof BentoSchema>[]>()
-    .default([])
-    .notNull(),
+    image: text('image'),
+    name: text('name').notNull(),
+    bio: text('bio'),
 
-  customDomain: text('custom_domain').unique(),
+    bento: json('bento')
+      .$type<z.infer<typeof BentoSchema>[]>()
+      .default([])
+      .notNull(),
 
-  theme: text('theme').default('default').notNull(),
-  accentColor: text('accent_color'),
-  darkMode: boolean('dark_mode').default(false).notNull(),
+    customDomain: text('custom_domain').unique(),
 
-  customFooter: text('custom_footer'),
+    theme: text('theme').default('default').notNull(),
+    accentColor: text('accent_color'),
+    darkMode: boolean('dark_mode').default(false).notNull(),
 
-  isPublic: boolean('is_public').default(true).notNull(),
+    customFooter: text('custom_footer'),
 
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+    isPublic: boolean('is_public').default(true).notNull(),
 
-  userId: text('user_id').notNull(),
-});
+    location: text('location'),
+    categoryId: uuid('category_id').references(() => category.id, {
+      onDelete: 'set null',
+    }),
+    claimStatus: text('claim_status', { enum: linkClaimStatuses })
+      .default('claimed')
+      .notNull(),
+    verificationStatus: text('verification_status', {
+      enum: linkVerificationStatuses,
+    })
+      .default('unverified')
+      .notNull(),
+    status: text('publication_status', { enum: linkPublicationStatuses })
+      .default('active')
+      .notNull(),
 
-export const linkRelations = relations(link, ({ one, many }) => ({
-  user: one(user, {
-    fields: [link.userId],
-    references: [user.id],
-  }),
-  views: many(linkView),
-  clicks: many(linkClick),
-}));
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+
+    userId: text('user_id').notNull(),
+  },
+  (table) => [
+    index('link_category_id_idx').on(table.categoryId),
+    index('link_publication_status_idx').on(table.status),
+  ]
+);

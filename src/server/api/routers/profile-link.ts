@@ -22,7 +22,6 @@ import {
   addEmailSubscriber,
   addProfileLinkBento,
   canModifyProfileLink,
-  canUserCreateProfileLink,
   createProfileLink,
   deleteProfileLink,
   deleteProfileLinkBento,
@@ -47,7 +46,6 @@ import {
 } from '@/server/db';
 import { db } from '@/server/db/db';
 import { link } from '@/server/db/schema';
-import { isUserPremium } from '@/server/db/utils/user';
 import type { LinkBento } from '@/types';
 import { and, desc, eq, lt } from 'drizzle-orm';
 import { after } from 'next/server';
@@ -76,23 +74,11 @@ export const profileLinkRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const user = await ctx.db.query.user.findFirst({
         where: (u, { eq }) => eq(u.id, ctx.user.id),
-        columns: {
-          id: true,
-          plan: true,
-          subscriptionEndsAt: true,
-          trialEndsAt: true,
-        },
+        columns: { id: true },
       });
 
       if (!user) {
         throw new Error('User not found');
-      }
-
-      const canCreate = await canUserCreateProfileLink(user);
-      if (!canCreate) {
-        throw new Error(
-          "You can't create more profile links, upgrade your plan"
-        );
       }
 
       const isAvailable = await isProfileLinkAvailable(input.link);
@@ -105,7 +91,7 @@ export const profileLinkRouter = createTRPCRouter({
       const profileLink = await createProfileLink({
         link: input.link,
         name: input.name || input.link,
-        bio: input.bio || "I'm using OpenBio.app!",
+        bio: input.bio || "I'm using AuraSpot!",
         bento,
         userId: user.id,
       });
@@ -139,16 +125,6 @@ export const profileLinkRouter = createTRPCRouter({
         return null;
       }
 
-      const owner = await ctx.db.query.user.findFirst({
-        where: (u, { eq }) => eq(u.id, profileLink.userId),
-        columns: {
-          id: true,
-          plan: true,
-          subscriptionEndsAt: true,
-          trialEndsAt: true,
-        },
-      });
-
       let ip = ctx.req.headers.get('x-real-ip');
       const forwardedFor = ctx.req.headers.get('x-forwarded-for');
       if (!ip && forwardedFor) {
@@ -169,7 +145,7 @@ export const profileLinkRouter = createTRPCRouter({
       return {
         ...profileLink,
         isOwner: authedUserId === profileLink.userId,
-        isPremium: !!owner && isUserPremium(owner),
+        isPremium: true,
       };
     }),
 
@@ -310,12 +286,7 @@ export const profileLinkRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const user = await ctx.db.query.user.findFirst({
         where: (u, { eq }) => eq(u.id, ctx.user.id),
-        columns: {
-          id: true,
-          plan: true,
-          subscriptionEndsAt: true,
-          trialEndsAt: true,
-        },
+        columns: { id: true },
       });
 
       if (!user) {
@@ -327,23 +298,7 @@ export const profileLinkRouter = createTRPCRouter({
         linkId: input.id,
       });
 
-      // Handle custom footer changes (pro only)
-      if (input.customFooter !== undefined) {
-        const isPro = isUserPremium(user);
-
-        if (!isPro) {
-          throw new Error('Custom footer requires a Pro subscription');
-        }
-      }
-
-      // Handle custom domain changes (pro only)
       if (input.customDomain !== undefined) {
-        const isPro = isUserPremium(user);
-
-        if (!isPro) {
-          throw new Error('Custom domains require a Pro subscription');
-        }
-
         const existing = await getProfileLinkById(input.id);
         const oldDomain = existing?.customDomain;
 

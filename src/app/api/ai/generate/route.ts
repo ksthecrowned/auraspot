@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   const creditCost = type === 'profile' ? 3 : 1;
   const canUse = await consumeAiCredits(session.user.id, creditCost);
   if (!canUse) {
-    return new Response('No AI credits remaining. Upgrade your plan.', {
+    return new Response('No AI credits remaining.', {
       status: 403,
     });
   }
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       ? `Their links/socials: ${body.links.join(', ')}`
       : '';
     const extraCtx = body.context ? `Additional context: ${body.context}` : '';
-    systemPrompt = `You are a bio writer for a link-in-bio platform called OpenBio.
+    systemPrompt = `You are a bio writer for a link-in-bio platform called AuraSpot.
 Write short, engaging bios for user profiles.
 The bio should be 1-3 sentences max.
 Do NOT use hashtags or emojis unless the tone is creative.
@@ -44,7 +44,7 @@ Use simple HTML: <p>, <strong>, <em>, <ul>, <li>, <h2>.
 Do NOT use markdown. Return ONLY the HTML content.`;
     userPrompt = body.prompt ?? '';
   } else {
-    systemPrompt = `You are a profile builder for OpenBio, a link-in-bio platform.
+    systemPrompt = `You are a profile builder for AuraSpot, a link-in-bio platform.
 Given a user description, generate a complete profile suggestion.
 Return a JSON object with:
 - "bio": a short 1-3 sentence bio

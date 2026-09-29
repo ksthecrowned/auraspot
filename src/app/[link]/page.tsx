@@ -5,6 +5,7 @@ import {
 } from '@/app/shared-metadata';
 import OnboardingTour from '@/components/onboarding-tour';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SITE_URL } from '@/lib/site';
 import { api } from '@/trpc/server';
 import { ArrowRight } from 'lucide-react';
 import type { Metadata } from 'next';
@@ -16,6 +17,7 @@ import Bento from './_components/bento';
 import { BentoHistoryProvider } from './_components/bento-history';
 import ProfileLinkHeader from './_components/header';
 import { PreviewProvider } from './_components/preview-context';
+import ProfilePublicMeta from './_components/profile-public-meta';
 import ThemeWrapper from './_components/theme-wrapper';
 import ViewportContainer from './_components/viewport-container';
 
@@ -29,16 +31,21 @@ const getProfileLink = cache((link: string) => {
   return api.profileLink.getByLink({ link });
 });
 
+const HTML_TAG_RE = /<[^>]*>/g;
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { link } = await params;
 
   const profileLink = await getProfileLink(link);
 
   const title = profileLink?.name ?? defaultMetadata.title;
-  const description = (
-    profileLink?.bio ??
-    `This is ${profileLink?.name ?? profileLink?.link}'s profile.`
-  ).replace(/<[^>]*>/g, '');
+  const description = profileLink
+    ? (profileLink.bio ?? `This is ${profileLink.name}'s profile.`).replace(
+        HTML_TAG_RE,
+        ''
+      )
+    : defaultMetadata.description;
+  const image = `/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`;
 
   return {
     ...defaultMetadata,
@@ -48,13 +55,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ...twitterMetadata,
       title,
       description,
-      images: [`/api/og?title=${title}&description=${description}`],
+      images: [image],
     },
     openGraph: {
       ...ogMetadata,
       title,
       description,
-      images: [`/api/og?title=${title}&description=${description}`],
+      images: [image],
     },
   };
 }
@@ -67,8 +74,12 @@ export default async function Page({ params }: Props) {
     notFound();
   }
 
-  const bio = (profileLink.bio ?? '').replace(/<[^>]*>/g, '');
-  const profileUrl = `https://openbio.app/${profileLink.link}`;
+  if (profileLink.status === 'suspended' && !profileLink.isOwner) {
+    notFound();
+  }
+
+  const bio = (profileLink.bio ?? '').replace(HTML_TAG_RE, '');
+  const profileUrl = `${SITE_URL}/${profileLink.link}`;
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -79,6 +90,12 @@ export default async function Page({ params }: Props) {
       url: profileUrl,
       ...(profileLink.image && { image: profileLink.image }),
       ...(bio && { description: bio }),
+      ...(profileLink.location && {
+        homeLocation: {
+          '@type': 'Place',
+          name: profileLink.location,
+        },
+      }),
       sameAs: profileLink.bento
         .filter((b) => b.type === 'link' && b.href)
         .map((b) => (b as { href: string }).href),
@@ -105,6 +122,12 @@ export default async function Page({ params }: Props) {
                   <div className="animate-fade-in">
                     <ProfileLinkHeader profileLink={profileLink} />
                   </div>
+                  <ProfilePublicMeta
+                    slug={profileLink.link}
+                    location={profileLink.location}
+                    verificationStatus={profileLink.verificationStatus}
+                    isOwner={profileLink.isOwner}
+                  />
 
                   <Suspense
                     fallback={
@@ -140,7 +163,7 @@ export default async function Page({ params }: Props) {
                       >
                         Create your own free page on
                         <span className="font-semibold text-foreground">
-                          OpenBio
+                          AuraSpot
                         </span>
                         <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                       </Link>

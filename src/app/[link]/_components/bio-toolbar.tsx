@@ -2,7 +2,6 @@
 
 import BioWriter from '@/components/ai/bio-writer';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/components/ui/use-toast';
 import type { Editor } from '@tiptap/react';
 import {
   Bold,
@@ -18,28 +17,14 @@ import {
 
 export default function BioToolbar({
   editor,
-  isPremium,
   name,
   links,
 }: {
   editor: Editor;
-  isPremium: boolean;
   name: string;
   links?: string[];
 }) {
-  const proAction = (action: () => void) => {
-    if (!isPremium) {
-      toast({
-        title: 'Pro feature',
-        description: 'Upgrade to Pro to unlock advanced bio styling.',
-      });
-      return;
-    }
-    action();
-  };
-
   const btnClass = 'h-6 w-6 p-0';
-  const proBtnClass = isPremium ? btnClass : `${btnClass} opacity-40`;
 
   return (
     <div className="inline-flex w-auto items-center gap-0.5 rounded-md border border-border/50 bg-card/80 px-0.5 py-0.5 backdrop-blur-sm">
@@ -83,50 +68,42 @@ export default function BioToolbar({
       <Button
         variant={editor.isActive('underline') ? 'secondary' : 'ghost'}
         size="sm"
-        className={proBtnClass}
-        onClick={() =>
-          proAction(() => editor.chain().focus().toggleUnderline().run())
-        }
+        className={btnClass}
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
       >
         <UnderlineIcon className="h-3 w-3" />
       </Button>
       <Button
         variant={editor.isActive('link') ? 'secondary' : 'ghost'}
         size="sm"
-        className={proBtnClass}
-        onClick={() =>
-          proAction(() => {
-            const url = window.prompt('Enter URL:');
-            if (url) {
-              editor.chain().focus().setLink({ href: url }).run();
-            }
-          })
-        }
+        className={btnClass}
+        onClick={() => {
+          const url = window.prompt('Enter URL:');
+          if (url) {
+            editor.chain().focus().setLink({ href: url }).run();
+          }
+        }}
       >
         <LinkIcon className="h-3 w-3" />
       </Button>
       <Button
         variant={editor.isActive('highlight') ? 'secondary' : 'ghost'}
         size="sm"
-        className={proBtnClass}
-        onClick={() =>
-          proAction(() => editor.chain().focus().toggleHighlight().run())
-        }
+        className={btnClass}
+        onClick={() => editor.chain().focus().toggleHighlight().run()}
       >
         <Highlighter className="h-3 w-3" />
       </Button>
       <Button
         variant="ghost"
         size="sm"
-        className={proBtnClass}
-        onClick={() =>
-          proAction(() => {
-            const color = window.prompt('Enter color hex (e.g. #ff0000):');
-            if (color) {
-              editor.chain().focus().setColor(color).run();
-            }
-          })
-        }
+        className={btnClass}
+        onClick={() => {
+          const color = window.prompt('Enter color hex (e.g. #ff0000):');
+          if (color) {
+            editor.chain().focus().setColor(color).run();
+          }
+        }}
       >
         <Palette className="h-3 w-3" />
       </Button>

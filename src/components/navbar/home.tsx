@@ -11,11 +11,25 @@ export default function HomeNavbar() {
   return (
     <NavbarShell>
       <Link
+        href="/personalities"
+        className="text-muted-foreground text-sm transition-colors hover:text-foreground"
+      >
+        Personnalités
+      </Link>
+      <Link
         href="/explore"
         className="text-muted-foreground text-sm transition-colors hover:text-foreground"
       >
         Explore
       </Link>
+      {session && (
+        <Link
+          href="/account/supports"
+          className="text-muted-foreground text-sm transition-colors hover:text-foreground"
+        >
+          Soutiens
+        </Link>
+      )}
       {!session && (
         <Link
           href="/app/sign-in"

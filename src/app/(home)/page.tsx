@@ -1,10 +1,8 @@
-import Pricing from '@/components/pricing';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { PillBadge } from '@/components/ui/pill-badge';
+import { TAGLINE } from '@/lib/site';
 import { BarChart3, Code2, Link2, Moon, Share2, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import { BsTwitterX } from 'react-icons/bs';
-import { FaGithub } from 'react-icons/fa';
 
 const features = [
   {
@@ -44,17 +42,7 @@ export default function Page() {
     <div className="flex flex-col items-center">
       {/* Hero */}
       <section className="flex w-full max-w-5xl flex-col items-center px-4 pt-32 pb-20 text-center">
-        <Link
-          href="https://x.com/Vanxhh/status/2041086066632044841"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <PillBadge className="animate-fade-up gap-2 transition-colors hover:bg-accent">
-            <BsTwitterX className="h-3 w-3" />
-            v2 is here — read the launch tweet
-            <span className="text-muted-foreground">→</span>
-          </PillBadge>
-        </Link>
+        <PillBadge className="animate-fade-up gap-2">{TAGLINE}</PillBadge>
 
         <h1
           className="mt-6 animate-fade-up font-cal text-5xl leading-tight md:text-7xl"
@@ -79,13 +67,12 @@ export default function Page() {
           <Link href="/claim-link">
             <GradientButton size="lg">Claim your page</GradientButton>
           </Link>
-          <Link href="/github" target="_blank" rel="noopener noreferrer">
+          <Link href="/personalities">
             <button
               className="inline-flex items-center gap-x-2 rounded-full border border-border bg-background px-6 py-3 font-medium text-base shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
               type="button"
             >
-              <FaGithub className="h-5 w-5" />
-              Star on GitHub
+              Personnalités
             </button>
           </Link>
         </div>
@@ -116,11 +103,6 @@ export default function Page() {
             </div>
           ))}
         </div>
-      </section>
-
-      {/* Pricing */}
-      <section className="w-full max-w-5xl px-4 py-20">
-        <Pricing />
       </section>
     </div>
   );

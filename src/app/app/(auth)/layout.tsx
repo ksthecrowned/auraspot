@@ -1,5 +1,6 @@
 import AuthNavbar from '@/components/navbar/auth';
 import type React from 'react';
+import { Suspense } from 'react';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -7,7 +8,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="flex w-full flex-col items-center justify-center">
         <AuthNavbar />
 
-        {children}
+        <Suspense>{children}</Suspense>
       </div>
     </div>
   );

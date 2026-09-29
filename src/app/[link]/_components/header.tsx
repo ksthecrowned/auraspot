@@ -3,7 +3,7 @@
 import LinkQRModal from '@/components/modals/link-qr-modal';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
-import VerifiedBadge from '@/components/verified-badge';
+import { SITE_URL } from '@/lib/site';
 import { type RouterOutputs, api } from '@/trpc/react';
 import Highlight from '@tiptap/extension-highlight';
 import TiptapLink from '@tiptap/extension-link';
@@ -151,7 +151,7 @@ export default function ProfileLinkHeader({
                   disabled={saving}
                   onClick={() => {
                     navigator.clipboard
-                      .writeText(`https://openbio.app/${profileLink.link}`)
+                      .writeText(`${SITE_URL}/${profileLink.link}`)
                       .then(() => {
                         toast({
                           title: 'Copied to clipboard!',
@@ -164,7 +164,7 @@ export default function ProfileLinkHeader({
                   {saving ? 'Saving...' : 'Share'}
                 </Button>
 
-                <LinkQRModal profileLink={profileLink}>
+                <LinkQRModal>
                   <Button size="icon" variant="outline" disabled={saving}>
                     <QrCode className="h-[1.2rem] w-[1.2rem]" />
                   </Button>
@@ -180,11 +180,11 @@ export default function ProfileLinkHeader({
               variant="outline"
               size="sm"
               onClick={() => {
-                const url = `https://openbio.app/${profileLink.link}`;
+                const url = `${SITE_URL}/${profileLink.link}`;
                 if (navigator.share) {
                   navigator
                     .share({
-                      title: profileLink.name ?? 'OpenBio Profile',
+                      title: profileLink.name ?? 'AuraSpot Profile',
                       url,
                     })
                     .catch(() => undefined);
@@ -204,7 +204,7 @@ export default function ProfileLinkHeader({
               <Share2 className="mr-1.5 h-4 w-4" />
               Share
             </Button>
-            <LinkQRModal profileLink={profileLink}>
+            <LinkQRModal>
               <Button size="icon" variant="outline" className="h-9 w-9">
                 <QrCode className="h-4 w-4" />
               </Button>
@@ -221,7 +221,6 @@ export default function ProfileLinkHeader({
           readOnly={!isEditable}
           size={Math.max((name ?? profileLink.name ?? '').length, 1)}
         />
-        {profileLink.isPremium && <VerifiedBadge />}
       </div>
 
       <div className="group/bio relative">
@@ -230,7 +229,6 @@ export default function ProfileLinkHeader({
           <div className="invisible absolute left-0 z-40 mt-1 group-focus-within/bio:visible">
             <BioToolbar
               editor={editor}
-              isPremium={!!profileLink.isPremium}
               name={profileLink.name ?? ''}
               links={profileLink.bento
                 .filter((b) => b.type === 'link' && 'href' in b)

@@ -25,7 +25,7 @@ export const aiRouter = createTRPCRouter({
       if (!canUse) {
         throw new TRPCError({
           code: 'FORBIDDEN',
-          message: 'No AI credits remaining. Upgrade your plan for more.',
+          message: 'No AI credits remaining.',
         });
       }
 
@@ -39,7 +39,7 @@ export const aiRouter = createTRPCRouter({
 
       const { text } = await generateText({
         model: 'openai/gpt-5.4-mini',
-        system: `You are a bio writer for a link-in-bio platform called OpenBio.
+        system: `You are a bio writer for a link-in-bio platform called AuraSpot.
 Write short, engaging bios for user profiles.
 The bio should be 1-3 sentences max.
 Do NOT use hashtags or emojis unless the tone is creative.
@@ -65,14 +65,13 @@ ${extraContext}`,
       if (!canUse) {
         throw new TRPCError({
           code: 'FORBIDDEN',
-          message:
-            'Not enough AI credits (3 required). Upgrade your plan for more.',
+          message: 'Not enough AI credits (3 required).',
         });
       }
 
       const { text } = await generateText({
         model: 'openai/gpt-5.4-mini',
-        system: `You are a profile builder for OpenBio, a link-in-bio platform.
+        system: `You are a profile builder for AuraSpot, a link-in-bio platform.
 Given a user description, generate a complete profile suggestion.
 Return a JSON object with:
 - "bio": a short 1-3 sentence bio
@@ -117,7 +116,7 @@ Description: ${input.description}`,
       if (!canUse) {
         throw new TRPCError({
           code: 'FORBIDDEN',
-          message: 'No AI credits remaining. Upgrade your plan for more.',
+          message: 'No AI credits remaining.',
         });
       }
 

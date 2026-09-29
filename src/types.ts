@@ -175,6 +175,7 @@ export const RESERVED_LINKS = [
   'actions',
   'app',
   'create-link',
+  'personalities',
   'twitter',
   'github',
   'linkedin',
@@ -205,12 +206,14 @@ export const RESERVED_LINKS = [
   'account',
   'dashboard',
   'admin',
+  'report',
   'login',
   'logout',
   'signout',
   'auth',
   'oauth',
   'openbio',
+  'auraspot',
 ];
 
 export const ValidLinkSchema = z

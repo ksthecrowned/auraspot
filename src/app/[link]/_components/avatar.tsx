@@ -43,7 +43,7 @@ export default function ProfileLinkAvatar({ profileLink }: Props) {
           title: 'Error',
           description: err instanceof Error ? err.message : 'Upload failed',
         });
-        setImg(profileLink.image ?? '/openbio.png');
+        setImg(profileLink.image ?? '/logo.png');
       }
     },
     [profileLink.id, profileLink.image]

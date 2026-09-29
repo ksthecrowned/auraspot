@@ -1,3 +1,4 @@
+import { isAdminEmail } from '@/lib/admin';
 import { auth } from '@/lib/auth';
 import { db } from '@/server/db/db';
 import { TRPCError, initTRPC } from '@trpc/server';
@@ -48,6 +49,13 @@ const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
 
 export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
 
+export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (!isAdminEmail(ctx.user.email)) {
+    throw new TRPCError({ code: 'FORBIDDEN' });
+  }
+  return next({ ctx });
+});
+
 function getIp(req: NextRequest): string {
   return (
     req.headers.get('x-real-ip') ??
@@ -64,6 +72,19 @@ export function createRateLimitedProcedure(limiter: Ratelimit) {
       throw new TRPCError({
         code: 'TOO_MANY_REQUESTS',
         message: 'Too many requests. Please try again later.',
+      });
+    }
+    return next();
+  });
+}
+
+export function createProtectedRateLimitedProcedure(limiter: Ratelimit) {
+  return protectedProcedure.use(async ({ ctx, next }) => {
+    const { success } = await limiter.limit(getIp(ctx.req));
+    if (!success) {
+      throw new TRPCError({
+        code: 'TOO_MANY_REQUESTS',
+        message: 'Trop de demandes. Réessayez dans un moment.',
       });
     }
     return next();

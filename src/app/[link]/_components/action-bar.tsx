@@ -313,7 +313,7 @@ export default function ActionBar() {
             </PopoverContent>
           </Popover>
 
-          <ThemeSettingsModal isPremium={!!profileLink?.isPremium}>
+          <ThemeSettingsModal>
             <button
               type="button"
               className={btnClass}
@@ -323,7 +323,7 @@ export default function ActionBar() {
             </button>
           </ThemeSettingsModal>
 
-          <CustomDomainModal isPremium={!!profileLink?.isPremium}>
+          <CustomDomainModal>
             <button type="button" className={btnClass}>
               <Globe size={14} />
             </button>

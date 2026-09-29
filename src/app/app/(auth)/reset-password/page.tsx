@@ -4,7 +4,7 @@ import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { forgetPassword, resetPassword } from '@/lib/auth-client';
-import OpenBioLogo from '@/public/openbio.png';
+import Logo from '@/public/logo.png';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -86,7 +86,7 @@ function ResetPasswordForm() {
     <div className="w-full max-w-md animate-fade-up rounded-2xl border border-border/50 bg-card p-8 shadow-lg">
       <div className="mb-8 flex flex-col items-center">
         <Link href="/">
-          <Image src={OpenBioLogo} alt="OpenBio" width={48} height={48} />
+          <Image src={Logo} alt="AuraSpot" width={48} height={48} />
         </Link>
         <h1 className="mt-4 font-cal text-2xl">
           {token ? 'Choose a new password' : 'Reset your password'}
