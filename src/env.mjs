@@ -45,6 +45,9 @@ export const env = createEnv({
     // Bearer token Vercel Cron sends to /api/cron/* (required for the crons to run).
     CRON_SECRET: z.string().min(16).optional(),
     PAYMENTS_WEBHOOK_SECRET: z.string().min(16).optional(),
+    // Nyole hosted checkout (card + mobile money). Secret key af_(test|live)_sec_…
+    NYOLE_SECRET_KEY: z.string().min(1).optional(),
+    NYOLE_BASE_URL: z.string().url().optional(),
   },
   client: {
     NEXT_PUBLIC_URL: z.string(),
@@ -88,6 +91,8 @@ export const env = createEnv({
     AIRTEL_CURRENCY: process.env.AIRTEL_CURRENCY || undefined,
     CRON_SECRET: process.env.CRON_SECRET || undefined,
     PAYMENTS_WEBHOOK_SECRET: process.env.PAYMENTS_WEBHOOK_SECRET || undefined,
+    NYOLE_SECRET_KEY: process.env.NYOLE_SECRET_KEY || undefined,
+    NYOLE_BASE_URL: process.env.NYOLE_BASE_URL || undefined,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
 });
