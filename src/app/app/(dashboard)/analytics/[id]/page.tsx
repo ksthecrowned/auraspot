@@ -53,7 +53,7 @@ export default async function AnalyticsPage({ params }: Props) {
             className="size-12 p-0.5"
           />
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               <p className="truncate font-bold font-brand">{profile.name}</p>
               {profile.verificationStatus === 'verified' && (
                 <PersonalityVerificationBadge size="sm" />

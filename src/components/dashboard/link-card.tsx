@@ -115,7 +115,7 @@ export function DashboardLinkCard({ link }: { link: ProfileLink }) {
           className="size-14 p-0.5"
         />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <p className="truncate font-bold font-brand text-lg">{link.name}</p>
             {link.verificationStatus === 'verified' && (
               <PersonalityVerificationBadge size="sm" />

@@ -14,6 +14,47 @@ import { usePreview } from './preview-context';
 
 type ProfileLinkData = NonNullable<RouterOutputs['profileLink']['getByLink']>;
 
+// The name with its verification badge right after it (a small space only).
+function HeroName({
+  name,
+  onChange,
+  verified,
+}: {
+  name: string;
+  // Set when the viewer can edit: the name becomes an input.
+  onChange?: (name: string) => void;
+  verified: boolean;
+}) {
+  if (onChange) {
+    return (
+      <div className="flex max-w-full items-center gap-1">
+        {/* field-sizing: the input is as wide as the name, so the badge
+            sits right after it. */}
+        <input
+          aria-label="Nom"
+          value={name}
+          onChange={(event) => onChange(event.target.value)}
+          maxLength={80}
+          size={Math.max(name.length, 1)}
+          className="min-w-0 max-w-full bg-transparent @4xl:text-left text-center font-bold font-brand @4xl:text-4xl text-3xl leading-tight outline-none [field-sizing:content]"
+        />
+        {verified && <PersonalityVerificationBadge />}
+      </div>
+    );
+  }
+  return (
+    <h1 className="max-w-full break-words font-bold font-brand @4xl:text-4xl text-3xl leading-tight">
+      {name}
+      {/* Inline, so it follows the last word even when the name wraps. */}
+      {verified && (
+        <span className="ml-1 inline-block align-[-0.1em]">
+          <PersonalityVerificationBadge />
+        </span>
+      )}
+    </h1>
+  );
+}
+
 export default function ProfileHero({
   profileLink: initialData,
 }: {
@@ -68,25 +109,11 @@ export default function ProfileHero({
 
       <ProfileLinkAvatar profileLink={profileLink} />
 
-      <div className="flex max-w-full items-center gap-2">
-        {isEditable ? (
-          <input
-            aria-label="Nom"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            maxLength={80}
-            size={Math.max(name.length, 1)}
-            className="min-w-0 max-w-full bg-transparent @4xl:text-left text-center font-bold font-brand @4xl:text-4xl text-3xl leading-tight outline-none"
-          />
-        ) : (
-          <h1 className="break-words font-bold font-brand @4xl:text-4xl text-3xl leading-tight">
-            {profileLink.name}
-          </h1>
-        )}
-        {profileLink.verificationStatus === 'verified' && (
-          <PersonalityVerificationBadge />
-        )}
-      </div>
+      <HeroName
+        name={isEditable ? name : profileLink.name}
+        onChange={isEditable ? setName : undefined}
+        verified={profileLink.verificationStatus === 'verified'}
+      />
 
       {(category || location || isEditable) && (
         <div className="flex flex-wrap items-center @4xl:justify-start justify-center gap-2">

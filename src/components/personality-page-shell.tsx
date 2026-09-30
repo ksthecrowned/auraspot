@@ -73,7 +73,7 @@ export default async function PersonalityPageShell({
             {personality && (
               <>
                 <AuraAvatar name={personality.name} image={personality.image} />
-                <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
+                <div className="flex items-center gap-1 text-muted-foreground text-sm">
                   {personality.name}
                   {personality.verificationStatus === 'verified' && (
                     <PersonalityVerificationBadge size="sm" />
