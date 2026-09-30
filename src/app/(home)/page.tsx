@@ -3,6 +3,7 @@ import { AuraAvatar } from '@/components/aura-avatar';
 import { AURA_CARD_CLASS } from '@/components/forms/aura-fields';
 import { formatThousands } from '@/lib/money';
 import { TAGLINE } from '@/lib/site';
+import { canReceiveSupport } from '@/lib/support-eligibility';
 import { cn } from '@/lib/utils';
 import {
   getFeaturedPersonalities,
@@ -142,7 +143,7 @@ function PersonalityCard({
           </p>
         </div>
       </Link>
-      {withDonate && (
+      {withDonate && canReceiveSupport(personality) && (
         <div className="flex items-center justify-between gap-2">
           <span className="text-muted-foreground text-xs">
             {supportsLabel(personality.supportCount)}

@@ -20,6 +20,7 @@ export const getFeaturedPersonalities = async (limit: number) => {
     name: true,
     image: true,
     location: true,
+    claimStatus: true,
     verificationStatus: true,
   } as const;
   const withCategory = { category: { columns: { name: true } } } as const;

@@ -40,6 +40,7 @@ import {
 
 const TRAILING_SLASH_RE = /\/$/;
 import { toMsisdn } from '@/lib/phone-countries';
+import { canReceiveSupport } from '@/lib/support-eligibility';
 import { notifyPlanPaused } from './recurring-emails';
 
 function isUniqueViolation(error: unknown): boolean {
@@ -81,6 +82,7 @@ export const getSupportPage = async (slug: string) => {
       theme: true,
       accentColor: true,
       darkMode: true,
+      claimStatus: true,
       verificationStatus: true,
     },
   });
@@ -88,8 +90,29 @@ export const getSupportPage = async (slug: string) => {
     return null;
   }
   const { link: rowSlug, ...rest } = row;
-  return { ...rest, slug: rowSlug };
+  return { ...rest, slug: rowSlug, canReceive: canReceiveSupport(row) };
 };
+
+// The fiche a payment is for can still receive donations: it may have lost
+// its verification since the donation was created.
+async function paymentFicheEligible(paymentId: string) {
+  const row = await db.query.payment.findFirst({
+    where: (table, { eq: equals }) => equals(table.id, paymentId),
+    columns: { id: true },
+    with: {
+      support: {
+        columns: { id: true },
+        with: {
+          personality: {
+            columns: { claimStatus: true, verificationStatus: true },
+          },
+        },
+      },
+    },
+  });
+  const fiche = row?.support?.personality;
+  return fiche ? canReceiveSupport(fiche) : false;
+}
 
 function addOneMonth(date: Date) {
   const next = new Date(date);
@@ -226,7 +249,8 @@ type CheckoutResult =
         | 'invalid-amount'
         | 'not-found'
         | 'account-required'
-        | 'already-active';
+        | 'already-active'
+        | 'not-eligible';
     }
   | { paymentId: string; checkoutPath: string };
 
@@ -249,6 +273,9 @@ export const createSupportCheckout = async (input: {
   const personalityRow = await getSupportPage(input.slug);
   if (!personalityRow) {
     return { error: 'not-found' as const };
+  }
+  if (!personalityRow.canReceive) {
+    return { error: 'not-eligible' as const };
   }
   if (input.interval === 'month' && !input.userId) {
     return { error: 'account-required' as const };
@@ -534,6 +561,9 @@ export const startMobileMoneyPayment = async (input: {
   if (!operatorServes(input.operator, payer.country.iso)) {
     return { error: 'not-configured' as const };
   }
+  if (!(await paymentFicheEligible(input.paymentId))) {
+    return { error: 'not-eligible' as const };
+  }
   const reference = crypto.randomUUID();
   const [claimed] = await db
     .update(payment)
@@ -592,6 +622,9 @@ function checkoutReturnUrl(paymentId: string) {
 export const startNyolePayment = async (input: { paymentId: string }) => {
   if (!nyoleEnabled()) {
     return { error: 'not-configured' as const };
+  }
+  if (!(await paymentFicheEligible(input.paymentId))) {
+    return { error: 'not-eligible' as const };
   }
   const placeholder = `${NYOLE_PENDING_PREFIX}${input.paymentId}`;
   await db

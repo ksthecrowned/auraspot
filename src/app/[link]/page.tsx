@@ -5,6 +5,7 @@ import {
 } from '@/app/shared-metadata';
 import OnboardingTour from '@/components/onboarding-tour';
 import { SITE_URL } from '@/lib/site';
+import { canReceiveSupport } from '@/lib/support-eligibility';
 import { api } from '@/trpc/server';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -110,6 +111,7 @@ export default async function Page({ params }: Props) {
   const accentStyle = profileLink.accentColor
     ? ({ '--aura-accent': profileLink.accentColor } as CSSProperties)
     : undefined;
+  const canDonate = canReceiveSupport(profileLink);
 
   return (
     <>
@@ -134,12 +136,14 @@ export default async function Page({ params }: Props) {
                     <aside className="@4xl:sticky @4xl:top-8 flex flex-col gap-5 @4xl:self-start">
                       <ProfileHero profileLink={profileLink} />
                       <OfficialSocials profileLink={profileLink} />
-                      <SupportButton
-                        slug={profileLink.link}
-                        name={profileLink.name}
-                        canEdit={profileLink.canEdit}
-                        variant="inline"
-                      />
+                      {canDonate && (
+                        <SupportButton
+                          slug={profileLink.link}
+                          name={profileLink.name}
+                          canEdit={profileLink.canEdit}
+                          variant="inline"
+                        />
+                      )}
                     </aside>
 
                     <main className="flex min-w-0 flex-col gap-8">
@@ -154,12 +158,14 @@ export default async function Page({ params }: Props) {
 
                   <ProfileFooter customFooter={profileLink.customFooter} />
 
-                  <SupportButton
-                    slug={profileLink.link}
-                    name={profileLink.name}
-                    canEdit={profileLink.canEdit}
-                    variant="sticky"
-                  />
+                  {canDonate && (
+                    <SupportButton
+                      slug={profileLink.link}
+                      name={profileLink.name}
+                      canEdit={profileLink.canEdit}
+                      variant="sticky"
+                    />
+                  )}
                 </div>
 
                 {profileLink.canEdit && (

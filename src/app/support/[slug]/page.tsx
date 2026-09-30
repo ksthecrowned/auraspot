@@ -1,3 +1,4 @@
+import { AURA_NOTICE } from '@/components/forms/aura-fields';
 import CreateSupportForm from '@/components/forms/create-support';
 import PersonalityPageShell from '@/components/personality-page-shell';
 import { auth } from '@/lib/auth';
@@ -50,14 +51,25 @@ export default async function SupportPage({ params, searchParams }: PageProps) {
     <PersonalityPageShell
       slug={personality.slug}
       title={`Faire un don à ${personality.name}`}
-      subtitle="Sans compte. Le montant reste privé."
+      subtitle={
+        personality.canReceive
+          ? 'Sans compte. Le montant reste privé.'
+          : undefined
+      }
     >
-      <CreateSupportForm
-        slug={personality.slug}
-        signedIn={Boolean(session)}
-        initialAmount={initialAmount(query.amount)}
-        defaultDisplayName={session?.user.name}
-      />
+      {personality.canReceive ? (
+        <CreateSupportForm
+          slug={personality.slug}
+          signedIn={Boolean(session)}
+          initialAmount={initialAmount(query.amount)}
+          defaultDisplayName={session?.user.name}
+        />
+      ) : (
+        <p className={`${AURA_NOTICE} text-center text-muted-foreground`}>
+          Les dons ouvriront quand {personality.name} aura revendiqué et vérifié
+          sa fiche.
+        </p>
+      )}
     </PersonalityPageShell>
   );
 }

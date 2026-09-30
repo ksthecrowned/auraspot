@@ -1,12 +1,13 @@
 import { SUPPORT_CURRENCY } from '@/lib/money';
 import { fromStoredPhone } from '@/lib/phone-countries';
+import { canReceiveSupport } from '@/lib/support-eligibility';
 import {
   isMobileMoneyOperator,
   operatorServes,
 } from '@/server/payments/mobile-money';
 import { and, eq, isNotNull, lte } from 'drizzle-orm';
 import { db } from '../db';
-import { payment, recurringSupport, support } from '../schema';
+import { link, payment, recurringSupport, support } from '../schema';
 import { notifyRenewalRequested } from './recurring-emails';
 import {
   RENEWAL_RETRY_DAYS,
@@ -65,6 +66,19 @@ async function renewPlan(plan: {
   payerOperator: string | null;
   payerPhone: string | null;
 }) {
+  // Nothing is requested while the fiche cannot receive donations; the plan
+  // stays due and renews once the fiche is claimed and verified again.
+  const [fiche] = await db
+    .select({
+      claimStatus: link.claimStatus,
+      verificationStatus: link.verificationStatus,
+    })
+    .from(link)
+    .where(eq(link.id, plan.personalityId));
+  if (!(fiche && canReceiveSupport(fiche))) {
+    return false;
+  }
+
   // Claim the plan: nextChargeAt stays null while this renewal is open, so a
   // second cron run cannot bill twice.
   const [claimed] = await db

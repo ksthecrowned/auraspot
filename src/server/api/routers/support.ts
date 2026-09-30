@@ -34,6 +34,7 @@ import {
 const rateLimitedSupport = createRateLimitedProcedure(supportCreateLimit);
 const PAY_ERRORS = {
   'not-payable': 'Ce paiement a déjà été lancé.',
+  'not-eligible': 'Cette fiche ne peut pas encore recevoir de dons.',
   'not-configured': 'Cet opérateur n’est pas disponible pour ce pays.',
   'invalid-phone': 'Ce numéro de téléphone n’est pas valide.',
   'operator-refused':
@@ -73,6 +74,12 @@ export const supportRouter = createTRPCRouter({
           throw new TRPCError({
             code: 'UNAUTHORIZED',
             message: 'Un compte est nécessaire pour un soutien mensuel.',
+          });
+        }
+        if (result.error === 'not-eligible') {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Cette fiche ne peut pas encore recevoir de dons.',
           });
         }
         if (result.error === 'already-active') {
