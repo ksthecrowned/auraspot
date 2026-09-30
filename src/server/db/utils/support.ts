@@ -691,7 +691,7 @@ export const getSupporterHistory = async (userId: string) => {
         recurringSupportId: true,
       },
       with: {
-        personality: { columns: { name: true, link: true } },
+        personality: { columns: { name: true, link: true, image: true } },
         payments: { columns: { id: true, status: true } },
       },
       orderBy: (table, { desc }) => desc(table.createdAt),
@@ -707,7 +707,7 @@ export const getSupporterHistory = async (userId: string) => {
         isPublic: true,
       },
       with: {
-        personality: { columns: { name: true, link: true } },
+        personality: { columns: { name: true, link: true, image: true } },
       },
       orderBy: (table, { desc }) => desc(table.createdAt),
     }),
@@ -719,6 +719,7 @@ export const getSupporterHistory = async (userId: string) => {
       personality: {
         name: plan.personality.name,
         slug: plan.personality.link,
+        image: plan.personality.image,
       },
       checkoutPath: await pendingCheckoutPath(plan.id),
     }))
@@ -730,6 +731,7 @@ export const getSupporterHistory = async (userId: string) => {
       personality: {
         name: item.personality.name,
         slug: item.personality.link,
+        image: item.personality.image,
       },
       paymentStatus: item.payments[0]?.status ?? null,
     })),

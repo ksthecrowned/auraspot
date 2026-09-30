@@ -1,7 +1,7 @@
 import ReportPersonalityForm from '@/components/forms/report-personality';
+import PersonalityPageShell from '@/components/personality-page-shell';
 import { getPublicPersonalityBySlug } from '@/server/db/utils/personality';
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 type PageProps = {
@@ -27,19 +27,12 @@ export default async function ReportPersonalityPage({ params }: PageProps) {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col px-4 py-12">
-      <Link
-        href={`/${personality.slug}`}
-        className="text-muted-foreground text-sm underline-offset-4 hover:underline"
-      >
-        Retour à la fiche
-      </Link>
-      <h1 className="mt-4 font-cal text-4xl">Signaler {personality.name}</h1>
-      <p className="mt-3 text-muted-foreground text-sm">
-        Un signalement n’enlève pas la fiche. La suspension est une décision
-        séparée.
-      </p>
+    <PersonalityPageShell
+      slug={personality.slug}
+      title={`Signaler ${personality.name}`}
+      subtitle="Un signalement n’enlève pas la fiche. La suspension est une décision séparée."
+    >
       <ReportPersonalityForm slug={personality.slug} />
-    </div>
+    </PersonalityPageShell>
   );
 }

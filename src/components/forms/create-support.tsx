@@ -1,9 +1,20 @@
 'use client';
 
+import {
+  AURA_ERROR,
+  AURA_INPUT,
+  AURA_NOTICE,
+  AURA_PRIMARY_BUTTON,
+  SegmentedControl,
+} from '@/components/forms/aura-fields';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { MAX_SUPPORT_AMOUNT, MIN_SUPPORT_AMOUNT } from '@/lib/money';
+import {
+  MAX_SUPPORT_AMOUNT,
+  MIN_SUPPORT_AMOUNT,
+  formatThousands,
+} from '@/lib/money';
 import { cn } from '@/lib/utils';
 import { api } from '@/trpc/react';
 import { Heart, Loader2 } from 'lucide-react';
@@ -17,14 +28,6 @@ const INTERVALS = [
   { value: 'once', label: 'Une fois' },
   { value: 'month', label: 'Chaque mois' },
 ] as const;
-
-const THOUSANDS_RE = /\B(?=(\d{3})+(?!\d))/g;
-
-// Fixed format (1 000) instead of toLocaleString: same output on server
-// and browser, and a plain no-break space every font can draw.
-function formatAmount(value: number) {
-  return String(value).replace(THOUSANDS_RE, ' ');
-}
 
 export default function CreateSupportForm({
   slug,
@@ -99,7 +102,7 @@ export default function CreateSupportForm({
                   : 'border-border bg-background hover:border-foreground/30'
               )}
             >
-              {formatAmount(preset)}
+              {formatThousands(preset)}
             </button>
           ))}
         </div>
@@ -120,28 +123,15 @@ export default function CreateSupportForm({
 
       <div className="flex flex-col gap-3">
         <span className="font-medium text-sm">Rythme</span>
-        <div className="grid grid-cols-2 gap-1 rounded-full bg-muted p-1">
-          {INTERVALS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={interval === option.value}
-              onClick={() => setInterval(option.value)}
-              className={cn(
-                'rounded-full py-2 font-medium text-sm transition-all',
-                interval === option.value
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <SegmentedControl
+          options={INTERVALS}
+          value={interval}
+          onChange={setInterval}
+        />
         {needsSignIn && (
           <Link
             href={`/app/sign-in?redirectUrl=${encodeURIComponent(`/support/${slug}?amount=${amount}`)}`}
-            className="rounded-xl bg-muted/60 px-3 py-2 text-sm underline-offset-4 hover:underline"
+            className={cn(AURA_NOTICE, 'underline-offset-4 hover:underline')}
           >
             Connectez-vous pour un don mensuel. Un don unique reste possible
             sans compte.
@@ -157,7 +147,7 @@ export default function CreateSupportForm({
           maxLength={80}
           placeholder="Aïcha"
           onChange={(event) => setDisplayName(event.target.value)}
-          className="h-11 rounded-xl"
+          className={AURA_INPUT}
         />
         <label
           htmlFor="isPublic"
@@ -177,16 +167,12 @@ export default function CreateSupportForm({
         </label>
       </div>
 
-      {error && (
-        <p className="rounded-xl bg-destructive/10 px-3 py-2 text-destructive text-sm">
-          {error}
-        </p>
-      )}
+      {error && <p className={AURA_ERROR}>{error}</p>}
 
       <button
         type="submit"
         disabled={createSupport.isPending || needsSignIn}
-        className="aura-cta flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 font-brand font-semibold text-base shadow-[0_10px_30px_-10px_rgba(180,60,240,0.6)] transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
+        className={AURA_PRIMARY_BUTTON}
       >
         {createSupport.isPending ? (
           <Loader2 className="size-4 animate-spin" />

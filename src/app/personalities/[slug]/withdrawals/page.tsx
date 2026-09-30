@@ -1,10 +1,10 @@
 import RequestWithdrawalForm from '@/components/forms/request-withdrawal';
+import PersonalityPageShell from '@/components/personality-page-shell';
 import { auth } from '@/lib/auth';
 import { formatFcfa } from '@/lib/money';
 import { api } from '@/trpc/server';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
-import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 
 type PageProps = {
@@ -31,24 +31,22 @@ export default async function WithdrawalsPage({ params }: PageProps) {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col px-4 py-12">
-      <Link
-        href={`/${page.personality.slug}`}
-        className="text-muted-foreground text-sm underline-offset-4 hover:underline"
-      >
-        Retour à la fiche
-      </Link>
-      <h1 className="mt-4 font-cal text-4xl">Retraits</h1>
-      <p className="mt-3 text-sm">
-        Solde disponible : {formatFcfa(page.available)}
-      </p>
-      <p className="mt-1 text-muted-foreground text-sm">
-        Commission actuelle : {page.commissionBps / 100} %. Demander un retrait
-        ne verse pas encore l’argent.
-      </p>
-      <div className="mt-8">
+    <PersonalityPageShell
+      slug={page.personality.slug}
+      title="Retraits"
+      subtitle={`Commission : ${page.commissionBps / 100} %. Une demande ne verse pas encore l’argent.`}
+    >
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col items-center gap-1 text-center">
+          <span className="text-muted-foreground text-sm">
+            Solde disponible
+          </span>
+          <span className="font-bold font-brand text-4xl">
+            {formatFcfa(page.available)}
+          </span>
+        </div>
         <RequestWithdrawalForm page={page} />
       </div>
-    </div>
+    </PersonalityPageShell>
   );
 }

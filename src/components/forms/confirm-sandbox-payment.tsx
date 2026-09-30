@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { AURA_PRIMARY_BUTTON } from '@/components/forms/aura-fields';
 import { api } from '@/trpc/react';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -14,19 +14,25 @@ export default function ConfirmSandboxPayment({
   const confirmSandbox = api.support.confirmSandbox.useMutation();
 
   return (
-    <Button
-      type="button"
-      disabled={confirmSandbox.isPending}
-      onClick={async () => {
-        await confirmSandbox.mutateAsync({ paymentId });
-        router.refresh();
-      }}
-    >
-      {confirmSandbox.isPending ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
-      ) : (
-        'Simuler le paiement réussi'
-      )}
-    </Button>
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        className={AURA_PRIMARY_BUTTON}
+        disabled={confirmSandbox.isPending}
+        onClick={async () => {
+          await confirmSandbox.mutateAsync({ paymentId });
+          router.refresh();
+        }}
+      >
+        {confirmSandbox.isPending ? (
+          <Loader2 className="size-4 animate-spin" />
+        ) : (
+          'Simuler le paiement réussi'
+        )}
+      </button>
+      <p className="text-center text-muted-foreground text-xs">
+        Mode test : aucun argent n’est débité.
+      </p>
+    </div>
   );
 }

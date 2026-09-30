@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { formatThousands } from '@/lib/money';
 import { type RouterOutputs, api } from '@/trpc/react';
 import { AlertTriangle, BarChart3, MapPin, Pencil, Tag } from 'lucide-react';
 import Link from 'next/link';
@@ -123,7 +124,7 @@ export default function ProfileHero({
       {supporters.count > 0 && (
         <p className="text-muted-foreground text-sm">
           <span className="font-bold font-brand text-foreground text-lg">
-            {supporters.count.toLocaleString('fr-FR')}
+            {formatThousands(supporters.count)}
           </span>{' '}
           {supporters.count === 1 ? 'soutien' : 'soutiens'}
         </p>
@@ -147,8 +148,8 @@ export default function ProfileHero({
           className="inline-flex items-center gap-1.5 text-muted-foreground text-xs hover:text-foreground"
         >
           <BarChart3 className="size-3.5" />
-          {profileLink.monthlyViews.toLocaleString('fr-FR')} visites ce mois ·
-          Voir les statistiques
+          {formatThousands(profileLink.monthlyViews)} visites ce mois · Voir les
+          statistiques
         </Link>
       )}
     </section>

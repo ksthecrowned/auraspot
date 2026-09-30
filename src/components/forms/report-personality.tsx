@@ -1,14 +1,20 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import {
+  AURA_ERROR,
+  AURA_NOTICE,
+  AURA_SECONDARY_BUTTON,
+  AURA_TEXTAREA,
+  SegmentedControl,
+} from '@/components/forms/aura-fields';
 import { Label } from '@/components/ui/label';
 import { api } from '@/trpc/react';
-import { Loader2 } from 'lucide-react';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 
 const REASONS = [
   { value: 'impersonation', label: 'Usurpation' },
-  { value: 'inappropriate', label: 'Contenu inapproprié' },
+  { value: 'inappropriate', label: 'Contenu' },
   { value: 'other', label: 'Autre' },
 ] as const;
 
@@ -41,29 +47,24 @@ export default function ReportPersonalityForm({ slug }: { slug: string }) {
 
   if (sent) {
     return (
-      <p className="mt-8 text-sm">
+      <p className={`${AURA_NOTICE} flex items-center gap-2`}>
+        <CheckCircle2 className="size-4 shrink-0" />
         Le signalement est enregistré. Il sera examiné avant toute décision.
       </p>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
-      <fieldset className="flex flex-col gap-2">
-        <legend className="font-medium text-sm">Motif</legend>
-        {REASONS.map((item) => (
-          <label key={item.value} className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="reason"
-              checked={reason === item.value}
-              onChange={() => setReason(item.value)}
-            />
-            {item.label}
-          </label>
-        ))}
-      </fieldset>
-      <div className="flex flex-col gap-1.5">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <div className="flex flex-col gap-3">
+        <span className="font-medium text-sm">Motif</span>
+        <SegmentedControl
+          options={REASONS}
+          value={reason}
+          onChange={setReason}
+        />
+      </div>
+      <div className="flex flex-col gap-3">
         <Label htmlFor="details">Détails</Label>
         <textarea
           id="details"
@@ -71,21 +72,22 @@ export default function ReportPersonalityForm({ slug }: { slug: string }) {
           onChange={(event) => setDetails(event.target.value)}
           maxLength={2000}
           required
-          className="min-h-32 rounded-md border border-input bg-background px-3 py-2 text-sm"
+          placeholder="Expliquez ce qui pose problème."
+          className={AURA_TEXTAREA}
         />
       </div>
-      {error && (
-        <p className="rounded-xl bg-destructive/10 px-3 py-2 text-destructive text-sm">
-          {error}
-        </p>
-      )}
-      <Button type="submit" disabled={report.isPending}>
+      {error && <p className={AURA_ERROR}>{error}</p>}
+      <button
+        type="submit"
+        disabled={report.isPending}
+        className={AURA_SECONDARY_BUTTON}
+      >
         {report.isPending ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="size-4 animate-spin" />
         ) : (
-          'Envoyer'
+          'Envoyer le signalement'
         )}
-      </Button>
+      </button>
     </form>
   );
 }

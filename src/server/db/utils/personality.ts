@@ -58,6 +58,28 @@ export const getPublicPersonalityBySlug = async (slug: string) => {
   return row ? withSlug(row) : null;
 };
 
+// Look of a personality (photo, theme, accent) for pages around the profile:
+// donation, checkout, claim, report, withdrawals.
+export const getPersonalityAppearance = async (slug: string) => {
+  const row = await db.query.link.findFirst({
+    where: (table, { eq: equals }) => equals(table.link, slug),
+    columns: {
+      link: true,
+      name: true,
+      image: true,
+      theme: true,
+      accentColor: true,
+      darkMode: true,
+      verificationStatus: true,
+    },
+  });
+  if (!row) {
+    return null;
+  }
+  const { link: rowSlug, ...rest } = row;
+  return { ...rest, slug: rowSlug };
+};
+
 export const getProfileDetails = async (linkId: string) => {
   const row = await db.query.link.findFirst({
     where: (table, { eq: equals }) => equals(table.id, linkId),

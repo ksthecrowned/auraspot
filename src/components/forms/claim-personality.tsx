@@ -1,6 +1,14 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import {
+  AURA_ERROR,
+  AURA_INPUT,
+  AURA_NOTICE,
+  AURA_PRIMARY_BUTTON,
+  AURA_SECONDARY_BUTTON,
+  AURA_TEXTAREA,
+  SegmentedControl,
+} from '@/components/forms/aura-fields';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { type RouterOutputs, api } from '@/trpc/react';
@@ -24,8 +32,8 @@ const STATUS_COPY = {
 } as const;
 
 const RELATIONSHIP_OPTIONS = [
-  { value: 'self', label: 'Je suis cette personne' },
-  { value: 'representative', label: 'Je représente cette personne' },
+  { value: 'self', label: 'C’est moi' },
+  { value: 'representative', label: 'Je la représente' },
 ] as const;
 
 function isHttpUrl(value: string) {
@@ -45,16 +53,16 @@ function SignedOut({ slug }: { slug: string }) {
         Connectez-vous pour envoyer la demande. Créer un compte ne revendique
         pas la fiche.
       </p>
-      <div className="flex gap-3">
+      <div className="flex flex-col gap-2">
         <Link
           href={`/app/sign-in?redirectUrl=${next}`}
-          className="inline-flex h-9 items-center rounded-md bg-primary px-4 font-medium text-primary-foreground text-sm"
+          className={AURA_PRIMARY_BUTTON}
         >
           Se connecter
         </Link>
         <Link
           href={`/app/sign-up?redirectUrl=${next}`}
-          className="inline-flex h-9 items-center rounded-md border border-border px-4 font-medium text-sm"
+          className={AURA_SECONDARY_BUTTON}
         >
           Créer un compte
         </Link>
@@ -65,7 +73,7 @@ function SignedOut({ slug }: { slug: string }) {
 
 function ClaimNotice({ claim }: { claim: Claim }) {
   return (
-    <div className="rounded-xl border border-border px-4 py-3 text-sm">
+    <div className={AURA_NOTICE}>
       <p>{STATUS_COPY[claim.status]}</p>
       {claim.reviewNote && (
         <p className="mt-2 text-muted-foreground">{claim.reviewNote}</p>
@@ -128,26 +136,17 @@ function ClaimForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       {claim && <ClaimNotice claim={claim} />}
-      <fieldset className="flex flex-col gap-2">
-        <legend className="font-medium text-sm">
-          Votre lien avec la fiche
-        </legend>
-        {RELATIONSHIP_OPTIONS.map((option) => (
-          <label key={option.value} className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="relationship"
-              value={option.value}
-              checked={relationship === option.value}
-              onChange={() => setRelationship(option.value)}
-            />
-            {option.label}
-          </label>
-        ))}
-      </fieldset>
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-3">
+        <span className="font-medium text-sm">Votre lien avec la fiche</span>
+        <SegmentedControl
+          options={RELATIONSHIP_OPTIONS}
+          value={relationship}
+          onChange={setRelationship}
+        />
+      </div>
+      <div className="flex flex-col gap-3">
         <Label htmlFor="statement">Explication</Label>
         <textarea
           id="statement"
@@ -158,10 +157,10 @@ function ClaimForm({
           required
           rows={5}
           placeholder="Expliquez pourquoi vous pouvez gérer cette fiche."
-          className="rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className={AURA_TEXTAREA}
         />
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         <Label>Justificatifs</Label>
         {evidenceUrls.map((url, index) => (
           <Input
@@ -170,6 +169,7 @@ function ClaimForm({
             value={url}
             placeholder="https://"
             onChange={(event) => updateEvidence(index, event.target.value)}
+            className={AURA_INPUT}
           />
         ))}
         {evidenceUrls.length < 5 && (
@@ -182,18 +182,18 @@ function ClaimForm({
           </button>
         )}
       </div>
-      {error && (
-        <p className="rounded-xl bg-destructive/10 px-3 py-2 text-destructive text-sm">
-          {error}
-        </p>
-      )}
-      <Button type="submit" disabled={submitClaim.isPending}>
+      {error && <p className={AURA_ERROR}>{error}</p>}
+      <button
+        type="submit"
+        disabled={submitClaim.isPending}
+        className={AURA_PRIMARY_BUTTON}
+      >
         {submitClaim.isPending ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="size-4 animate-spin" />
         ) : (
           'Envoyer la demande'
         )}
-      </Button>
+      </button>
     </form>
   );
 }
@@ -207,7 +207,7 @@ export default function ClaimPersonalityForm({
     return <SignedOut slug={context.personality.slug} />;
   }
   if (context.isManager) {
-    return <p className="text-sm">Vous gérez déjà cette fiche.</p>;
+    return <p className={AURA_NOTICE}>Vous gérez déjà cette fiche.</p>;
   }
   if (
     context.claim &&

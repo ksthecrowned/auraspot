@@ -1,7 +1,7 @@
 import ClaimPersonalityForm from '@/components/forms/claim-personality';
+import PersonalityPageShell from '@/components/personality-page-shell';
 import { api } from '@/trpc/server';
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 type PageProps = {
@@ -27,24 +27,12 @@ export default async function ClaimPersonalityPage({ params }: PageProps) {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col px-4 py-12">
-      <Link
-        href={`/${context.personality.slug}`}
-        className="text-muted-foreground text-sm underline-offset-4 hover:underline"
-      >
-        Retour à la fiche
-      </Link>
-      <h1 className="mt-4 font-cal text-4xl">
-        Revendiquer {context.personality.name}
-      </h1>
-      <p className="mt-3 text-muted-foreground text-sm">
-        Indiquez si vous êtes la personne ou son représentant, et joignez des
-        justificatifs. Envoyer la demande ne reprend pas la fiche et ne la
-        vérifie pas.
-      </p>
-      <div className="mt-8">
-        <ClaimPersonalityForm context={context} />
-      </div>
-    </div>
+    <PersonalityPageShell
+      slug={context.personality.slug}
+      title={`Revendiquer ${context.personality.name}`}
+      subtitle="Dites-nous qui vous êtes et joignez des justificatifs. La demande ne vérifie pas la fiche."
+    >
+      <ClaimPersonalityForm context={context} />
+    </PersonalityPageShell>
   );
 }

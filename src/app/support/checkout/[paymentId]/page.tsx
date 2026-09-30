@@ -1,7 +1,11 @@
+import { AURA_NOTICE } from '@/components/forms/aura-fields';
 import ConfirmSandboxPayment from '@/components/forms/confirm-sandbox-payment';
+import PersonalityPageShell from '@/components/personality-page-shell';
 import { auth } from '@/lib/auth';
 import { formatFcfa } from '@/lib/money';
+import { cn } from '@/lib/utils';
 import { getCheckout } from '@/server/db/utils/support';
+import { CheckCircle2, Clock, XCircle } from 'lucide-react';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Link from 'next/link';
@@ -11,12 +15,32 @@ type PageProps = {
   params: Promise<{ paymentId: string }>;
 };
 
-const STATUS_COPY = {
-  pending: 'Le paiement est en attente auprès du fournisseur.',
-  success: 'Le paiement est reçu. Merci.',
-  failed: 'Le paiement a échoué.',
-  cancelled: 'Le paiement a été annulé.',
-  refunded: 'Le paiement a été remboursé.',
+const STATUS = {
+  pending: {
+    copy: 'Le paiement est en attente auprès du fournisseur.',
+    icon: Clock,
+    tone: 'text-muted-foreground',
+  },
+  success: {
+    copy: 'Le paiement est reçu. Merci.',
+    icon: CheckCircle2,
+    tone: 'text-emerald-600 dark:text-emerald-400',
+  },
+  failed: {
+    copy: 'Le paiement a échoué.',
+    icon: XCircle,
+    tone: 'text-destructive',
+  },
+  cancelled: {
+    copy: 'Le paiement a été annulé.',
+    icon: XCircle,
+    tone: 'text-muted-foreground',
+  },
+  refunded: {
+    copy: 'Le paiement a été remboursé.',
+    icon: CheckCircle2,
+    tone: 'text-muted-foreground',
+  },
 } as const;
 
 export const metadata: Metadata = {
@@ -33,37 +57,48 @@ export default async function CheckoutPage({ params }: PageProps) {
   const showSimulator =
     process.env.NODE_ENV !== 'production' && checkout.canSimulate;
   const session = await auth.api.getSession({ headers: await headers() });
+  const status = STATUS[checkout.status];
+  const StatusIcon = status.icon;
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col px-4 py-12">
-      <h1 className="font-cal text-4xl">
-        Soutien à {checkout.personalityName}
-      </h1>
-      <p className="mt-4 font-medium text-2xl">{formatFcfa(checkout.amount)}</p>
-      <p className="mt-3 text-muted-foreground text-sm">
-        {STATUS_COPY[checkout.status]}
-      </p>
-      {showSimulator && (
-        <div className="mt-8">
-          <ConfirmSandboxPayment paymentId={checkout.id} />
+    <PersonalityPageShell
+      slug={checkout.personalitySlug}
+      title={
+        checkout.status === 'success'
+          ? `Merci pour ${checkout.personalityName}`
+          : `Faire un don à ${checkout.personalityName}`
+      }
+    >
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col items-center gap-1 text-center">
+          <span className="text-muted-foreground text-sm">Montant</span>
+          <span className="font-bold font-brand text-4xl">
+            {formatFcfa(checkout.amount)}
+          </span>
         </div>
-      )}
-      <div className="mt-8 flex flex-col gap-3">
+
+        <p
+          className={cn(
+            AURA_NOTICE,
+            'flex items-center justify-center gap-2',
+            status.tone
+          )}
+        >
+          <StatusIcon className="size-4 shrink-0" />
+          {status.copy}
+        </p>
+
+        {showSimulator && <ConfirmSandboxPayment paymentId={checkout.id} />}
+
         {session && (
           <Link
             href="/account/supports"
-            className="text-sm underline-offset-4 hover:underline"
+            className="text-center text-muted-foreground text-sm underline-offset-4 hover:underline"
           >
             Voir mon historique
           </Link>
         )}
-        <Link
-          href={`/${checkout.personalitySlug}`}
-          className="text-sm underline-offset-4 hover:underline"
-        >
-          Retour à la fiche
-        </Link>
       </div>
-    </div>
+    </PersonalityPageShell>
   );
 }

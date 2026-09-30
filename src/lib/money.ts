@@ -16,6 +16,14 @@ export function splitWithdrawal(grossAmount: number, commissionBps: number) {
   };
 }
 
+const THOUSANDS_RE = /\B(?=(\d{3})+(?!\d))/g;
+
+// "12 500". Not Intl: its narrow no-break space (U+202F) is missing from the
+// brand font and can differ between Node and the browser (hydration).
+export function formatThousands(value: number) {
+  return String(value).replace(THOUSANDS_RE, '\u00a0');
+}
+
 export function formatFcfa(amount: number) {
-  return `${new Intl.NumberFormat('fr-FR').format(amount)}\u00a0FCFA`;
+  return `${formatThousands(amount)}\u00a0FCFA`;
 }

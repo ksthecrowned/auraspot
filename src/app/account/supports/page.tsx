@@ -1,7 +1,11 @@
+import { AuraAvatar } from '@/components/aura-avatar';
 import {
   CancelRecurringButton,
   SupportPrivacyToggle,
 } from '@/components/forms/supporter-history-actions';
+import PersonalityPageShell, {
+  AURA_CARD_CLASS,
+} from '@/components/personality-page-shell';
 import { auth } from '@/lib/auth';
 import { formatFcfa } from '@/lib/money';
 import { api } from '@/trpc/server';
@@ -9,6 +13,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import type { ReactNode } from 'react';
 
 export const metadata: Metadata = {
   title: 'Mes soutiens',
@@ -23,12 +28,59 @@ const PAYMENT_STATUS = {
   refunded: 'Remboursé',
 } as const;
 
+const LINK_CLASS = 'font-medium text-sm underline-offset-4 hover:underline';
+
 function formatDate(value: Date | null) {
   if (!value) {
     return null;
   }
   return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(
     value
+  );
+}
+
+function SupportCard({
+  personality,
+  amount,
+  meta,
+  children,
+}: {
+  personality: { name: string; slug: string; image: string | null };
+  amount: string;
+  meta?: string | null;
+  children: ReactNode;
+}) {
+  return (
+    <li className={AURA_CARD_CLASS}>
+      <div className="flex items-center gap-3">
+        <AuraAvatar
+          name={personality.name}
+          image={personality.image}
+          className="size-12 p-0.5"
+        />
+        <div className="min-w-0 flex-1">
+          <Link
+            href={`/${personality.slug}`}
+            className="block truncate font-brand font-semibold hover:underline"
+          >
+            {personality.name}
+          </Link>
+          {meta && <p className="text-muted-foreground text-xs">{meta}</p>}
+        </div>
+        <span className="shrink-0 font-bold font-brand">{amount}</span>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-3">
+        {children}
+      </div>
+    </li>
+  );
+}
+
+function SectionTitle({ children }: { children: ReactNode }) {
+  return (
+    <h2 className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+      {children}
+    </h2>
   );
 }
 
@@ -41,96 +93,88 @@ export default async function SupporterHistoryPage() {
   const history = await api.support.history();
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-xl flex-col px-4 py-12">
-      <h1 className="font-cal text-4xl">Mes soutiens</h1>
-      <p className="mt-3 text-muted-foreground text-sm">
-        Les montants ne sont visibles que pour vous. Un nom public n’affiche
-        jamais le montant.
-      </p>
-
-      <section className="mt-10">
-        <h2 className="font-medium text-lg">Renouvellements</h2>
-        {history.recurrings.length === 0 ? (
-          <p className="mt-3 text-muted-foreground text-sm">
-            Aucun soutien mensuel en cours.
-          </p>
-        ) : (
-          <ul className="mt-4 flex flex-col gap-4">
-            {history.recurrings.map((plan) => (
-              <li
-                key={plan.id}
-                className="rounded-2xl border border-border p-4"
-              >
-                <p className="font-medium">{plan.personality.name}</p>
-                <p className="mt-1 text-sm">{formatFcfa(plan.amount)} / mois</p>
-                {formatDate(plan.nextChargeAt) && (
-                  <p className="mt-1 text-muted-foreground text-sm">
-                    Prochain paiement le {formatDate(plan.nextChargeAt)}
-                  </p>
-                )}
-                <div className="mt-3 flex flex-wrap gap-3">
+    <PersonalityPageShell
+      title="Mes soutiens"
+      subtitle="Les montants ne sont visibles que par vous. Un nom public n’affiche jamais le montant."
+      back={{ href: '/personalities', label: 'Personnalités' }}
+      bare
+    >
+      <div className="flex flex-col gap-10">
+        <section className="flex flex-col gap-3">
+          <SectionTitle>Dons mensuels</SectionTitle>
+          {history.recurrings.length === 0 ? (
+            <p className="text-muted-foreground text-sm">
+              Aucun don mensuel en cours.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {history.recurrings.map((plan) => (
+                <SupportCard
+                  key={plan.id}
+                  personality={plan.personality}
+                  amount={`${formatFcfa(plan.amount)} / mois`}
+                  meta={
+                    formatDate(plan.nextChargeAt) &&
+                    `Prochain paiement le ${formatDate(plan.nextChargeAt)}`
+                  }
+                >
                   {plan.checkoutPath && (
-                    <Link
-                      href={plan.checkoutPath}
-                      className="text-sm underline-offset-4 hover:underline"
-                    >
+                    <Link href={plan.checkoutPath} className={LINK_CLASS}>
                       Payer le renouvellement
                     </Link>
                   )}
                   <Link
                     href={`/support/${plan.personality.slug}?amount=${plan.amount}`}
-                    className="text-sm underline-offset-4 hover:underline"
+                    className={LINK_CLASS}
                   >
                     Nouveau montant
                   </Link>
-                </div>
-                <div className="mt-3">
                   <CancelRecurringButton recurringSupportId={plan.id} />
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+                </SupportCard>
+              ))}
+            </ul>
+          )}
+        </section>
 
-      <section className="mt-10">
-        <h2 className="font-medium text-lg">Historique</h2>
-        {history.supports.length === 0 ? (
-          <p className="mt-3 text-muted-foreground text-sm">
-            Vous n’avez pas encore soutenu de personnalité.
-          </p>
-        ) : (
-          <ul className="mt-4 flex flex-col gap-4">
-            {history.supports.map((item) => (
-              <li
-                key={item.id}
-                className="rounded-2xl border border-border p-4"
-              >
-                <p className="font-medium">{item.personality.name}</p>
-                <p className="mt-1 text-sm">{formatFcfa(item.amount)}</p>
-                <p className="mt-1 text-muted-foreground text-sm">
-                  {formatDate(item.createdAt)}
-                  {item.paymentStatus
-                    ? ` · ${PAYMENT_STATUS[item.paymentStatus]}`
-                    : ''}
-                </p>
-                <div className="mt-3">
+        <section className="flex flex-col gap-3">
+          <SectionTitle>Historique</SectionTitle>
+          {history.supports.length === 0 ? (
+            <p className="text-muted-foreground text-sm">
+              Vous n’avez pas encore fait de don.{' '}
+              <Link href="/personalities" className={LINK_CLASS}>
+                Découvrir des personnalités
+              </Link>
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {history.supports.map((item) => (
+                <SupportCard
+                  key={item.id}
+                  personality={item.personality}
+                  amount={formatFcfa(item.amount)}
+                  meta={[
+                    formatDate(item.createdAt),
+                    item.paymentStatus && PAYMENT_STATUS[item.paymentStatus],
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                >
                   <SupportPrivacyToggle
                     supportId={item.id}
                     isPublic={item.isPublic}
                   />
-                </div>
-                <Link
-                  href={`/support/${item.personality.slug}?amount=${item.amount}`}
-                  className="mt-3 inline-block text-sm underline-offset-4 hover:underline"
-                >
-                  Renouveler
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </div>
+                  <Link
+                    href={`/support/${item.personality.slug}?amount=${item.amount}`}
+                    className={LINK_CLASS}
+                  >
+                    Donner à nouveau
+                  </Link>
+                </SupportCard>
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
+    </PersonalityPageShell>
   );
 }
