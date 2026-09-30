@@ -14,7 +14,9 @@ import {
   operatorServes,
   requestToPay,
 } from '@/server/payments/mobile-money';
+import type { PaymentStatus } from '@/server/payments/nyole';
 import { getCheckoutProvider } from '@/server/payments/provider';
+import { canTransition } from '@/server/payments/transitions';
 import { and, desc, eq, gte, inArray, isNotNull, sql } from 'drizzle-orm';
 import { db } from '../db';
 import {
@@ -25,21 +27,10 @@ import {
   support,
   withdrawal,
 } from '../schema';
-import type { paymentStatuses } from '../schema/support';
 
 const TRAILING_SLASH_RE = /\/$/;
 import { toMsisdn } from '@/lib/phone-countries';
 import { notifyPlanPaused } from './recurring-emails';
-
-type PaymentStatus = (typeof paymentStatuses)[number];
-
-const PAYMENT_TRANSITIONS: Record<PaymentStatus, PaymentStatus[]> = {
-  pending: ['success', 'failed', 'cancelled'],
-  success: ['refunded'],
-  failed: [],
-  cancelled: [],
-  refunded: [],
-};
 
 function isUniqueViolation(error: unknown): boolean {
   if (typeof error !== 'object' || error === null) {
@@ -455,9 +446,11 @@ export const applyPaymentEvent = async (input: {
     await recordPaymentEvent(input);
     return { ok: true as const, duplicate: true as const };
   }
-  if (!PAYMENT_TRANSITIONS[row.status].includes(input.status)) {
+  if (!canTransition(row.provider, row.status, input.status)) {
     return { error: 'invalid-transition' as const };
   }
+  // Paid after we expired it (Nyole): credit it, leave the plan alone.
+  const latePayment = row.status === 'cancelled';
 
   if (input.status === 'success' || input.status === 'refunded') {
     await writePaymentLedger(
@@ -476,7 +469,7 @@ export const applyPaymentEvent = async (input: {
     .update(payment)
     .set({ status: input.status, updatedAt: new Date() })
     .where(eq(payment.id, row.id));
-  const planId = row.support.recurringSupportId;
+  const planId = latePayment ? null : row.support.recurringSupportId;
   if (planId && input.status === 'success') {
     await db
       .update(recurringSupport)
@@ -770,7 +763,8 @@ export const applyPayoutEvent = async (input: {
     });
     return { ok: true as const, duplicate: true as const };
   }
-  if (!PAYMENT_TRANSITIONS[row.status].includes(input.status)) {
+  // Withdrawals follow the strict rules: no late-payment exception.
+  if (!canTransition('payout', row.status, input.status)) {
     return { error: 'invalid-transition' as const };
   }
 
