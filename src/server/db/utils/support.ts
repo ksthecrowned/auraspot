@@ -59,12 +59,22 @@ export const getSupportPage = async (slug: string) => {
         equals(table.status, 'active'),
         equals(table.isPublic, true)
       ),
-    columns: { id: true, link: true, name: true },
+    columns: {
+      id: true,
+      link: true,
+      name: true,
+      image: true,
+      theme: true,
+      accentColor: true,
+      darkMode: true,
+      verificationStatus: true,
+    },
   });
   if (!row) {
     return null;
   }
-  return { id: row.id, slug: row.link, name: row.name };
+  const { link: rowSlug, ...rest } = row;
+  return { ...rest, slug: rowSlug };
 };
 
 function addOneMonth(date: Date) {
