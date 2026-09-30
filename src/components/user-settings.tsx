@@ -1,5 +1,7 @@
+import { AuraAvatar } from '@/components/aura-avatar';
 import EmailDigestToggle from '@/components/email-digest-toggle';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AURA_INPUT } from '@/components/forms/aura-fields';
+import { AURA_CARD_CLASS } from '@/components/personality-page-shell';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { auth } from '@/lib/auth';
@@ -14,35 +16,40 @@ export default async function UserSettings({
   const session = await auth.api.getSession({ headers: await headers() });
 
   return (
-    <div className="flex w-full flex-col gap-y-6">
-      <div className="flex flex-col gap-y-6 rounded-lg border border-border bg-background px-4 py-4 md:px-6 md:py-6">
-        <div className="space-y-2">
-          <Label>Your Avatar</Label>
-
-          <Avatar>
-            <AvatarImage src={session?.user?.image ?? undefined} />
-            <AvatarFallback className="uppercase">
-              {user.name?.charAt(0)}
-            </AvatarFallback>
-          </Avatar>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Your Email</Label>
-
-          <Input value={user.email} readOnly className="w-max" />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Your Name</Label>
-
-          <Input value={user.name} readOnly className="w-max" />
-        </div>
-
-        <div className="space-y-2">
-          <EmailDigestToggle defaultEnabled={user.emailDigest} />
+    <div className={`${AURA_CARD_CLASS} flex max-w-xl flex-col gap-6`}>
+      <div className="flex items-center gap-4">
+        <AuraAvatar
+          name={user.name}
+          image={session?.user?.image ?? null}
+          className="size-16"
+        />
+        <div className="min-w-0">
+          <p className="truncate font-bold font-brand text-lg">{user.name}</p>
+          <p className="truncate text-muted-foreground text-sm">{user.email}</p>
         </div>
       </div>
+
+      <div className="flex flex-col gap-3">
+        <Label htmlFor="settings-name">Nom</Label>
+        <Input
+          id="settings-name"
+          value={user.name}
+          readOnly
+          className={AURA_INPUT}
+        />
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <Label htmlFor="settings-email">E-mail</Label>
+        <Input
+          id="settings-email"
+          value={user.email}
+          readOnly
+          className={AURA_INPUT}
+        />
+      </div>
+
+      <EmailDigestToggle defaultEnabled={user.emailDigest} />
     </div>
   );
 }

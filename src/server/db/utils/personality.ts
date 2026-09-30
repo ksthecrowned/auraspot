@@ -2,7 +2,49 @@ import { eq } from 'drizzle-orm';
 import { db } from '../db';
 import { link, personalityClaim, personalityManager } from '../schema';
 import { invalidateProfileLinkCache } from './link';
+import { getViewsSinceByLinks } from './link-view';
 import { countSupportsByPersonality } from './support';
+
+// Profiles a user owns or manages, with 30-day views and support counts.
+export const getDashboardProfileLinks = async (userId: string) => {
+  const managed = await db.query.personalityManager.findMany({
+    where: (table, { eq: equals }) => equals(table.userId, userId),
+    columns: { personalityId: true },
+  });
+  const managedIds = managed.map((row) => row.personalityId);
+
+  const rows = await db.query.link.findMany({
+    where: (table, { eq: equals, inArray, or }) =>
+      managedIds.length > 0
+        ? or(equals(table.userId, userId), inArray(table.id, managedIds))
+        : equals(table.userId, userId),
+    columns: {
+      id: true,
+      link: true,
+      name: true,
+      image: true,
+      userId: true,
+      claimStatus: true,
+      verificationStatus: true,
+      status: true,
+      createdAt: true,
+    },
+    orderBy: (table, { desc }) => desc(table.createdAt),
+  });
+
+  const ids = rows.map((row) => row.id);
+  const [supportCounts, views] = await Promise.all([
+    countSupportsByPersonality(ids),
+    getViewsSinceByLinks(ids, 30),
+  ]);
+
+  return rows.map(({ userId: ownerId, ...row }) => ({
+    ...row,
+    role: ownerId === userId ? ('owner' as const) : ('manager' as const),
+    supportCount: supportCounts.get(row.id) ?? 0,
+    monthlyViews: views.get(row.id) ?? 0,
+  }));
+};
 
 function withSlug<T extends { link: string }>(row: T) {
   return { ...row, slug: row.link };

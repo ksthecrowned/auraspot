@@ -27,6 +27,7 @@ import {
   deleteProfileLink,
   deleteProfileLinkBento,
   getClicksOverTime,
+  getDashboardProfileLinks,
   getDeviceBreakdown,
   getEmailSubscribers,
   getGeoBreakdown,
@@ -36,7 +37,6 @@ import {
   getProfileLinkUniqueViews,
   getProfileLinkViews,
   getProfileLinkViewsSince,
-  getProfileLinksOfUser,
   getTopCards,
   getTopReferrers,
   getTotalClicks,
@@ -105,19 +105,9 @@ export const profileLinkRouter = createTRPCRouter({
       return profileLink;
     }),
 
-  getAll: protectedProcedure.input(z.undefined()).query(async ({ ctx }) => {
-    const user = await ctx.db.query.user.findFirst({
-      where: (u, { eq }) => eq(u.id, ctx.user.id),
-      columns: { id: true, plan: true, subscriptionEndsAt: true },
-    });
-
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    const profileLinks = await getProfileLinksOfUser(user.id);
-
-    return profileLinks;
+  // Owned and managed profiles, for the dashboard.
+  getAll: protectedProcedure.input(z.undefined()).query(({ ctx }) => {
+    return getDashboardProfileLinks(ctx.user.id);
   }),
 
   getByLink: publicProcedure

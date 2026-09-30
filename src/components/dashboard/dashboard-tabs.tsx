@@ -1,8 +1,13 @@
 'use client';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LayoutGrid, Settings } from 'lucide-react';
+import { SegmentedControl } from '@/components/forms/aura-fields';
 import type React from 'react';
+import { useState } from 'react';
+
+const TABS = [
+  { value: 'pages', label: 'Mes fiches' },
+  { value: 'settings', label: 'Réglages' },
+] as const;
 
 export function DashboardTabs({
   pages,
@@ -11,26 +16,17 @@ export function DashboardTabs({
   pages: React.ReactNode;
   settings: React.ReactNode;
 }) {
+  const [tab, setTab] = useState<(typeof TABS)[number]['value']>('pages');
+
   return (
-    <Tabs defaultValue="pages" className="w-full">
-      <TabsList>
-        <TabsTrigger value="pages" className="gap-x-1.5">
-          <LayoutGrid className="h-3.5 w-3.5" />
-          Pages
-        </TabsTrigger>
-        <TabsTrigger value="settings" className="gap-x-1.5">
-          <Settings className="h-3.5 w-3.5" />
-          Settings
-        </TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="pages" className="mt-6">
-        {pages}
-      </TabsContent>
-
-      <TabsContent value="settings" className="mt-6">
+    <div className="flex w-full flex-col gap-6">
+      <div className="w-full max-w-xs">
+        <SegmentedControl options={TABS} value={tab} onChange={setTab} />
+      </div>
+      <div className={tab === 'pages' ? undefined : 'hidden'}>{pages}</div>
+      <div className={tab === 'settings' ? undefined : 'hidden'}>
         {settings}
-      </TabsContent>
-    </Tabs>
+      </div>
+    </div>
   );
 }

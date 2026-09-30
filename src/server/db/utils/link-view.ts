@@ -1,6 +1,6 @@
 import { redis } from '@/lib/redis';
 import { UAParser } from 'ua-parser-js';
-import { and, count, countDistinct, desc, eq, gte, sql } from '..';
+import { and, count, countDistinct, desc, eq, gte, inArray, sql } from '..';
 import { db } from '../db';
 import { linkView } from '../schema';
 
@@ -181,3 +181,20 @@ export async function getGeoBreakdown(linkId: string, days: number) {
   await redis.set(cacheKey, mapped, { ex: 300 });
   return mapped;
 }
+
+// Views over the last `days` days for several links at once (dashboard).
+export const getViewsSinceByLinks = async (linkIds: string[], days: number) => {
+  if (linkIds.length === 0) {
+    return new Map<string, number>();
+  }
+  const since = new Date(Date.now() - days * 86_400_000);
+  const rows = await db
+    .select({ linkId: linkView.linkId, count: sql<number>`count(*)` })
+    .from(linkView)
+    .where(
+      and(inArray(linkView.linkId, linkIds), gte(linkView.createdAt, since))
+    )
+    .groupBy(linkView.linkId);
+
+  return new Map(rows.map((row) => [row.linkId, Number(row.count)]));
+};
