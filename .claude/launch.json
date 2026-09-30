@@ -4,21 +4,13 @@
     {
       "name": "openbio-dev",
       "runtimeExecutable": "bun",
-      "runtimeArgs": [
-        "dev"
-      ],
+      "runtimeArgs": ["dev"],
       "port": 3000
     },
     {
       "name": "openbio-prod",
       "runtimeExecutable": "bun",
-      "runtimeArgs": [
-        "run",
-        "start",
-        "--",
-        "-p",
-        "3100"
-      ],
+      "runtimeArgs": ["run", "start", "--", "-p", "3100"],
       "port": 3100
     }
   ]
