@@ -130,7 +130,7 @@ export async function GET(req: NextRequest) {
 
     await sendEmail({
       to: [u.email],
-      subject: `Weekly digest: ${stats.totalViews} views, ${stats.totalClicks} clicks`,
+      subject: `Votre semaine : ${stats.totalViews} vues, ${stats.totalClicks} clics`,
       react: AnalyticsDigest({
         name: u.name,
         profileLink: primaryLink?.link ?? 'profile',

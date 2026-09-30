@@ -3,6 +3,8 @@ export type CheckoutProvider = {
   start(): { providerReference: string };
 };
 
+// Every checkout starts here: "sandbox" means no operator chosen yet. The
+// payer then picks MTN MoMo or Airtel Money (see mobile-money.ts).
 const sandboxProvider: CheckoutProvider = {
   id: 'sandbox',
   start() {

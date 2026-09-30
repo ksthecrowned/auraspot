@@ -32,6 +32,14 @@ export const CheckoutPaymentSchema = z.object({
   paymentId: z.string().uuid(),
 });
 
+export const PayCheckoutSchema = z.object({
+  paymentId: z.string().uuid(),
+  operator: z.enum(['mtn_momo', 'airtel_money']),
+  country: z.string().length(2),
+  // Validated per country by toMsisdn() (src/lib/phone-countries.ts).
+  phone: z.string().trim().min(6).max(24),
+});
+
 export const RequestWithdrawalSchema = z.object({
   slug: z.string().trim().min(1).max(80),
   grossAmount: z.number().int().min(MIN_SUPPORT_AMOUNT).max(MAX_SUPPORT_AMOUNT),

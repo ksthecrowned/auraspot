@@ -62,7 +62,7 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
               margin: '0 0 16px 0',
             }}
           >
-            Welcome to AuraSpot{name ? `, ${name}` : ''}!
+            Bienvenue sur AuraSpot{name ? `, ${name}` : ''} !
           </h1>
 
           <p
@@ -73,9 +73,9 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
               margin: '0 0 12px 0',
             }}
           >
-            Thanks for signing up! AuraSpot helps you create a beautiful
-            link-in-bio page in minutes — share all your important links, social
-            profiles, and content in one place.
+            Merci pour votre inscription ! Sur AuraSpot, vous suivez et soutenez
+            les personnalités que vous aimez, et vous pouvez créer la page de
+            votre propre personnalité.
           </p>
 
           <p
@@ -86,8 +86,7 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
               margin: '0 0 24px 0',
             }}
           >
-            Get started by claiming your unique link and customizing your
-            profile.
+            Commencez par réserver votre adresse et personnaliser votre page.
           </p>
 
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
@@ -104,7 +103,7 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
                 fontSize: '14px',
               }}
             >
-              Create your page
+              Créer ma page
             </a>
           </div>
 
@@ -116,10 +115,10 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
               margin: '0 0 4px 0',
             }}
           >
-            If you have any questions, just reply to this email.
+            Une question ? Répondez simplement à cet e-mail.
           </p>
           <p style={{ fontSize: '14px', color: '#52525b', margin: 0 }}>
-            &mdash; Vanxh
+            &mdash; L’équipe AuraSpot
           </p>
         </div>
 
@@ -141,7 +140,7 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
             >
               AuraSpot
             </a>{' '}
-            &middot; Your link-in-bio page
+            &middot; Découvrez. Suivez. Soutenez.
           </p>
         </div>
       </div>

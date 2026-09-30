@@ -62,7 +62,7 @@ export default function VerifyEmail({ url }: VerifyEmailProps) {
               margin: '0 0 16px 0',
             }}
           >
-            Verify your email
+            Confirmez votre adresse e-mail
           </h1>
 
           <p
@@ -73,8 +73,8 @@ export default function VerifyEmail({ url }: VerifyEmailProps) {
               margin: '0 0 12px 0',
             }}
           >
-            Thanks for signing up for AuraSpot! Please verify your email address
-            by clicking the button below.
+            Merci pour votre inscription sur AuraSpot ! Confirmez votre adresse
+            e-mail avec le bouton ci-dessous.
           </p>
 
           <p
@@ -84,7 +84,7 @@ export default function VerifyEmail({ url }: VerifyEmailProps) {
               margin: '0 0 24px 0',
             }}
           >
-            This link will expire in 24 hours.
+            Ce lien expire dans 24 heures.
           </p>
 
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
@@ -101,7 +101,7 @@ export default function VerifyEmail({ url }: VerifyEmailProps) {
                 fontSize: '14px',
               }}
             >
-              Verify email
+              Confirmer mon adresse
             </a>
           </div>
 
@@ -112,8 +112,8 @@ export default function VerifyEmail({ url }: VerifyEmailProps) {
               margin: 0,
             }}
           >
-            If you didn&apos;t create an AuraSpot account, you can safely ignore
-            this email.
+            Si vous n’avez pas créé de compte AuraSpot, ignorez simplement cet
+            e-mail.
           </p>
         </div>
 
@@ -135,7 +135,7 @@ export default function VerifyEmail({ url }: VerifyEmailProps) {
             >
               AuraSpot
             </a>{' '}
-            &middot; Your link-in-bio page
+            &middot; Découvrez. Suivez. Soutenez.
           </p>
         </div>
       </div>

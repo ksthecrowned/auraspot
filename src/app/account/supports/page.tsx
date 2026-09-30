@@ -38,6 +38,23 @@ function formatDate(value: Date | null) {
   );
 }
 
+// Mobile money cannot debit automatically: each month a payment request is
+// sent, so the wording says "demande", not "prélèvement".
+function recurringMeta(plan: {
+  status: string;
+  nextChargeAt: Date | null;
+  checkoutPath: string | null;
+}) {
+  if (plan.status === 'paused') {
+    return 'En pause après plusieurs paiements non aboutis';
+  }
+  if (plan.checkoutPath) {
+    return 'Paiement du mois en attente';
+  }
+  const date = formatDate(plan.nextChargeAt);
+  return date ? `Prochaine demande de paiement le ${date}` : null;
+}
+
 function SupportCard({
   personality,
   amount,
@@ -95,7 +112,7 @@ export default async function SupporterHistoryPage() {
     <PersonalityPageShell
       title="Mes soutiens"
       subtitle="Les montants ne sont visibles que par vous. Un nom public n’affiche jamais le montant."
-      back={{ href: '/explore', label: 'Personnalités' }}
+      back={{ href: '/explore', label: 'Explorer' }}
       bare
     >
       <div className="flex flex-col gap-10">
@@ -112,10 +129,7 @@ export default async function SupporterHistoryPage() {
                   key={plan.id}
                   personality={plan.personality}
                   amount={`${formatFcfa(plan.amount)} / mois`}
-                  meta={
-                    formatDate(plan.nextChargeAt) &&
-                    `Prochain paiement le ${formatDate(plan.nextChargeAt)}`
-                  }
+                  meta={recurringMeta(plan)}
                 >
                   {plan.checkoutPath && (
                     <Link href={plan.checkoutPath} className={LINK_CLASS}>
@@ -126,7 +140,7 @@ export default async function SupporterHistoryPage() {
                     href={`/support/${plan.personality.slug}?amount=${plan.amount}`}
                     className={LINK_CLASS}
                   >
-                    Nouveau montant
+                    {plan.status === 'paused' ? 'Reprendre' : 'Nouveau montant'}
                   </Link>
                   <CancelRecurringButton recurringSupportId={plan.id} />
                 </SupportCard>

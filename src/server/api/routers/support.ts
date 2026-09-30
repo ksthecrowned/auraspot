@@ -1,4 +1,4 @@
-import { supportCreateLimit } from '@/lib/ratelimit';
+import { generalLimit, supportCreateLimit } from '@/lib/ratelimit';
 import {
   createProtectedRateLimitedProcedure,
   createRateLimitedProcedure,
@@ -6,9 +6,9 @@ import {
   protectedProcedure,
   publicProcedure,
 } from '@/server/api/trpc';
+import { renewDuePlans } from '@/server/db/utils/recurring';
 import {
   cancelRecurringSupport,
-  confirmSandboxPayment,
   createSupportCheckout,
   getCheckout,
   getSupportPage,
@@ -16,18 +16,30 @@ import {
   getWithdrawalPage,
   requestWithdrawal,
   setSupportVisibility,
+  startMobileMoneyPayment,
+  syncMobileMoneyPayment,
 } from '@/server/db/utils/support';
 import { TRPCError } from '@trpc/server';
 import {
   CancelRecurringSupportSchema,
   CheckoutPaymentSchema,
   CreateSupportSchema,
+  PayCheckoutSchema,
   RequestWithdrawalSchema,
   SetSupportVisibilitySchema,
   SupportSlugSchema,
 } from '../schemas/support';
 
 const rateLimitedSupport = createRateLimitedProcedure(supportCreateLimit);
+const PAY_ERRORS = {
+  'not-payable': 'Ce paiement a déjà été lancé.',
+  'not-configured': 'Cet opérateur n’est pas disponible pour ce pays.',
+  'invalid-phone': 'Ce numéro de téléphone n’est pas valide.',
+  'operator-refused':
+    'L’opérateur a refusé la demande. Vérifiez le numéro et réessayez avec un nouveau don.',
+} as const;
+
+const rateLimitedPolling = createRateLimitedProcedure(generalLimit);
 const rateLimitedWithdrawal =
   createProtectedRateLimitedProcedure(supportCreateLimit);
 
@@ -78,20 +90,37 @@ export const supportRouter = createTRPCRouter({
     return getCheckout(input.paymentId);
   }),
 
-  confirmSandbox: rateLimitedSupport
-    .input(CheckoutPaymentSchema)
+  pay: rateLimitedSupport
+    .input(PayCheckoutSchema)
     .mutation(async ({ input }) => {
-      const result = await confirmSandboxPayment(input.paymentId);
+      const result = await startMobileMoneyPayment(input);
       if ('error' in result) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'Ce paiement ne peut pas être confirmé.',
+          message: PAY_ERRORS[result.error ?? 'operator-refused'],
         });
       }
       return result;
     }),
 
-  history: protectedProcedure.query(({ ctx }) => {
+  // Polled by the checkout page while the payer approves on their phone.
+  syncCheckout: rateLimitedPolling
+    .input(CheckoutPaymentSchema)
+    .mutation(async ({ input }) => {
+      const status = await syncMobileMoneyPayment({
+        paymentId: input.paymentId,
+      }).catch(() => 'pending' as const);
+      if (!status) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Paiement introuvable.',
+        });
+      }
+      return { status };
+    }),
+
+  history: protectedProcedure.query(async ({ ctx }) => {
+    await renewDuePlans({ userId: ctx.user.id });
     return getSupporterHistory(ctx.user.id);
   }),
 

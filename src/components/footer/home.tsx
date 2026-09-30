@@ -12,14 +12,14 @@ const COLUMNS = [
   {
     title: 'Découvrir',
     links: [
-      { href: '/explore', label: 'Personnalités' },
+      { href: '/explore', label: 'Explorer' },
       { href: '/explore?category=music', label: 'Musique' },
       { href: '/explore?category=sport', label: 'Sport' },
       { href: '/#comment-ca-marche', label: 'Comment ça marche' },
     ],
   },
   {
-    title: 'Personnalités',
+    title: 'Explorer',
     links: [
       { href: '/claim-link', label: 'Créer ma page' },
       { href: '/explore', label: 'Revendiquer ma fiche' },

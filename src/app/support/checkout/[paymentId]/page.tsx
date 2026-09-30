@@ -1,10 +1,17 @@
-import { AURA_NOTICE } from '@/components/forms/aura-fields';
-import ConfirmSandboxPayment from '@/components/forms/confirm-sandbox-payment';
+import {
+  AURA_NOTICE,
+  AURA_SECONDARY_BUTTON,
+} from '@/components/forms/aura-fields';
+import MobileMoneyCheckout from '@/components/forms/mobile-money-checkout';
 import PersonalityPageShell from '@/components/personality-page-shell';
 import { auth } from '@/lib/auth';
 import { formatFcfa } from '@/lib/money';
 import { cn } from '@/lib/utils';
 import { getCheckout } from '@/server/db/utils/support';
+import {
+  configuredOperators,
+  isMobileMoneyOperator,
+} from '@/server/payments/mobile-money';
 import { CheckCircle2, Clock, XCircle } from 'lucide-react';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
@@ -17,7 +24,7 @@ type PageProps = {
 
 const STATUS = {
   pending: {
-    copy: 'Le paiement est en attente auprès du fournisseur.',
+    copy: 'Le paiement est en attente.',
     icon: Clock,
     tone: 'text-muted-foreground',
   },
@@ -54,10 +61,15 @@ export default async function CheckoutPage({ params }: PageProps) {
   if (!checkout) {
     notFound();
   }
-  const showSimulator =
-    process.env.NODE_ENV !== 'production' && checkout.canSimulate;
   const session = await auth.api.getSession({ headers: await headers() });
   const status = STATUS[checkout.status];
+  const awaitingApproval =
+    isMobileMoneyOperator(checkout.provider) && checkout.status === 'pending';
+  const offers = configuredOperators();
+  // Operator not chosen yet: the form replaces the "pending" notice.
+  const choosing = checkout.canPay;
+  const canRetry =
+    checkout.status === 'failed' || checkout.status === 'cancelled';
   const StatusIcon = status.icon;
 
   return (
@@ -77,18 +89,42 @@ export default async function CheckoutPage({ params }: PageProps) {
           </span>
         </div>
 
-        <p
-          className={cn(
-            AURA_NOTICE,
-            'flex items-center justify-center gap-2',
-            status.tone
-          )}
-        >
-          <StatusIcon className="size-4 shrink-0" />
-          {status.copy}
-        </p>
+        {!choosing && (
+          <p
+            className={cn(
+              AURA_NOTICE,
+              'flex items-center justify-center gap-2',
+              status.tone
+            )}
+          >
+            <StatusIcon className="size-4 shrink-0" />
+            {status.copy}
+          </p>
+        )}
 
-        {showSimulator && <ConfirmSandboxPayment paymentId={checkout.id} />}
+        {((choosing && offers.length > 0) || awaitingApproval) && (
+          <MobileMoneyCheckout
+            paymentId={checkout.id}
+            awaitingApproval={awaitingApproval}
+            offers={offers}
+          />
+        )}
+
+        {choosing && offers.length === 0 && (
+          <p className={cn(AURA_NOTICE, 'text-center text-muted-foreground')}>
+            Le paiement mobile est momentanément indisponible. Réessayez plus
+            tard.
+          </p>
+        )}
+
+        {canRetry && (
+          <Link
+            href={`/support/${checkout.personalitySlug}`}
+            className={AURA_SECONDARY_BUTTON}
+          >
+            Refaire un don
+          </Link>
+        )}
 
         {session && (
           <Link

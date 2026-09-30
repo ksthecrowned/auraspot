@@ -27,7 +27,12 @@ export const ledgerEntryTypes = [
   'withdrawal',
 ] as const;
 
-export const recurringSupportStatuses = ['active', 'cancelled'] as const;
+// paused: renewals stopped after repeated failed payments.
+export const recurringSupportStatuses = [
+  'active',
+  'paused',
+  'cancelled',
+] as const;
 
 export const recurringSupport = pgTable(
   'recurring_support',
@@ -46,7 +51,12 @@ export const recurringSupport = pgTable(
     status: text('status', { enum: recurringSupportStatuses })
       .default('active')
       .notNull(),
+    // Null while a renewal payment is in progress.
     nextChargeAt: timestamp('next_charge_at', { withTimezone: true }),
+    // Mobile money used for the last successful payment, reused for renewals.
+    payerOperator: text('payer_operator'),
+    payerPhone: text('payer_phone'),
+    failedAttempts: integer('failed_attempts').default(0).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -98,6 +108,8 @@ export const payment = pgTable(
       .references(() => support.id, { onDelete: 'cascade' }),
     provider: text('provider').notNull(),
     providerReference: text('provider_reference').notNull().unique(),
+    // Number the mobile money request was sent to.
+    payerPhone: text('payer_phone'),
     status: text('status', { enum: paymentStatuses })
       .default('pending')
       .notNull(),

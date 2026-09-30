@@ -5,6 +5,8 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 
+const TRAILING_SLASH_RE = /\/$/;
+
 // File storage on Cloudflare R2 (S3-compatible API), same setup as ride-api.
 // Objects are served publicly from R2_PUBLIC_BASE_URL (r2.dev or custom domain).
 
@@ -40,7 +42,7 @@ function getPublicBase() {
   if (!env.R2_PUBLIC_BASE_URL) {
     throw new Error('R2_PUBLIC_BASE_URL is missing');
   }
-  return env.R2_PUBLIC_BASE_URL.replace(/\/$/, '');
+  return env.R2_PUBLIC_BASE_URL.replace(TRAILING_SLASH_RE, '');
 }
 
 // Keys are always built server-side: `<prefix>/<yyyy-mm-dd>/<uuid>.<ext>`.
@@ -73,7 +75,7 @@ export async function uploadObject({
 // Only deletes objects of our bucket under `allowedPrefix`; anything else
 // (legacy Vercel Blob URLs, external images) is ignored.
 export async function deleteObjectByUrl(url: string, allowedPrefix: string) {
-  const base = env.R2_PUBLIC_BASE_URL?.replace(/\/$/, '');
+  const base = env.R2_PUBLIC_BASE_URL?.replace(TRAILING_SLASH_RE, '');
   if (!(base && url.startsWith(`${base}/`))) {
     return false;
   }

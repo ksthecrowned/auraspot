@@ -4,6 +4,7 @@ import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { forgetPassword, resetPassword } from '@/lib/auth-client';
+import { authErrorMessage } from '@/lib/auth-errors';
 import Logo from '@/public/logo.png';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
@@ -48,19 +49,21 @@ function ResetPasswordForm() {
     });
 
     if (result.error) {
-      setError(result.error.message ?? 'Something went wrong');
+      setError(authErrorMessage(result.error));
       setLoading(false);
       return;
     }
 
-    setSuccess('Check your email for a password reset link.');
+    setSuccess(
+      'Consultez vos e-mails : un lien de réinitialisation vous a été envoyé.'
+    );
     setLoading(false);
   };
 
   const handleResetPassword = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
+      setError('Les mots de passe ne correspondent pas');
       return;
     }
     setLoading(true);
@@ -73,12 +76,14 @@ function ResetPasswordForm() {
     });
 
     if (result.error) {
-      setError(result.error.message ?? 'Something went wrong');
+      setError(authErrorMessage(result.error));
       setLoading(false);
       return;
     }
 
-    setSuccess('Your password has been reset. You can now sign in.');
+    setSuccess(
+      'Votre mot de passe a été réinitialisé. Vous pouvez vous connecter.'
+    );
     setLoading(false);
   };
 
@@ -89,19 +94,19 @@ function ResetPasswordForm() {
           <Image src={Logo} alt="AuraSpot" width={48} height={48} />
         </Link>
         <h1 className="mt-4 font-cal text-2xl">
-          {token ? 'Choose a new password' : 'Reset your password'}
+          {token ? 'Choisissez un nouveau mot de passe' : 'Mot de passe oublié'}
         </h1>
         <p className="mt-1 text-muted-foreground text-sm">
           {token
-            ? 'Enter your new password below'
-            : "We'll send you a link to reset your password"}
+            ? 'Saisissez votre nouveau mot de passe'
+            : 'Nous vous envoyons un lien pour le réinitialiser'}
         </p>
       </div>
 
       {token ? (
         <form onSubmit={handleResetPassword} className="flex flex-col gap-y-5">
           <div className="space-y-2">
-            <Label htmlFor="newPassword">New password</Label>
+            <Label htmlFor="newPassword">Nouveau mot de passe</Label>
             <Input
               id="newPassword"
               type="password"
@@ -114,7 +119,7 @@ function ResetPasswordForm() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm new password</Label>
+            <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
             <Input
               id="confirmPassword"
               type="password"
@@ -144,7 +149,7 @@ function ResetPasswordForm() {
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              'Reset password'
+              'Réinitialiser'
             )}
           </GradientButton>
           {success && (
@@ -152,18 +157,18 @@ function ResetPasswordForm() {
               href="/app/sign-in"
               className="text-center text-muted-foreground text-sm underline underline-offset-4 hover:text-foreground"
             >
-              Go to sign in
+              Aller à la connexion
             </Link>
           )}
         </form>
       ) : (
         <form onSubmit={handleRequestReset} className="flex flex-col gap-y-5">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">E-mail</Label>
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder="vous@exemple.com"
               className="h-11 rounded-xl"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -188,19 +193,19 @@ function ResetPasswordForm() {
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              'Send reset link'
+              'Envoyer le lien'
             )}
           </GradientButton>
         </form>
       )}
 
       <p className="mt-6 text-center text-muted-foreground text-sm">
-        Remember your password?{' '}
+        Vous vous en souvenez ?{' '}
         <Link
           href="/app/sign-in"
           className="font-medium text-foreground underline underline-offset-4 hover:text-violet-600"
         >
-          Sign in
+          Se connecter
         </Link>
       </p>
     </div>

@@ -5,6 +5,7 @@ import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { signIn } from '@/lib/auth-client';
+import { authErrorMessage } from '@/lib/auth-errors';
 import { safeNextPath } from '@/lib/safe-next-path';
 import Logo from '@/public/logo.png';
 import { Loader2 } from 'lucide-react';
@@ -27,7 +28,7 @@ export default function SignInPage() {
     setError('');
     const result = await signIn.email({ email, password });
     if (result.error) {
-      setError(result.error.message ?? 'Something went wrong');
+      setError(authErrorMessage(result.error));
       setLoading(false);
       return;
     }
@@ -40,18 +41,18 @@ export default function SignInPage() {
         <Link href="/">
           <Image src={Logo} alt="AuraSpot" width={48} height={48} />
         </Link>
-        <h1 className="mt-4 font-cal text-2xl">Welcome back</h1>
+        <h1 className="mt-4 font-cal text-2xl">Bon retour</h1>
         <p className="mt-1 text-muted-foreground text-sm">
-          Sign in to your account
+          Connectez-vous à votre compte
         </p>
       </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-y-5">
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">E-mail</Label>
           <Input
             id="email"
             type="email"
-            placeholder="you@example.com"
+            placeholder="vous@exemple.com"
             className="h-11 rounded-xl"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -59,7 +60,7 @@ export default function SignInPage() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">Mot de passe</Label>
           <Input
             id="password"
             type="password"
@@ -74,7 +75,7 @@ export default function SignInPage() {
               href="/app/reset-password"
               className="text-muted-foreground text-sm hover:text-foreground"
             >
-              Forgot your password?
+              Mot de passe oublié ?
             </Link>
           </div>
         </div>
@@ -88,7 +89,11 @@ export default function SignInPage() {
           disabled={loading}
           className="mt-1 w-full"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sign in'}
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            'Se connecter'
+          )}
         </GradientButton>
       </form>
       <div className="relative my-6">
@@ -97,7 +102,7 @@ export default function SignInPage() {
         </div>
         <div className="relative flex justify-center text-xs uppercase">
           <span className="bg-card px-2 text-muted-foreground">
-            or continue with
+            ou continuer avec
           </span>
         </div>
       </div>
@@ -137,7 +142,7 @@ export default function SignInPage() {
         </Button>
       </div>
       <p className="mt-6 text-center text-muted-foreground text-sm">
-        Don&apos;t have an account?{' '}
+        Pas encore de compte ?{' '}
         <Link
           href={
             nextPath === '/app'
@@ -146,7 +151,7 @@ export default function SignInPage() {
           }
           className="font-medium text-foreground underline underline-offset-4 hover:text-violet-600"
         >
-          Sign up
+          Créer un compte
         </Link>
       </p>
     </div>

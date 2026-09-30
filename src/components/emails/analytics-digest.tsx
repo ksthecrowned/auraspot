@@ -81,17 +81,17 @@ export default function AnalyticsDigest({
               margin: '0 0 4px 0',
             }}
           >
-            Your weekly digest
+            Votre bilan de la semaine
           </h1>
           <p style={{ fontSize: '14px', color: '#71717a', margin: 0 }}>
-            Hi {name}, here&apos;s how{' '}
+            Bonjour {name}, voici les résultats de{' '}
             <a
               href={profileUrl}
               style={{ color: '#7c3aed', textDecoration: 'none' }}
             >
               {ROOT_DOMAIN}/{profileLink}
             </a>{' '}
-            performed this week.
+            cette semaine.
           </p>
         </div>
 
@@ -125,7 +125,7 @@ export default function AnalyticsDigest({
                       letterSpacing: '0.05em',
                     }}
                   >
-                    Views
+                    Vues
                   </p>
                   <p
                     style={{
@@ -136,7 +136,7 @@ export default function AnalyticsDigest({
                       lineHeight: 1.1,
                     }}
                   >
-                    {views.toLocaleString()}
+                    {views.toLocaleString('fr-FR')}
                   </p>
                   <p
                     style={{
@@ -145,7 +145,7 @@ export default function AnalyticsDigest({
                       margin: '4px 0 0 0',
                     }}
                   >
-                    {uniqueViews.toLocaleString()} unique
+                    {uniqueViews.toLocaleString('fr-FR')} uniques
                   </p>
                 </td>
                 <td
@@ -167,7 +167,7 @@ export default function AnalyticsDigest({
                       letterSpacing: '0.05em',
                     }}
                   >
-                    Clicks
+                    Clics
                   </p>
                   <p
                     style={{
@@ -178,7 +178,7 @@ export default function AnalyticsDigest({
                       lineHeight: 1.1,
                     }}
                   >
-                    {clicks.toLocaleString()}
+                    {clicks.toLocaleString('fr-FR')}
                   </p>
                   <p
                     style={{
@@ -213,7 +213,7 @@ export default function AnalyticsDigest({
                 margin: '0 0 12px 0',
               }}
             >
-              Highlights
+              En bref
             </p>
             <table
               style={{
@@ -226,7 +226,7 @@ export default function AnalyticsDigest({
                 {topReferrer && (
                   <tr>
                     <td style={{ padding: '6px 0', color: '#71717a' }}>
-                      Top referrer
+                      Première source
                     </td>
                     <td
                       style={{
@@ -242,7 +242,7 @@ export default function AnalyticsDigest({
                 )}
                 <tr>
                   <td style={{ padding: '6px 0', color: '#71717a' }}>
-                    New subscribers
+                    Nouveaux abonnés
                   </td>
                   <td
                     style={{
@@ -257,7 +257,7 @@ export default function AnalyticsDigest({
                 </tr>
                 <tr>
                   <td style={{ padding: '6px 0', color: '#71717a' }}>
-                    Click rate
+                    Taux de clic
                   </td>
                   <td
                     style={{
@@ -290,7 +290,7 @@ export default function AnalyticsDigest({
               fontSize: '14px',
             }}
           >
-            View full analytics
+            Voir toutes les statistiques
           </a>
         </div>
 
@@ -313,14 +313,14 @@ export default function AnalyticsDigest({
             >
               AuraSpot
             </a>{' '}
-            &middot; Your link-in-bio page
+            &middot; Découvrez. Suivez. Soutenez.
           </p>
           <p style={{ margin: 0 }}>
             <a
               href={unsubscribeUrl}
               style={{ color: '#a1a1aa', textDecoration: 'underline' }}
             >
-              Unsubscribe from digest emails
+              Ne plus recevoir ce bilan
             </a>
           </p>
         </div>

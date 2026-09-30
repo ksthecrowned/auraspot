@@ -15,20 +15,20 @@ export default async function Page() {
           <Link href="/">
             <Image src={Logo} alt="AuraSpot" width={48} height={48} />
           </Link>
-          <h1 className="mt-4 font-cal text-3xl">Claim your page</h1>
+          <h1 className="mt-4 font-cal text-3xl">Réservez votre page</h1>
           <p className="mt-1 text-muted-foreground text-sm">
-            Pick a username for your AuraSpot page
+            Choisissez l’adresse de votre page AuraSpot
           </p>
         </div>
         <ClaimLinkForm />
         {!session && (
           <p className="mt-6 text-center text-muted-foreground text-sm">
-            Already have an account?{' '}
+            Déjà un compte ?{' '}
             <Link
               href="/app/sign-in"
               className="font-medium text-foreground underline underline-offset-4 hover:text-foreground/80"
             >
-              Sign in
+              Se connecter
             </Link>
           </p>
         )}

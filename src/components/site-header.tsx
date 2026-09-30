@@ -74,7 +74,7 @@ export default function SiteHeader({
           className="hidden flex-1 items-center justify-center gap-6 md:flex"
         >
           <Link href="/explore" className={HEADER_LINK_CLASS}>
-            Personnalités
+            Explorer
           </Link>
           <Link href="/#comment-ca-marche" className={HEADER_LINK_CLASS}>
             Comment ça marche

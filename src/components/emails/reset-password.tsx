@@ -62,7 +62,7 @@ export default function ResetPassword({ url }: ResetPasswordProps) {
               margin: '0 0 16px 0',
             }}
           >
-            Reset your password
+            Réinitialisez votre mot de passe
           </h1>
 
           <p
@@ -73,8 +73,8 @@ export default function ResetPassword({ url }: ResetPasswordProps) {
               margin: '0 0 12px 0',
             }}
           >
-            We received a request to reset your AuraSpot password. Click the
-            button below to choose a new one.
+            Nous avons reçu une demande de réinitialisation de votre mot de
+            passe AuraSpot. Choisissez-en un nouveau avec le bouton ci-dessous.
           </p>
 
           <p
@@ -84,7 +84,7 @@ export default function ResetPassword({ url }: ResetPasswordProps) {
               margin: '0 0 24px 0',
             }}
           >
-            This link will expire in 1 hour.
+            Ce lien expire dans 1 heure.
           </p>
 
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
@@ -101,7 +101,7 @@ export default function ResetPassword({ url }: ResetPasswordProps) {
                 fontSize: '14px',
               }}
             >
-              Reset password
+              Choisir un nouveau mot de passe
             </a>
           </div>
 
@@ -112,8 +112,8 @@ export default function ResetPassword({ url }: ResetPasswordProps) {
               margin: 0,
             }}
           >
-            If you didn&apos;t request a password reset, you can safely ignore
-            this email. Your password will not be changed.
+            Si vous n’êtes pas à l’origine de cette demande, ignorez cet e-mail
+            : votre mot de passe ne changera pas.
           </p>
         </div>
 
@@ -135,7 +135,7 @@ export default function ResetPassword({ url }: ResetPasswordProps) {
             >
               AuraSpot
             </a>{' '}
-            &middot; Your link-in-bio page
+            &middot; Découvrez. Suivez. Soutenez.
           </p>
         </div>
       </div>

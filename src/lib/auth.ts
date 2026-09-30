@@ -26,7 +26,7 @@ export const auth = betterAuth({
         .default;
       await sendEmail({
         to: [user.email],
-        subject: 'Verify your AuraSpot email',
+        subject: 'Confirmez votre adresse e-mail AuraSpot',
         react: VerifyEmail({ url }),
       });
     },
@@ -39,7 +39,7 @@ export const auth = betterAuth({
         .default;
       await sendEmail({
         to: [user.email],
-        subject: 'Reset your AuraSpot password',
+        subject: 'Réinitialisez votre mot de passe AuraSpot',
         react: ResetPassword({ url }),
       });
     },
@@ -69,7 +69,7 @@ export const auth = betterAuth({
           const Welcome = (await import('@/components/emails/welcome')).default;
           await sendEmail({
             to: [user.email],
-            subject: 'Welcome to AuraSpot!',
+            subject: 'Bienvenue sur AuraSpot !',
             react: Welcome({ name: user.name }),
           });
         },

@@ -14,7 +14,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Personnalités',
+  title: 'Explorer',
   description:
     'Recherchez une personnalité publique par nom, catégorie ou lieu.',
 };
@@ -83,7 +83,7 @@ export default async function PersonalitiesPage({
             className="aura-halo -z-10 -top-24 pointer-events-none absolute inset-x-0 mx-auto h-80 max-w-2xl"
           />
           <h1 className="font-bold font-brand text-4xl leading-tight md:text-6xl">
-            Personnalités
+            Explorer
           </h1>
           <p className="max-w-md text-muted-foreground md:text-lg">
             Découvrez, suivez et soutenez les talents qui vous inspirent.

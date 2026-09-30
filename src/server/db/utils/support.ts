@@ -1,3 +1,4 @@
+import { env } from '@/env.mjs';
 import {
   MAX_SUPPORT_AMOUNT,
   MIN_SUPPORT_AMOUNT,
@@ -5,6 +6,14 @@ import {
   splitWithdrawal,
   supportCommissionBps,
 } from '@/lib/money';
+import {
+  MobileMoneyError,
+  type MobileMoneyOperator,
+  getProviderStatus,
+  isMobileMoneyOperator,
+  operatorServes,
+  requestToPay,
+} from '@/server/payments/mobile-money';
 import { getCheckoutProvider } from '@/server/payments/provider';
 import { and, desc, eq, gte, inArray, isNotNull, sql } from 'drizzle-orm';
 import { db } from '../db';
@@ -17,6 +26,10 @@ import {
   withdrawal,
 } from '../schema';
 import type { paymentStatuses } from '../schema/support';
+
+const TRAILING_SLASH_RE = /\/$/;
+import { toMsisdn } from '@/lib/phone-countries';
+import { notifyPlanPaused } from './recurring-emails';
 
 type PaymentStatus = (typeof paymentStatuses)[number];
 
@@ -83,7 +96,7 @@ function addOneMonth(date: Date) {
   return next;
 }
 
-async function insertPendingPayment(supportId: string, amount: number) {
+export async function insertPendingPayment(supportId: string, amount: number) {
   const provider = getCheckoutProvider();
   const started = provider.start();
   const insertedPayment = await db
@@ -107,13 +120,60 @@ async function insertPendingPayment(supportId: string, amount: number) {
   };
 }
 
-async function insertActivePlan(input: {
-  personalityId: string;
-  userId: string;
-  amount: number;
-  displayName?: string;
-  isPublic: boolean;
-}) {
+// Retry delay and number of failed renewals before a plan is paused.
+export const RENEWAL_RETRY_DAYS = 3;
+export const MAX_RENEWAL_FAILURES = 3;
+
+async function planHasSuccessfulPayment(recurringSupportId: string) {
+  const rows = await db
+    .select({ id: payment.id })
+    .from(payment)
+    .innerJoin(support, eq(payment.supportId, support.id))
+    .where(
+      and(
+        eq(support.recurringSupportId, recurringSupportId),
+        eq(payment.status, 'success')
+      )
+    )
+    .limit(1);
+  return rows.length > 0;
+}
+
+// An "active" plan whose first payment never went through (abandoned
+// checkout) is cancelled so the supporter can start again.
+async function cancelUnpaidActivePlan(userId: string, personalityId: string) {
+  const existing = await db.query.recurringSupport.findFirst({
+    where: (table, { and: also, eq: equals }) =>
+      also(
+        equals(table.userId, userId),
+        equals(table.personalityId, personalityId),
+        equals(table.status, 'active')
+      ),
+    columns: { id: true },
+  });
+  if (!existing || (await planHasSuccessfulPayment(existing.id))) {
+    return false;
+  }
+  await db
+    .update(recurringSupport)
+    .set({ status: 'cancelled', nextChargeAt: null, updatedAt: new Date() })
+    .where(eq(recurringSupport.id, existing.id));
+  return true;
+}
+
+async function insertActivePlan(
+  input: {
+    personalityId: string;
+    userId: string;
+    amount: number;
+    displayName?: string;
+    isPublic: boolean;
+  },
+  retried = false
+): Promise<
+  | { ok: true; id: string }
+  | { ok: false; error: 'not-found' | 'already-active' }
+> {
   try {
     const insertedPlan = await db
       .insert(recurringSupport)
@@ -134,6 +194,12 @@ async function insertActivePlan(input: {
     return { ok: true as const, id };
   } catch (error) {
     if (isUniqueViolation(error)) {
+      if (
+        !retried &&
+        (await cancelUnpaidActivePlan(input.userId, input.personalityId))
+      ) {
+        return insertActivePlan(input, true);
+      }
       return { ok: false as const, error: 'already-active' as const };
     }
     throw error;
@@ -262,7 +328,8 @@ export const getCheckout = async (paymentId: string) => {
     currency: row.currency,
     personalityName: row.support.personality.name,
     personalitySlug: row.support.personality.link,
-    canSimulate: row.provider === 'sandbox' && row.status === 'pending',
+    // No operator chosen yet: the payer can pick MTN MoMo or Airtel Money.
+    canPay: row.provider === 'sandbox' && row.status === 'pending',
   };
 };
 
@@ -315,6 +382,41 @@ async function writePaymentLedger(
   });
 }
 
+// First payment failed: the plan never started, cancel it. Renewal failed:
+// retry in a few days, pause after MAX_RENEWAL_FAILURES.
+async function handlePlanPaymentFailure(planId: string) {
+  const plan = await db.query.recurringSupport.findFirst({
+    where: (table, { eq: equals }) => equals(table.id, planId),
+    columns: { status: true, failedAttempts: true },
+  });
+  if (plan?.status !== 'active') {
+    return;
+  }
+  if (!(await planHasSuccessfulPayment(planId))) {
+    await db
+      .update(recurringSupport)
+      .set({ status: 'cancelled', nextChargeAt: null, updatedAt: new Date() })
+      .where(eq(recurringSupport.id, planId));
+    return;
+  }
+  const failedAttempts = plan.failedAttempts + 1;
+  const paused = failedAttempts >= MAX_RENEWAL_FAILURES;
+  const retryAt = new Date();
+  retryAt.setDate(retryAt.getDate() + RENEWAL_RETRY_DAYS);
+  await db
+    .update(recurringSupport)
+    .set({
+      failedAttempts,
+      status: paused ? 'paused' : 'active',
+      nextChargeAt: paused ? null : retryAt,
+      updatedAt: new Date(),
+    })
+    .where(eq(recurringSupport.id, planId));
+  if (paused) {
+    await notifyPlanPaused(planId).catch(() => null);
+  }
+}
+
 export const applyPaymentEvent = async (input: {
   eventId: string;
   providerReference: string;
@@ -337,6 +439,8 @@ export const applyPaymentEvent = async (input: {
       amount: true,
       currency: true,
       supportId: true,
+      provider: true,
+      payerPhone: true,
     },
     with: {
       support: {
@@ -372,45 +476,133 @@ export const applyPaymentEvent = async (input: {
     .update(payment)
     .set({ status: input.status, updatedAt: new Date() })
     .where(eq(payment.id, row.id));
-  if (input.status === 'success' && row.support.recurringSupportId) {
+  const planId = row.support.recurringSupportId;
+  if (planId && input.status === 'success') {
     await db
       .update(recurringSupport)
       .set({
         nextChargeAt: addOneMonth(new Date()),
+        failedAttempts: 0,
+        // Renewals are requested on the number that just paid.
+        ...(isMobileMoneyOperator(row.provider) && row.payerPhone
+          ? { payerOperator: row.provider, payerPhone: row.payerPhone }
+          : {}),
         updatedAt: new Date(),
       })
       .where(
         and(
-          eq(recurringSupport.id, row.support.recurringSupportId),
+          eq(recurringSupport.id, planId),
           eq(recurringSupport.status, 'active')
         )
       );
+  }
+  if (planId && (input.status === 'failed' || input.status === 'cancelled')) {
+    await handlePlanPaymentFailure(planId);
   }
   await recordPaymentEvent(input);
   return { ok: true as const, duplicate: false as const };
 };
 
-export const confirmSandboxPayment = async (paymentId: string) => {
-  if (process.env.NODE_ENV === 'production') {
-    return { error: 'unavailable' as const };
+// Callbacks need a public HTTPS URL; skipped for localhost.
+function mobileMoneyCallbackUrl(operator: MobileMoneyOperator) {
+  const base = env.NEXT_PUBLIC_URL.replace(TRAILING_SLASH_RE, '');
+  if (!base.startsWith('https://')) {
+    return undefined;
   }
+  return `${base}/api/webhook/${operator === 'mtn_momo' ? 'momo' : 'airtel'}`;
+}
+
+// The payer picked an operator on the checkout page: send the USSD push.
+// A payment is sent to an operator only once; if it fails the supporter
+// starts a new donation.
+export const startMobileMoneyPayment = async (input: {
+  paymentId: string;
+  operator: MobileMoneyOperator;
+  country: string;
+  phone: string;
+}) => {
+  const payer = toMsisdn(input.country, input.phone);
+  if (!payer) {
+    return { error: 'invalid-phone' as const };
+  }
+  if (!operatorServes(input.operator, payer.country.iso)) {
+    return { error: 'not-configured' as const };
+  }
+  const reference = crypto.randomUUID();
+  const [claimed] = await db
+    .update(payment)
+    .set({
+      provider: input.operator,
+      providerReference: reference,
+      payerPhone: `+${payer.msisdn}`,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(payment.id, input.paymentId),
+        eq(payment.provider, 'sandbox'),
+        eq(payment.status, 'pending')
+      )
+    )
+    .returning({ id: payment.id, amount: payment.amount });
+  if (!claimed) {
+    return { error: 'not-payable' as const };
+  }
+
+  try {
+    await requestToPay(input.operator, {
+      reference,
+      externalId: claimed.id,
+      amount: claimed.amount,
+      payer: {
+        iso: payer.country.iso,
+        msisdn: payer.msisdn,
+        national: payer.national,
+      },
+      callbackUrl: mobileMoneyCallbackUrl(input.operator),
+    });
+  } catch (error) {
+    await applyPaymentEvent({
+      eventId: `${input.operator}:${reference}:request-failed`,
+      providerReference: reference,
+      status: 'failed',
+    });
+    return {
+      error: 'operator-refused' as const,
+      message: error instanceof MobileMoneyError ? error.message : undefined,
+    };
+  }
+  return { ok: true as const };
+};
+
+// Reads the status from the operator and applies it. Used by the checkout
+// page (polling) and by operator callbacks, whose payload is never trusted.
+export const syncMobileMoneyPayment = async (
+  where: { paymentId: string } | { providerReference: string }
+) => {
   const row = await db.query.payment.findFirst({
-    where: (table, { eq: equals }) => equals(table.id, paymentId),
-    columns: {
-      id: true,
-      provider: true,
-      providerReference: true,
-      status: true,
-    },
+    where: (table, { eq: equals }) =>
+      'paymentId' in where
+        ? equals(table.id, where.paymentId)
+        : equals(table.providerReference, where.providerReference),
+    columns: { provider: true, providerReference: true, status: true },
   });
-  if (!row || row.provider !== 'sandbox') {
-    return { error: 'not-found' as const };
+  if (!row) {
+    return null;
   }
-  return applyPaymentEvent({
-    eventId: `sandbox-confirm:${row.id}`,
+  if (row.status !== 'pending' || !isMobileMoneyOperator(row.provider)) {
+    return row.status;
+  }
+  const status = await getProviderStatus(row.provider, row.providerReference);
+  if (status === 'pending') {
+    return 'pending';
+  }
+  await applyPaymentEvent({
+    eventId: `${row.provider}:${row.providerReference}:${status}`,
     providerReference: row.providerReference,
-    status: 'success',
+    status,
   });
+  return status;
 };
 
 async function ledgerBalance(personalityId: string) {
@@ -631,54 +823,7 @@ async function pendingCheckoutPath(recurringSupportId: string) {
   return null;
 }
 
-export const prepareDueCharges = async (userId: string) => {
-  const due = await db.query.recurringSupport.findMany({
-    where: (table, { and: also, eq: equals, isNotNull, lte }) =>
-      also(
-        equals(table.userId, userId),
-        equals(table.status, 'active'),
-        isNotNull(table.nextChargeAt),
-        lte(table.nextChargeAt, new Date())
-      ),
-  });
-
-  for (const plan of due) {
-    const dueAt = plan.nextChargeAt;
-    if (!dueAt) {
-      continue;
-    }
-    const issued = await db.query.support.findFirst({
-      where: (table, { and: also, eq: equals, gte }) =>
-        also(
-          equals(table.recurringSupportId, plan.id),
-          gte(table.createdAt, dueAt)
-        ),
-      columns: { id: true },
-    });
-    if (issued) {
-      continue;
-    }
-    const inserted = await db
-      .insert(support)
-      .values({
-        personalityId: plan.personalityId,
-        userId: plan.userId,
-        recurringSupportId: plan.id,
-        amount: plan.amount,
-        currency: plan.currency,
-        displayName: plan.displayName,
-        isPublic: plan.isPublic,
-      })
-      .returning({ id: support.id });
-    const row = inserted[0];
-    if (row) {
-      await insertPendingPayment(row.id, plan.amount);
-    }
-  }
-};
-
 export const getSupporterHistory = async (userId: string) => {
-  await prepareDueCharges(userId);
   const [supports, plans] = await Promise.all([
     db.query.support.findMany({
       where: (table, { eq: equals }) => equals(table.userId, userId),
@@ -698,10 +843,14 @@ export const getSupporterHistory = async (userId: string) => {
       limit: 30,
     }),
     db.query.recurringSupport.findMany({
-      where: (table, { and: also, eq: equals }) =>
-        also(equals(table.userId, userId), equals(table.status, 'active')),
+      where: (table, { and: also, eq: equals, inArray: inArrayOf }) =>
+        also(
+          equals(table.userId, userId),
+          inArrayOf(table.status, ['active', 'paused'])
+        ),
       columns: {
         id: true,
+        status: true,
         amount: true,
         nextChargeAt: true,
         isPublic: true,
@@ -768,7 +917,7 @@ export const cancelRecurringSupport = async (input: {
       and(
         eq(recurringSupport.id, input.recurringSupportId),
         eq(recurringSupport.userId, input.userId),
-        eq(recurringSupport.status, 'active')
+        inArray(recurringSupport.status, ['active', 'paused'])
       )
     )
     .returning({ id: recurringSupport.id });
