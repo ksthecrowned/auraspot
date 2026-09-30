@@ -88,7 +88,7 @@ export default function ActionBar() {
   }
 
   const btnClass =
-    'inline-flex items-center justify-center rounded-lg p-2 text-muted-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95 disabled:opacity-40 disabled:pointer-events-none';
+    'inline-flex items-center justify-center rounded-full p-2 sm:p-2.5 text-muted-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95 disabled:opacity-40 disabled:pointer-events-none';
 
   const menuItemClass =
     'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-muted';
@@ -102,12 +102,12 @@ export default function ActionBar() {
   return (
     <>
       <div className="-translate-x-1/2 container fixed bottom-6 left-1/2 z-50 mx-auto md:bottom-10">
-        <div className="mx-auto flex w-max items-center gap-x-2 rounded-full border border-border/60 bg-background/90 px-3 py-2 shadow-[0_10px_40px_-12px_rgba(180,60,240,0.45)] backdrop-blur-md">
+        <div className="mx-auto flex w-max items-center gap-x-1 rounded-full border border-border/60 bg-background/90 px-3 py-2.5 shadow-[0_10px_40px_-12px_rgba(180,60,240,0.45)] backdrop-blur-md sm:gap-x-2">
           <NextLink href="/app" className={btnClass} title="Back to dashboard">
-            <ArrowLeft size={14} />
+            <ArrowLeft size={20} />
           </NextLink>
 
-          <div className="h-5 w-px bg-border/40" />
+          <div className="h-6 w-px bg-border/40" />
 
           <button
             type="button"
@@ -116,7 +116,7 @@ export default function ActionBar() {
             disabled={!canUndo}
             onClick={undo}
           >
-            <Undo2 size={14} />
+            <Undo2 size={20} />
           </button>
           <button
             type="button"
@@ -125,10 +125,10 @@ export default function ActionBar() {
             disabled={!canRedo}
             onClick={redo}
           >
-            <Redo2 size={14} />
+            <Redo2 size={20} />
           </button>
 
-          <div className="h-5 w-px bg-border/40" />
+          <div className="h-6 w-px bg-border/40" />
 
           <Popover open={addOpen} onOpenChange={setAddOpen}>
             <PopoverTrigger asChild>
@@ -138,7 +138,7 @@ export default function ActionBar() {
                 title="Add card"
                 data-tour="add-card"
               >
-                <Plus size={14} />
+                <Plus size={20} />
               </button>
             </PopoverTrigger>
             <PopoverContent className="w-52 p-1.5" side="top" sideOffset={12}>
@@ -319,13 +319,13 @@ export default function ActionBar() {
               className={btnClass}
               data-tour="theme-settings"
             >
-              <Palette size={14} />
+              <Palette size={20} />
             </button>
           </ThemeSettingsModal>
 
           <CustomDomainModal>
             <button type="button" className={btnClass}>
-              <Globe size={14} />
+              <Globe size={20} />
             </button>
           </CustomDomainModal>
 
@@ -347,10 +347,10 @@ export default function ActionBar() {
               });
             }}
           >
-            {profileLink?.isPublic ? <Eye size={14} /> : <EyeOff size={14} />}
+            {profileLink?.isPublic ? <Eye size={20} /> : <EyeOff size={20} />}
           </button>
 
-          <div className="h-5 w-px bg-border/40" />
+          <div className="h-6 w-px bg-border/40" />
 
           <ProfileBuilder
             name={profileLink?.name ?? ''}
@@ -409,7 +409,7 @@ export default function ActionBar() {
               className={`${btnClass} text-violet-500`}
               title="AI Profile Builder"
             >
-              <Sparkles size={14} />
+              <Sparkles size={20} />
             </button>
           </ProfileBuilder>
         </div>
