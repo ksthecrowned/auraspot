@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { signOut, useSession } from '@/lib/auth-client';
-import { LogOut, Settings } from 'lucide-react';
+import { Heart, LogOut, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export function UserMenu() {
@@ -41,14 +41,21 @@ export function UserMenu() {
           className="cursor-pointer gap-x-2 rounded-lg"
         >
           <Settings className="h-4 w-4" />
-          Settings
+          Réglages
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => router.push('/account/supports')}
+          className="cursor-pointer gap-x-2 rounded-lg"
+        >
+          <Heart className="h-4 w-4" />
+          Mes dons
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={handleSignOut}
           className="cursor-pointer gap-x-2 rounded-lg text-destructive"
         >
           <LogOut className="h-4 w-4" />
-          Sign out
+          Se déconnecter
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

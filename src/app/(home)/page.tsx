@@ -327,7 +327,10 @@ export default async function HomePage() {
       )}
 
       {/* How it works */}
-      <section className="flex flex-col gap-6">
+      <section
+        id="comment-ca-marche"
+        className="flex scroll-mt-24 flex-col gap-6"
+      >
         <SectionTitle
           title="Comment ça marche"
           subtitle="Pas de compte, pas d’abonnement. Juste votre soutien."

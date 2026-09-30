@@ -4,7 +4,7 @@
 
 export const SITE_NAME = 'AuraSpot';
 
-export const TAGLINE = 'Discover. Connect. Support.';
+export const TAGLINE = 'Découvrez. Suivez. Soutenez.';
 
 export const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? 'auraspot.me';
 

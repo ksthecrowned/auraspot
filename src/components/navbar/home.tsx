@@ -1,7 +1,10 @@
 'use client';
 
-import { NavbarShell } from '@/components/navbar/shared';
-import { GradientButton } from '@/components/ui/gradient-button';
+import {
+  NAV_CTA_CLASS,
+  NAV_LINK_CLASS,
+  NavbarShell,
+} from '@/components/navbar/shared';
 import { useSession } from '@/lib/auth-client';
 import Link from 'next/link';
 
@@ -9,34 +12,40 @@ export default function HomeNavbar() {
   const { data: session } = useSession();
 
   return (
-    <NavbarShell>
-      <Link
-        href="/explore"
-        className="hidden text-muted-foreground text-sm transition-colors hover:text-foreground sm:inline"
-      >
-        Personnalités
-      </Link>
-      {session && (
-        <Link
-          href="/account/supports"
-          className="hidden text-muted-foreground text-sm transition-colors hover:text-foreground sm:inline"
-        >
-          Mes dons
-        </Link>
+    <NavbarShell
+      center={
+        <>
+          <Link href="/explore" className={NAV_LINK_CLASS}>
+            Personnalités
+          </Link>
+          <Link href="/#comment-ca-marche" className={NAV_LINK_CLASS}>
+            Comment ça marche
+          </Link>
+        </>
+      }
+    >
+      {session ? (
+        <>
+          <Link
+            href="/account/supports"
+            className={`hidden sm:inline ${NAV_LINK_CLASS}`}
+          >
+            Mes dons
+          </Link>
+          <Link href="/app" className={NAV_CTA_CLASS}>
+            Mon espace
+          </Link>
+        </>
+      ) : (
+        <>
+          <Link href="/app/sign-in" className={NAV_LINK_CLASS}>
+            Se connecter
+          </Link>
+          <Link href="/claim-link" className={NAV_CTA_CLASS}>
+            Créer ma page
+          </Link>
+        </>
       )}
-      {!session && (
-        <Link
-          href="/app/sign-in"
-          className="text-muted-foreground text-sm transition-colors hover:text-foreground"
-        >
-          Se connecter
-        </Link>
-      )}
-      <Link href={session ? '/app' : '/claim-link'}>
-        <GradientButton size="sm">
-          {session ? 'Mon espace' : 'Créer ma page'}
-        </GradientButton>
-      </Link>
     </NavbarShell>
   );
 }

@@ -1,65 +1,77 @@
-import { CONTACT_EMAIL, SITE_NAME } from '@/lib/site';
+import { Wordmark } from '@/components/brand';
+import { CONTACT_EMAIL, SITE_NAME, TAGLINE } from '@/lib/site';
 import Link from 'next/link';
-import type { ReactNode } from 'react';
 
-export default function HomeFooter() {
-  const footerLinks = {
-    Découvrir: [
-      {
-        href: '/explore',
-        label: 'Personnalités',
-      },
+const COLUMNS = [
+  {
+    title: 'Découvrir',
+    links: [
+      { href: '/explore', label: 'Personnalités' },
+      { href: '/explore?category=music', label: 'Musique' },
+      { href: '/explore?category=sport', label: 'Sport' },
+      { href: '/#comment-ca-marche', label: 'Comment ça marche' },
     ],
-    AuraSpot: [
+  },
+  {
+    title: 'Personnalités',
+    links: [
+      { href: '/claim-link', label: 'Créer ma page' },
+      { href: '/explore', label: 'Revendiquer ma fiche' },
+      { href: '/app', label: 'Mon espace' },
+    ],
+  },
+  {
+    title: SITE_NAME,
+    links: [
       {
         href: `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Aide ${SITE_NAME}`)}`,
         label: 'Aide',
       },
-      {
-        href: '/legal/privacy',
-        label: 'Confidentialité',
-      },
-      {
-        href: '/legal/terms',
-        label: 'Conditions',
-      },
+      { href: '/legal/privacy', label: 'Confidentialité' },
+      { href: '/legal/terms', label: 'Conditions' },
     ],
-  };
+  },
+];
 
+export default function HomeFooter() {
   return (
-    <footer className="bottom-0 grid w-full max-w-3xl grid-cols-2 gap-6 rounded-lg border border-border bg-background/95 p-4 backdrop-blur supports-backdrop-blur:bg-background/60 md:p-6">
-      {Object.keys(footerLinks).map((key) => (
-        <div key={key} className="flex flex-col gap-y-3 text-sm">
-          <p className="font-semibold">{key}</p>
-
-          {footerLinks[key as keyof typeof footerLinks].map((link) => (
-            <FooterLink key={link.href} href={link.href}>
-              {link.label}
-            </FooterLink>
-          ))}
+    <footer className="mt-auto w-full border-border/60 border-t pt-12">
+      <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+        <div className="flex flex-col gap-3">
+          <Link href="/" className="w-fit">
+            <Wordmark className="text-2xl" />
+          </Link>
+          <p className="font-brand font-semibold text-muted-foreground">
+            {TAGLINE}
+          </p>
+          <a
+            href={`mailto:${CONTACT_EMAIL}`}
+            className="w-fit text-muted-foreground text-sm transition-colors hover:text-foreground"
+          >
+            {CONTACT_EMAIL}
+          </a>
         </div>
-      ))}
+        {COLUMNS.map((column) => (
+          <div key={column.title} className="flex flex-col gap-3">
+            <p className="font-brand font-semibold text-sm">{column.title}</p>
+            <ul className="flex flex-col gap-2">
+              {column.links.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-muted-foreground text-sm transition-colors hover:text-foreground"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <p className="mt-10 border-border/60 border-t py-6 text-muted-foreground text-xs">
+        © {new Date().getFullYear()} {SITE_NAME}
+      </p>
     </footer>
   );
 }
-
-const FooterLink = ({
-  href,
-  children,
-}: {
-  href: string;
-  children: ReactNode;
-}) => {
-  const isExternal = href.startsWith('http');
-
-  return (
-    <Link
-      href={href}
-      target={isExternal ? '_blank' : undefined}
-      rel={isExternal ? 'noopener noreferrer' : undefined}
-      className="text-muted-foreground underline hover:text-foreground hover:no-underline"
-    >
-      {children}
-    </Link>
-  );
-};
