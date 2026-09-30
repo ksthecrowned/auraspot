@@ -14,7 +14,7 @@ import type { getMetadata } from '@/lib/metadata';
 import { cn } from '@/lib/utils';
 import { api } from '@/trpc/react';
 import type { LinkBentoSchema } from '@/types';
-import { Pencil } from 'lucide-react';
+import { ArrowUpRight, Pencil } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -50,7 +50,7 @@ const PLATFORM_MAP: Record<string, PlatformInfo> = {
     color: '#000000',
     bg: 'bg-foreground/5',
     action: {
-      label: 'Follow',
+      label: 'Suivre',
       className:
         'rounded-full bg-foreground text-background hover:bg-foreground/90',
     },
@@ -60,7 +60,7 @@ const PLATFORM_MAP: Record<string, PlatformInfo> = {
     color: '#0A66C2',
     bg: 'bg-[#0A66C2]/5',
     action: {
-      label: 'Connect',
+      label: 'Se connecter',
       className: 'rounded-full bg-[#0A66C2] text-white hover:bg-[#004182]',
     },
   },
@@ -69,18 +69,19 @@ const PLATFORM_MAP: Record<string, PlatformInfo> = {
     color: '#333333',
     bg: 'bg-gray-500/5',
     action: {
-      label: 'Follow',
-      className: 'rounded-full',
+      label: 'Suivre',
+      className:
+        'rounded-full bg-foreground text-background hover:bg-foreground/90',
     },
   },
   instagram: {
-    icon: <FaInstagram size={20} className="text-[#F56040]" />,
-    color: '#F56040',
-    bg: 'bg-[#F56040]/5',
+    icon: <FaInstagram size={20} className="text-[#E1306C]" />,
+    color: '#E1306C',
+    bg: 'bg-[#E1306C]/5',
     action: {
-      label: 'Follow',
+      label: 'Suivre',
       className:
-        'rounded-full bg-foreground text-background hover:bg-foreground/90',
+        'rounded-full bg-gradient-to-r from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white hover:opacity-90',
     },
   },
   twitch: {
@@ -88,7 +89,7 @@ const PLATFORM_MAP: Record<string, PlatformInfo> = {
     color: '#9146FF',
     bg: 'bg-[#9146FF]/5',
     action: {
-      label: 'Follow',
+      label: 'Suivre',
       className: 'rounded-full bg-[#9146FF] text-white hover:bg-[#7c3aed]',
     },
   },
@@ -97,8 +98,8 @@ const PLATFORM_MAP: Record<string, PlatformInfo> = {
     color: '#0088CC',
     bg: 'bg-[#0088CC]/5',
     action: {
-      label: 'Message',
-      className: 'rounded-full',
+      label: 'Écrire',
+      className: 'rounded-full bg-[#0088CC] text-white hover:bg-[#0077b3]',
     },
   },
   discord: {
@@ -106,7 +107,7 @@ const PLATFORM_MAP: Record<string, PlatformInfo> = {
     color: '#5A65EA',
     bg: 'bg-[#5A65EA]/5',
     action: {
-      label: 'Join',
+      label: 'Rejoindre',
       className: 'rounded-full bg-[#5A65EA] text-white hover:bg-[#4752c4]',
     },
   },
@@ -115,7 +116,7 @@ const PLATFORM_MAP: Record<string, PlatformInfo> = {
     color: '#FF0000',
     bg: 'bg-[#FF0000]/5',
     action: {
-      label: 'Subscribe',
+      label: 'S’abonner',
       className: 'rounded-full bg-[#FF0000] text-white hover:bg-[#cc0000]',
     },
   },
@@ -246,40 +247,32 @@ function getDescription(url: string, metadata?: Metadata) {
   return metadata?.description ?? null;
 }
 
-function getAction(url: string) {
+// A span, not a button: the whole card is already the link.
+function ActionPill({ url }: { url: string }) {
   const platform = getPlatform(url);
   if (!platform) {
     return null;
   }
   return (
-    <Button size="sm" className={platform.action.className}>
+    <span
+      className={cn(
+        'inline-flex h-8 items-center px-4 font-semibold text-xs shadow-sm transition-colors',
+        platform.action.className
+      )}
+    >
       {platform.action.label}
-    </Button>
+    </span>
   );
 }
 
-function ActionButton({
-  url,
-  variant = 'default',
-}: {
-  url: string;
-  variant?: 'default' | 'outline';
-}) {
-  const platform = getPlatform(url);
-  if (!platform) {
-    return null;
-  }
-  return (
-    <Button
-      size="sm"
-      variant={variant}
-      className={
-        variant === 'outline' ? 'rounded-full' : platform.action.className
-      }
-    >
-      {platform.action.label}
-    </Button>
-  );
+// Soft brand-colored light in the top-left corner of the card.
+function brandWash(url: string) {
+  const color = getPlatform(url)?.color;
+  const tint =
+    !color || color === '#000000' || color === '#333333'
+      ? 'color-mix(in oklab, var(--foreground) 7%, transparent)'
+      : `color-mix(in oklab, ${color} 14%, transparent)`;
+  return `radial-gradient(120% 100% at 0% 0%, ${tint}, transparent 65%)`;
 }
 
 // --- Layout Components ---
@@ -330,7 +323,17 @@ function CardWrapper({
       )}
     >
       {editable && <CardOverlay bento={bento} allowedSizes={LINK_CARD_SIZES} />}
+      <div
+        aria-hidden="true"
+        className="-z-10 pointer-events-none absolute inset-0 rounded-[inherit]"
+        style={{ background: brandWash(bento.href ?? '') }}
+      />
       {children}
+      {!editable && (
+        <span className="absolute top-3.5 right-3.5 inline-flex size-7 items-center justify-center rounded-full bg-background/80 text-muted-foreground opacity-0 shadow-sm transition-all duration-200 group-hover:text-foreground group-hover:opacity-100">
+          <ArrowUpRight className="size-3.5" />
+        </span>
+      )}
       {editable && onEdit && (
         <button
           type="button"
@@ -362,9 +365,9 @@ function IconBadge({
   return (
     <div
       className={cn(
-        'inline-flex shrink-0 items-center justify-center border border-border/60 bg-muted/50',
+        'inline-flex shrink-0 items-center justify-center border border-border/60 bg-background/90 shadow-sm',
         size === 'sm' && 'h-8 w-8 rounded-lg',
-        size === 'md' && 'h-10 w-10 rounded-xl',
+        size === 'md' && 'h-11 w-11 rounded-xl',
         size === 'lg' && 'h-14 w-14 rounded-2xl'
       )}
     >
@@ -399,14 +402,18 @@ function CompactLayout({
       onEdit={onEdit}
     >
       <IconBadge href={bento.href ?? ''} metadata={metadata} />
-      <div className="mt-auto space-y-1">
-        {title && <p className="font-cal text-sm leading-tight">{title}</p>}
+      <div className="mt-auto space-y-0.5">
+        {title && (
+          <p className="truncate font-cal text-base leading-tight">{title}</p>
+        )}
         {description && (
           <p className="truncate text-muted-foreground text-xs">
             {description}
           </p>
         )}
-        <div className="pt-1">{getAction(bento.href ?? '')}</div>
+        <div className="pt-2.5">
+          <ActionPill url={bento.href ?? ''} />
+        </div>
       </div>
     </CardWrapper>
   );
@@ -435,7 +442,9 @@ function BannerLayout({
     >
       <IconBadge href={bento.href ?? ''} metadata={metadata} size="sm" />
       <span className="truncate font-cal text-sm">{title}</span>
-      <div className="ml-auto shrink-0">{getAction(bento.href ?? '')}</div>
+      <div className="ml-auto shrink-0">
+        <ActionPill url={bento.href ?? ''} />
+      </div>
     </CardWrapper>
   );
 }
@@ -519,7 +528,7 @@ function WideLayout({
           </p>
         )}
         <div className="pt-2">
-          <ActionButton url={href} />
+          <ActionPill url={href} />
         </div>
       </div>
     </CardWrapper>
@@ -612,7 +621,9 @@ export default function LinkCard({
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-cal text-xl">Edit Link</DialogTitle>
+            <DialogTitle className="font-cal text-xl">
+              Modifier le lien
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -632,7 +643,7 @@ export default function LinkCard({
               disabled={isPending}
               className="w-full rounded-xl"
             >
-              {isPending ? 'Saving...' : 'Save'}
+              {isPending ? 'Enregistrement…' : 'Enregistrer'}
             </Button>
           </div>
         </DialogContent>

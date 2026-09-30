@@ -79,14 +79,14 @@ const SOCIAL_COLORS: Record<string, { text: string; bg: string }> = {
 };
 
 const SOCIAL_ACTIONS: Record<string, string> = {
-  twitter: 'Follow',
-  github: 'Follow',
-  instagram: 'Follow',
-  linkedin: 'Connect',
-  youtube: 'Subscribe',
-  discord: 'Join',
-  telegram: 'Message',
-  twitch: 'Follow',
+  twitter: 'Suivre',
+  github: 'Suivre',
+  instagram: 'Suivre',
+  linkedin: 'Se connecter',
+  youtube: 'S’abonner',
+  discord: 'Rejoindre',
+  telegram: 'Écrire',
+  twitch: 'Suivre',
 };
 
 function PreviewCard({

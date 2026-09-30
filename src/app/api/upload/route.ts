@@ -1,28 +1,32 @@
 import { auth } from '@/lib/auth';
 import { redis } from '@/lib/redis';
+import {
+  buildObjectKey,
+  deleteObjectByUrl,
+  uploadObject,
+  validateImageFile,
+} from '@/lib/storage';
 import { db, eq, isProfileLinkEditor } from '@/server/db';
 import { link } from '@/server/db/schema';
-import { del, put } from '@vercel/blob';
 import { type NextRequest, NextResponse } from 'next/server';
 import sharp from 'sharp';
-
-const FILE_EXT_RE = /\.\w+$/;
 
 export async function POST(request: NextRequest) {
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Non connecté' }, { status: 401 });
   }
 
   const formData = await request.formData();
-  const file = formData.get('file') as File;
-  const profileLinkId = formData.get('profileLinkId') as string;
+  const file = formData.get('file');
+  const profileLinkId = formData.get('profileLinkId');
 
-  if (!file || !profileLinkId) {
-    return NextResponse.json(
-      { error: 'Missing file or profileLinkId' },
-      { status: 400 }
-    );
+  if (typeof profileLinkId !== 'string' || !profileLinkId) {
+    return NextResponse.json({ error: 'Profil manquant' }, { status: 400 });
+  }
+  const invalid = validateImageFile(file);
+  if (invalid) {
+    return NextResponse.json({ error: invalid }, { status: 400 });
   }
 
   const profileLink = await db.query.link.findFirst({
@@ -33,41 +37,41 @@ export async function POST(request: NextRequest) {
   if (
     !(profileLink && (await isProfileLinkEditor(session.user.id, profileLink)))
   ) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json({ error: 'Introuvable' }, { status: 404 });
   }
+
+  const prefix = `avatars/${profileLinkId}`;
+  let optimized: Buffer;
+  try {
+    optimized = await sharp(Buffer.from(await (file as File).arrayBuffer()))
+      .resize(400, 400, { fit: 'cover' })
+      .webp({ quality: 85 })
+      .toBuffer();
+  } catch {
+    return NextResponse.json({ error: 'Image illisible' }, { status: 400 });
+  }
+
+  // Upload first, then drop the previous avatar: a failed upload never
+  // leaves the profile without an image.
+  const { url } = await uploadObject({
+    key: buildObjectKey(prefix, 'webp'),
+    body: optimized,
+    contentType: 'image/webp',
+  });
+
+  const [updated] = await db
+    .update(link)
+    .set({ image: url })
+    .where(eq(link.id, profileLinkId))
+    .returning();
 
   if (profileLink.image) {
     try {
-      await del(profileLink.image);
+      await deleteObjectByUrl(profileLink.image, prefix);
     } catch {
-      // Ignore errors when deleting
+      // An orphan file is harmless; the new avatar is already saved.
     }
   }
-
-  const arrayBuffer = await file.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-
-  const optimized = await sharp(buffer)
-    .resize(400, 400, { fit: 'cover' })
-    .webp({ quality: 85 })
-    .toBuffer();
-
-  const optimizedFile = new File(
-    [new Uint8Array(optimized)],
-    file.name.replace(FILE_EXT_RE, '.webp'),
-    { type: 'image/webp' }
-  );
-
-  const blob = await put(
-    `avatars/${profileLinkId}/${optimizedFile.name}`,
-    optimizedFile,
-    { access: 'public' }
-  );
-  const [updated] = await db
-    .update(link)
-    .set({ image: blob.url })
-    .where(eq(link.id, profileLinkId))
-    .returning();
 
   if (updated?.link) {
     await redis.set(`profile-link:${updated.link}`, updated, {
@@ -75,5 +79,5 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  return NextResponse.json({ url: blob.url });
+  return NextResponse.json({ url });
 }

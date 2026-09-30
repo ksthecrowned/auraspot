@@ -46,9 +46,9 @@ function getProviderName(url: string): string {
     if (parsed.hostname.includes('calendly.com')) {
       return 'Calendly';
     }
-    return 'Calendar';
+    return 'Agenda';
   } catch {
-    return 'Calendar';
+    return 'Agenda';
   }
 }
 
@@ -61,8 +61,8 @@ function CalendarDisplay({
   onBookClick: () => void;
   compact?: boolean;
 }) {
-  const title = bento.title || 'Book a time';
-  const description = bento.description || 'Schedule a meeting with me';
+  const title = bento.title || 'Prendre rendez-vous';
+  const description = bento.description || 'Réservez un créneau avec moi';
   const provider = getProviderName(bento.url);
 
   if (compact) {
@@ -78,7 +78,7 @@ function CalendarDisplay({
             className="mt-2 inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 font-medium text-primary-foreground text-xs transition-opacity hover:opacity-90"
             onClick={onBookClick}
           >
-            Book
+            Réserver
           </button>
         </div>
       </div>
@@ -100,7 +100,7 @@ function CalendarDisplay({
             onClick={onBookClick}
           >
             <Calendar className="h-3.5 w-3.5" />
-            Book a time
+            Prendre rendez-vous
           </button>
           <span className="text-muted-foreground/60 text-xs">
             via {provider}
@@ -219,7 +219,7 @@ export default function CalendarCard({
         <DialogContent className="flex h-[85vh] max-h-175 flex-col overflow-hidden sm:max-w-2xl">
           <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center justify-between font-cal text-xl">
-              {bento.title || 'Book a time'}
+              {bento.title || 'Prendre rendez-vous'}
               <a
                 href={bento.url}
                 target="_blank"
@@ -235,7 +235,7 @@ export default function CalendarCard({
             <iframe
               src={embedUrl}
               className="min-h-0 flex-1 rounded-lg border-0"
-              title="Book a time"
+              title="Prendre rendez-vous"
             />
           )}
         </DialogContent>
@@ -246,33 +246,33 @@ export default function CalendarCard({
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-cal text-xl">
-              Edit Booking Card
+              Modifier le bloc rendez-vous
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="cal-url" className="font-medium text-sm">
-                Booking URL
+                Lien de réservation
               </Label>
               <Input
                 id="cal-url"
-                placeholder="https://cal.com/yourname or https://calendly.com/yourname"
+                placeholder="https://cal.com/votrenom ou https://calendly.com/votrenom"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 className="rounded-xl"
               />
               <p className="text-muted-foreground text-xs">
-                Supports Cal.com and Calendly links
+                Liens Cal.com et Calendly acceptés
               </p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="cal-title" className="font-medium text-sm">
-                Title
+                Titre
               </Label>
               <Input
                 id="cal-title"
-                placeholder="Book a time"
+                placeholder="Prendre rendez-vous"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="rounded-xl"
@@ -285,7 +285,7 @@ export default function CalendarCard({
               </Label>
               <Input
                 id="cal-desc"
-                placeholder="Schedule a meeting with me"
+                placeholder="Réservez un créneau avec moi"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="rounded-xl"
@@ -297,7 +297,7 @@ export default function CalendarCard({
               disabled={isPending}
               className="w-full rounded-xl"
             >
-              {isPending ? 'Saving...' : 'Save'}
+              {isPending ? 'Enregistrement…' : 'Enregistrer'}
             </Button>
           </div>
         </DialogContent>

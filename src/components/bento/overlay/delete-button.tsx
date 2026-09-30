@@ -62,7 +62,7 @@ export default function DeleteButton({
         </button>
       </TooltipTrigger>
       <TooltipContent side="bottom" className="text-xs">
-        Delete
+        Supprimer
       </TooltipContent>
     </Tooltip>
   );

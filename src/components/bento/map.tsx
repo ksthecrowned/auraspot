@@ -24,35 +24,6 @@ type BentoData = z.infer<typeof MapBentoSchema>;
 
 export const MAP_CARD_SIZES = ['2x2', '4x2', '4x4'] as const;
 
-function getTiles(lat: number, lng: number) {
-  const zoom = 15;
-  const xFloat = ((lng + 180) / 360) * 2 ** zoom;
-  const latRad = (lat * Math.PI) / 180;
-  const yFloat =
-    ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) *
-    2 ** zoom;
-
-  const cx = Math.floor(xFloat);
-  const cy = Math.floor(yFloat);
-
-  const tiles: { url: string; dx: number; dy: number }[] = [];
-  for (let dy = -1; dy <= 1; dy++) {
-    for (let dx = -1; dx <= 1; dx++) {
-      tiles.push({
-        url: `https://a.basemaps.cartocdn.com/dark_all/${zoom}/${cx + dx}/${cy + dy}@2x.png`,
-        dx,
-        dy,
-      });
-    }
-  }
-
-  return {
-    tiles,
-    offsetX: (xFloat - cx) * 256,
-    offsetY: (yFloat - cy) * 256,
-  };
-}
-
 function useReverseGeocode(lat: number, lng: number) {
   const [placeName, setPlaceName] = useState<string | null>(null);
 
@@ -151,39 +122,21 @@ function MapDisplay({
   profileImage?: string | null;
   profileName?: string;
 }) {
-  const { tiles, offsetX, offsetY } = getTiles(latitude, longitude);
   const geocodedName = useReverseGeocode(latitude, longitude);
   const displayLabel = label || geocodedName;
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-[#1a1a2e]">
-      {/* Tile grid */}
-      <div
-        className="absolute"
-        style={{
-          width: 256 * 3,
-          height: 256 * 3,
-          left: `calc(50% - ${offsetX + 256}px)`,
-          top: `calc(50% - ${offsetY + 256}px)`,
-        }}
-      >
-        {tiles.map((tile) => (
-          <Image
-            key={`${tile.dx}-${tile.dy}`}
-            src={tile.url}
-            alt=""
-            width={256}
-            height={256}
-            className="absolute"
-            style={{
-              left: (tile.dx + 1) * 256,
-              top: (tile.dy + 1) * 256,
-            }}
-            unoptimized
-            draggable={false}
-          />
-        ))}
-      </div>
+      {/* Google Static Maps, served through /api/map (key stays server-side). */}
+      <Image
+        src={`/api/map?lat=${latitude}&lng=${longitude}`}
+        alt=""
+        fill
+        sizes="(min-width: 768px) 50vw, 100vw"
+        className="object-cover"
+        unoptimized
+        draggable={false}
+      />
 
       {/* Avatar pin */}
       <AvatarPin image={profileImage} name={profileName} />
@@ -222,7 +175,9 @@ function EmptyMapState({ editable }: { editable?: boolean }) {
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[#1a1a2e]">
       <MapPin className="h-8 w-8 text-white/20" />
-      <p className="text-white/40 text-xs">{editable ? 'Set location' : ''}</p>
+      <p className="text-white/40 text-xs">
+        {editable ? 'Choisir un lieu' : ''}
+      </p>
     </div>
   );
 }
@@ -252,8 +207,8 @@ export default function MapCard({
   const handleUseMyLocation = useCallback(() => {
     if (!navigator.geolocation) {
       toast({
-        title: 'Geolocation not supported',
-        description: 'Your browser does not support geolocation.',
+        title: 'Géolocalisation indisponible',
+        description: 'Votre navigateur ne permet pas la géolocalisation.',
       });
       return;
     }
@@ -264,20 +219,20 @@ export default function MapCard({
         setLongitude(String(position.coords.longitude));
         setLocating(false);
         toast({
-          title: 'Location updated',
-          description: 'Coordinates have been filled in.',
+          title: 'Position mise à jour',
+          description: 'Les coordonnées ont été remplies.',
         });
       },
       (err) => {
         setLocating(false);
         const msgs: Record<number, string> = {
-          1: 'Permission denied. Go to browser settings to allow location for this site.',
-          2: 'Position unavailable. Try again or enter coordinates manually.',
-          3: 'Request timed out. Try again.',
+          1: 'Autorisation refusée. Autorisez la localisation pour ce site dans les réglages du navigateur.',
+          2: 'Position indisponible. Réessayez ou saisissez les coordonnées.',
+          3: 'Délai dépassé. Réessayez.',
         };
         toast({
-          title: 'Could not get location',
-          description: msgs[err.code] ?? 'Unknown error.',
+          title: 'Impossible d’obtenir la position',
+          description: msgs[err.code] ?? 'Erreur inconnue.',
         });
       },
       { enableHighAccuracy: false, timeout: 10000 }
@@ -368,7 +323,9 @@ export default function MapCard({
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-cal text-xl">Edit Map</DialogTitle>
+            <DialogTitle className="font-cal text-xl">
+              Modifier la carte
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             {latitude &&
@@ -394,7 +351,7 @@ export default function MapCard({
               onClick={handleUseMyLocation}
             >
               <Locate className="mr-2 h-4 w-4" />
-              {locating ? 'Getting location...' : 'Use my location'}
+              {locating ? 'Localisation…' : 'Utiliser ma position'}
             </Button>
 
             <div className="grid grid-cols-2 gap-3">
@@ -426,11 +383,11 @@ export default function MapCard({
 
             <div className="space-y-2">
               <Label htmlFor="map-label" className="font-medium text-sm">
-                Label
+                Libellé
               </Label>
               <Input
                 id="map-label"
-                placeholder="New York City"
+                placeholder="Brazzaville"
                 value={label}
                 onChange={(e) => setLabel(e.target.value)}
                 className="rounded-xl"
@@ -442,7 +399,7 @@ export default function MapCard({
               disabled={isPending}
               className="w-full rounded-xl"
             >
-              {isPending ? 'Saving...' : 'Save'}
+              {isPending ? 'Enregistrement…' : 'Enregistrer'}
             </Button>
           </div>
         </DialogContent>

@@ -78,7 +78,7 @@ export default function DuplicateButton({
         </button>
       </TooltipTrigger>
       <TooltipContent side="bottom" className="text-xs">
-        Duplicate
+        Dupliquer
       </TooltipContent>
     </Tooltip>
   );

@@ -56,7 +56,9 @@ function MusicDisplay({
           )}
         />
         <p className="text-muted-foreground text-xs">
-          {compact ? 'Add a song' : 'Paste a Spotify or Apple Music link'}
+          {compact
+            ? 'Ajouter un titre'
+            : 'Collez un lien Spotify ou Apple Music'}
         </p>
       </div>
     );
@@ -275,23 +277,23 @@ export default function MusicCard({
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-cal text-xl">
-              Edit Music Card
+              Modifier le bloc musique
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="music-url" className="font-medium text-sm">
-                Song or Playlist URL
+                Lien du titre ou de la playlist
               </Label>
               <Input
                 id="music-url"
-                placeholder="https://open.spotify.com/track/... or https://music.apple.com/..."
+                placeholder="https://open.spotify.com/track/… ou https://music.apple.com/…"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 className="rounded-xl"
               />
               <p className="text-muted-foreground text-xs">
-                Paste a Spotify or Apple Music link
+                Collez un lien Spotify ou Apple Music
               </p>
             </div>
 
@@ -323,7 +325,7 @@ export default function MusicCard({
               disabled={isPending}
               className="w-full rounded-xl"
             >
-              {isPending ? 'Saving...' : 'Save'}
+              {isPending ? 'Enregistrement…' : 'Enregistrer'}
             </Button>
           </div>
         </DialogContent>

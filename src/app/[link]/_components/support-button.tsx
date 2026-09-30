@@ -1,6 +1,4 @@
 'use client';
-
-import { firstNameOf } from '@/lib/personality';
 import { Heart } from 'lucide-react';
 import Link from 'next/link';
 import { usePreview } from './preview-context';
@@ -29,7 +27,8 @@ export default function SupportButton({
       className="aura-cta flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 font-brand font-semibold text-base shadow-[0_10px_30px_-10px_rgba(180,60,240,0.6)] transition-transform hover:scale-[1.02] active:scale-[0.98]"
     >
       <Heart className="size-4 fill-current" />
-      Soutenir {firstNameOf(name)}
+      {/* Soutenir {firstNameOf(name)} */}
+      Faire un don
     </Link>
   );
 

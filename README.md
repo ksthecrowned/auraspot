@@ -24,7 +24,7 @@
 
 ## Stack
 
-Next.js 16 (App Router, Turbopack) · TypeScript · Bun · Tailwind CSS 4 · shadcn/ui · tRPC 11 · Drizzle ORM (PostgreSQL / Neon) · Better Auth · Upstash Redis · Vercel Blob · Resend · Biome.
+Next.js 16 (App Router, Turbopack) · TypeScript · Bun · Tailwind CSS 4 · shadcn/ui · tRPC 11 · Drizzle ORM (PostgreSQL / Neon) · Better Auth · Upstash Redis · Cloudflare R2 · Resend · Biome.
 
 ## Démarrer en local
 

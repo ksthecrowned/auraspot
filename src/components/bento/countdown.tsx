@@ -29,6 +29,8 @@ type TimeLeft = {
   minutes: number;
   seconds: number;
   isPast: boolean;
+  // The occurrence being counted down to (the next one for repeating events).
+  target: Date;
 };
 
 function getNextOccurrence(targetDate: string, repeat: string): Date {
@@ -53,14 +55,14 @@ function getNextOccurrence(targetDate: string, repeat: string): Date {
 }
 
 function getTimeLeft(targetDate: string, repeat = 'none'): TimeLeft {
-  const effectiveTarget =
+  const target =
     repeat !== 'none'
       ? getNextOccurrence(targetDate, repeat)
       : new Date(targetDate);
-  const diff = effectiveTarget.getTime() - Date.now();
+  const diff = target.getTime() - Date.now();
 
   if (diff <= 0) {
-    return { days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true };
+    return { days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true, target };
   }
   return {
     days: Math.floor(diff / (1000 * 60 * 60 * 24)),
@@ -68,6 +70,7 @@ function getTimeLeft(targetDate: string, repeat = 'none'): TimeLeft {
     minutes: Math.floor((diff / (1000 * 60)) % 60),
     seconds: Math.floor((diff / 1000) % 60),
     isPast: false,
+    target,
   };
 }
 
@@ -87,56 +90,145 @@ function useCountdown(targetDate: string, repeat = 'none') {
   return timeLeft;
 }
 
-function CountdownDisplay({ timeLeft }: { timeLeft: TimeLeft }) {
-  if (timeLeft.days > 7) {
-    return (
-      <p className="font-cal text-2xl tabular-nums">in {timeLeft.days} days</p>
-    );
-  }
-  if (timeLeft.days >= 1) {
-    return (
-      <p className="font-cal text-xl tabular-nums">
-        {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m
-      </p>
-    );
-  }
+const REPEAT_LABELS: Record<string, string> = {
+  weekly: 'Chaque semaine',
+  monthly: 'Chaque mois',
+  yearly: 'Chaque année',
+};
+
+const pad = (value: number) => String(value).padStart(2, '0');
+
+function formatTarget(date: Date, withWeekday = false) {
+  return date.toLocaleDateString('fr-FR', {
+    weekday: withWeekday ? 'long' : undefined,
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+function EmojiTile({
+  emoji,
+  size = 'md',
+}: {
+  emoji?: string;
+  size?: 'md' | 'lg';
+}) {
   return (
-    <div className="flex items-center gap-3">
-      <TimeUnit value={timeLeft.hours} label="h" compact />
-      <span className="font-cal text-muted-foreground text-xl">:</span>
-      <TimeUnit value={timeLeft.minutes} label="m" compact />
-      <span className="font-cal text-muted-foreground text-xl">:</span>
-      <TimeUnit value={timeLeft.seconds} label="s" compact />
+    <span
+      className={cn(
+        'countdown-emoji inline-flex shrink-0 items-center justify-center',
+        size === 'lg'
+          ? 'size-16 rounded-2xl text-4xl'
+          : 'size-11 rounded-xl text-2xl'
+      )}
+    >
+      {emoji || '⏳'}
+    </span>
+  );
+}
+
+// Emoji tile, title, then the date and the repeat rule.
+function CountdownHeader({
+  bento,
+  timeLeft,
+  size = 'md',
+}: {
+  bento: BentoData;
+  timeLeft: TimeLeft;
+  size?: 'md' | 'lg';
+}) {
+  const repeat = bento.repeat ? REPEAT_LABELS[bento.repeat] : undefined;
+  return (
+    <div
+      className={cn(
+        'flex min-w-0 gap-3',
+        size === 'lg' ? 'flex-col items-center text-center' : 'items-center'
+      )}
+    >
+      <EmojiTile emoji={bento.emoji} size={size} />
+      <div className="min-w-0">
+        {bento.title && (
+          <p
+            className={cn(
+              'truncate font-cal leading-tight',
+              size === 'lg' ? 'text-xl' : 'text-base'
+            )}
+          >
+            {bento.title}
+          </p>
+        )}
+        <p className="mt-0.5 truncate text-muted-foreground text-xs first-letter:uppercase">
+          {formatTarget(timeLeft.target, size === 'lg')}
+          {repeat && ` · ${repeat}`}
+        </p>
+      </div>
     </div>
   );
 }
 
-function TimeUnit({
+function PastMessage({
+  timeLeft,
+  className,
+}: {
+  timeLeft: TimeLeft;
+  className?: string;
+}) {
+  const today = timeLeft.target.toDateString() === new Date().toDateString();
+  return (
+    <p
+      className={cn(
+        'font-cal leading-none',
+        today ? 'countdown-number' : 'text-muted-foreground',
+        className
+      )}
+    >
+      {today ? 'C’est aujourd’hui !' : 'Terminé'}
+    </p>
+  );
+}
+
+function TimeTile({
   value,
   label,
-  compact,
+  size = 'md',
 }: {
   value: number;
   label: string;
-  compact?: boolean;
+  size?: 'md' | 'lg';
 }) {
   return (
-    <div className="flex flex-col items-center">
+    <div
+      className={cn(
+        'countdown-tile flex flex-col items-center justify-center rounded-xl',
+        size === 'lg' ? 'px-3 py-4' : 'px-2 py-2.5'
+      )}
+    >
       <span
         className={cn(
-          'font-cal tabular-nums',
-          compact ? 'text-2xl' : 'text-3xl'
+          'countdown-number font-cal tabular-nums leading-none',
+          size === 'lg' ? 'text-4xl' : 'text-2xl'
         )}
       >
-        {String(value).padStart(2, '0')}
+        {pad(value)}
       </span>
-      <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+      <span className="mt-1.5 text-[10px] text-muted-foreground uppercase tracking-wider">
         {label}
       </span>
     </div>
   );
 }
 
+function timeTiles(timeLeft: TimeLeft) {
+  return [
+    { value: timeLeft.days, label: timeLeft.days > 1 ? 'jours' : 'jour' },
+    { value: timeLeft.hours, label: 'h' },
+    { value: timeLeft.minutes, label: 'min' },
+    { value: timeLeft.seconds, label: 's' },
+  ];
+}
+
+// 2x2: the one number that matters (J-12, or hh:mm:ss on the last day).
 function CompactCountdown({
   bento,
   timeLeft,
@@ -144,21 +236,40 @@ function CompactCountdown({
   bento: BentoData;
   timeLeft: TimeLeft;
 }) {
+  let main = (
+    <p className="countdown-number font-cal text-3xl tabular-nums leading-none">
+      {pad(timeLeft.hours)}:{pad(timeLeft.minutes)}:{pad(timeLeft.seconds)}
+    </p>
+  );
+  if (timeLeft.isPast) {
+    main = <PastMessage timeLeft={timeLeft} className="text-2xl" />;
+  } else if (timeLeft.days >= 1) {
+    main = (
+      <p className="countdown-number font-cal text-4xl tabular-nums leading-none">
+        J-{timeLeft.days}
+      </p>
+    );
+  }
+
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-3 p-4 text-center">
-      {bento.emoji && <span className="text-2xl">{bento.emoji}</span>}
-      {bento.title && (
-        <p className="font-cal text-xs leading-tight">{bento.title}</p>
-      )}
-      {timeLeft.isPast ? (
-        <p className="font-cal text-primary text-sm">Time&apos;s up!</p>
-      ) : (
-        <CountdownDisplay timeLeft={timeLeft} />
-      )}
+    <div className="flex h-full w-full flex-col justify-between p-5">
+      <EmojiTile emoji={bento.emoji} />
+      <div className="min-w-0">
+        {main}
+        {bento.title && (
+          <p className="mt-2.5 truncate font-cal text-sm leading-tight">
+            {bento.title}
+          </p>
+        )}
+        <p className="truncate text-muted-foreground text-xs">
+          {formatTarget(timeLeft.target)}
+        </p>
+      </div>
     </div>
   );
 }
 
+// 4x2: header on top, the four units in tiles below.
 function WideCountdown({
   bento,
   timeLeft,
@@ -167,28 +278,22 @@ function WideCountdown({
   timeLeft: TimeLeft;
 }) {
   return (
-    <div className="flex h-full w-full flex-col justify-center gap-4 p-6">
-      <div className="flex items-center gap-2">
-        {bento.emoji && <span className="text-xl">{bento.emoji}</span>}
-        {bento.title && <p className="font-cal text-sm">{bento.title}</p>}
-      </div>
+    <div className="flex h-full w-full flex-col justify-between gap-4 p-5">
+      <CountdownHeader bento={bento} timeLeft={timeLeft} />
       {timeLeft.isPast ? (
-        <p className="font-cal text-lg text-primary">Time's up!</p>
+        <PastMessage timeLeft={timeLeft} className="text-3xl" />
       ) : (
-        <div className="flex items-center gap-4">
-          <TimeUnit value={timeLeft.days} label="days" />
-          <div className="font-cal text-2xl text-muted-foreground/40">:</div>
-          <TimeUnit value={timeLeft.hours} label="hrs" />
-          <div className="font-cal text-2xl text-muted-foreground/40">:</div>
-          <TimeUnit value={timeLeft.minutes} label="min" />
-          <div className="font-cal text-2xl text-muted-foreground/40">:</div>
-          <TimeUnit value={timeLeft.seconds} label="sec" />
+        <div className="grid grid-cols-4 gap-2">
+          {timeTiles(timeLeft).map((tile) => (
+            <TimeTile key={tile.label} value={tile.value} label={tile.label} />
+          ))}
         </div>
       )}
     </div>
   );
 }
 
+// 4x4: centered, large tiles.
 function LargeCountdown({
   bento,
   timeLeft,
@@ -197,41 +302,22 @@ function LargeCountdown({
   timeLeft: TimeLeft;
 }) {
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-5 p-6 text-center">
-      {bento.emoji && <span className="text-4xl">{bento.emoji}</span>}
-      {bento.title && <p className="font-cal text-lg">{bento.title}</p>}
+    <div className="flex h-full w-full flex-col items-center justify-center gap-6 p-6">
+      <CountdownHeader bento={bento} timeLeft={timeLeft} size="lg" />
       {timeLeft.isPast ? (
-        <p className="font-cal text-2xl text-primary">Time's up!</p>
+        <PastMessage timeLeft={timeLeft} className="text-4xl" />
       ) : (
-        <div className="grid grid-cols-4 gap-4">
-          {[
-            { value: timeLeft.days, label: 'Days' },
-            { value: timeLeft.hours, label: 'Hours' },
-            { value: timeLeft.minutes, label: 'Minutes' },
-            { value: timeLeft.seconds, label: 'Seconds' },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="flex flex-col items-center gap-1 rounded-xl border border-border/40 bg-muted/20 px-3 py-4"
-            >
-              <span className="font-cal text-2xl tabular-nums">
-                {String(item.value).padStart(2, '0')}
-              </span>
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                {item.label}
-              </span>
-            </div>
+        <div className="grid w-full grid-cols-4 gap-3">
+          {timeTiles(timeLeft).map((tile) => (
+            <TimeTile
+              key={tile.label}
+              value={tile.value}
+              label={tile.label}
+              size="lg"
+            />
           ))}
         </div>
       )}
-      <p className="text-muted-foreground text-xs">
-        {new Date(bento.targetDate).toLocaleDateString(undefined, {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        })}
-      </p>
     </div>
   );
 }
@@ -259,8 +345,8 @@ export default function CountdownCard({
   const handleSave = async () => {
     if (!targetDate) {
       toast({
-        title: 'Missing date',
-        description: 'Please select a target date.',
+        title: 'Date manquante',
+        description: 'Choisissez une date.',
       });
       return;
     }
@@ -269,8 +355,8 @@ export default function CountdownCard({
     const parsed = new Date(targetDate);
     if (Number.isNaN(parsed.getTime())) {
       toast({
-        title: 'Invalid date',
-        description: 'Please enter a valid date.',
+        title: 'Date invalide',
+        description: 'Saisissez une date valide.',
       });
       return;
     }
@@ -308,7 +394,7 @@ export default function CountdownCard({
       },
     });
     setEditOpen(false);
-    toast({ title: 'Saved', description: 'Countdown updated.' });
+    toast({ title: 'Enregistré', description: 'Compte à rebours mis à jour.' });
   };
 
   const mdSize = bento.size.md ?? '2x2';
@@ -319,7 +405,7 @@ export default function CountdownCard({
         <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-2xl bg-muted/30">
           <span className="text-2xl">⏰</span>
           <p className="text-muted-foreground text-xs">
-            {editable ? 'Set date' : ''}
+            {editable ? 'Choisir une date' : ''}
           </p>
         </div>
       );
@@ -374,7 +460,7 @@ export default function CountdownCard({
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-cal text-xl">
-              Edit Countdown
+              Modifier le compte à rebours
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
@@ -394,11 +480,11 @@ export default function CountdownCard({
 
             <div className="space-y-2">
               <Label htmlFor="cd-title" className="font-medium text-sm">
-                Title
+                Titre
               </Label>
               <Input
                 id="cd-title"
-                placeholder="My Birthday"
+                placeholder="Mon anniversaire"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="rounded-xl"
@@ -407,7 +493,7 @@ export default function CountdownCard({
 
             <div className="space-y-2">
               <Label htmlFor="cd-date" className="font-medium text-sm">
-                Target Date
+                Date cible
               </Label>
               <Input
                 id="cd-date"
@@ -424,7 +510,7 @@ export default function CountdownCard({
 
             <div className="space-y-2">
               <Label htmlFor="cd-repeat" className="font-medium text-sm">
-                Repeat
+                Répétition
               </Label>
               <select
                 id="cd-repeat"
@@ -432,10 +518,10 @@ export default function CountdownCard({
                 onChange={(e) => setRepeat(e.target.value as typeof repeat)}
                 className="h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"
               >
-                <option value="none">Don&apos;t repeat</option>
-                <option value="weekly">Every week</option>
-                <option value="monthly">Every month</option>
-                <option value="yearly">Every year</option>
+                <option value="none">Aucune</option>
+                <option value="weekly">Chaque semaine</option>
+                <option value="monthly">Chaque mois</option>
+                <option value="yearly">Chaque année</option>
               </select>
             </div>
 
@@ -444,7 +530,7 @@ export default function CountdownCard({
               disabled={isPending}
               className="w-full rounded-xl"
             >
-              {isPending ? 'Saving...' : 'Save'}
+              {isPending ? 'Enregistrement…' : 'Enregistrer'}
             </Button>
           </div>
         </DialogContent>

@@ -48,9 +48,9 @@ function CompactViews({ views }: { views: number }) {
       <Eye size={24} className="text-muted-foreground" />
       <div className="text-center">
         <p className="font-cal text-3xl leading-tight">
-          {animatedCount.toLocaleString()}
+          {animatedCount.toLocaleString('fr-FR')}
         </p>
-        <p className="mt-1 text-muted-foreground text-xs">profile views</p>
+        <p className="mt-1 text-muted-foreground text-xs">vues du profil</p>
       </div>
     </div>
   );
@@ -62,9 +62,9 @@ function BannerViews({ views }: { views: number }) {
     <div className="flex h-full w-full items-center justify-center gap-3 px-6">
       <Eye size={18} className="shrink-0 text-muted-foreground" />
       <p className="font-cal text-xl leading-tight">
-        {animatedCount.toLocaleString()}
+        {animatedCount.toLocaleString('fr-FR')}
       </p>
-      <p className="text-muted-foreground text-sm">profile views</p>
+      <p className="text-muted-foreground text-sm">vues du profil</p>
     </div>
   );
 }

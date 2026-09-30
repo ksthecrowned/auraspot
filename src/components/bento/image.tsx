@@ -29,12 +29,12 @@ export const IMAGE_CARD_SIZES = ['2x2', '4x1', '4x2', '2x4', '4x4'] as const;
 
 function getUploadButtonLabel(uploading: boolean, hasImage: boolean) {
   if (uploading) {
-    return 'Uploading...';
+    return 'Envoi…';
   }
   if (hasImage) {
-    return 'Replace Image';
+    return 'Remplacer l’image';
   }
-  return 'Upload Image';
+  return 'Importer une image';
 }
 
 function ImageEditModal({
@@ -68,7 +68,9 @@ function ImageEditModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-cal text-xl">Edit Image</DialogTitle>
+          <DialogTitle className="font-cal text-xl">
+            Modifier l’image
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -76,7 +78,7 @@ function ImageEditModal({
             <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-border">
               <Image
                 src={modalImgUrl}
-                alt="Preview"
+                alt="Aperçu"
                 fill
                 sizes="(max-width: 640px) 100vw, 512px"
                 className="object-cover"
@@ -107,11 +109,11 @@ function ImageEditModal({
 
           <div className="space-y-2">
             <Label htmlFor="caption" className="font-medium text-sm">
-              Caption
+              Légende
             </Label>
             <Input
               id="caption"
-              placeholder="Add a caption..."
+              placeholder="Ajouter une légende…"
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               className="rounded-xl border border-border bg-card p-3"
@@ -120,7 +122,7 @@ function ImageEditModal({
 
           <div className="space-y-2">
             <Label htmlFor="image-href" className="font-medium text-sm">
-              Link URL
+              Lien
             </Label>
             <Input
               id="image-href"
@@ -136,7 +138,7 @@ function ImageEditModal({
             onClick={onSave}
             disabled={uploading}
           >
-            Save
+            Enregistrer
           </Button>
         </div>
       </DialogContent>
@@ -183,13 +185,13 @@ export default function ImageCard({
         });
         const data = (await res.json()) as { url?: string; error?: string };
         if (!res.ok || !data.url) {
-          throw new Error(data.error ?? 'Upload failed');
+          throw new Error(data.error ?? 'Échec de l’envoi');
         }
         setModalImgUrl(data.url);
       } catch (err) {
         toast({
-          title: 'Error',
-          description: err instanceof Error ? err.message : 'Upload failed',
+          title: 'Erreur',
+          description: err instanceof Error ? err.message : 'Échec de l’envoi',
         });
         setModalImgUrl(bento.url || '');
       } finally {
@@ -286,7 +288,7 @@ function EmptyEditableCard({
       <CardOverlay bento={bento} allowedSizes={IMAGE_CARD_SIZES} />
       <ImagePlus className="h-6 w-6 text-muted-foreground" />
       <p className="text-muted-foreground text-xs">
-        {uploading ? 'Uploading...' : 'No image'}
+        {uploading ? 'Envoi…' : 'Aucune image'}
       </p>
       <button
         type="button"

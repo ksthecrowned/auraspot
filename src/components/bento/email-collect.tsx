@@ -41,22 +41,21 @@ function SubscribeForm({
         setSubmitted(true);
         setEmail('');
         toast({
-          title: 'Subscribed!',
-          description: 'You will receive updates from this creator.',
+          title: 'Inscription confirmée',
+          description: 'Vous recevrez les nouvelles de cette page.',
         });
       },
       onError: (err) => {
         toast({
-          title: 'Error',
+          title: 'Erreur',
           description: err.message,
         });
       },
     });
 
-  const heading = bento.heading || 'Stay in touch';
-  const description =
-    bento.description || 'Get notified when I post something new.';
-  const buttonText = bento.buttonText || 'Subscribe';
+  const heading = bento.heading || 'Restons en contact';
+  const description = bento.description || 'Soyez prévenu·e de mes nouveautés.';
+  const buttonText = bento.buttonText || 'S’inscrire';
 
   if (submitted) {
     return (
@@ -64,8 +63,10 @@ function SubscribeForm({
         <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
           <Check className="h-5 w-5 text-primary" />
         </div>
-        <p className="font-cal text-sm">You&apos;re subscribed!</p>
-        <p className="text-muted-foreground text-xs">Thanks for subscribing.</p>
+        <p className="font-cal text-sm">Vous êtes inscrit·e !</p>
+        <p className="text-muted-foreground text-xs">
+          Merci pour votre inscription.
+        </p>
       </div>
     );
   }
@@ -89,7 +90,7 @@ function SubscribeForm({
           >
             <Input
               type="email"
-              placeholder="you@email.com"
+              placeholder="vous@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="h-8 rounded-lg text-xs"
@@ -129,7 +130,7 @@ function SubscribeForm({
       >
         <Input
           type="email"
-          placeholder="you@email.com"
+          placeholder="vous@email.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="rounded-xl"
@@ -249,17 +250,17 @@ export default function EmailCollectCard({
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-cal text-xl">
-              Edit Email Collection
+              Modifier la collecte d’e-mails
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="ec-heading" className="font-medium text-sm">
-                Heading
+                Titre
               </Label>
               <Input
                 id="ec-heading"
-                placeholder="Stay in touch"
+                placeholder="Restons en contact"
                 value={heading}
                 onChange={(e) => setHeading(e.target.value)}
                 className="rounded-xl"
@@ -272,7 +273,7 @@ export default function EmailCollectCard({
               </Label>
               <Input
                 id="ec-desc"
-                placeholder="Get notified when I post something new."
+                placeholder="Soyez prévenu·e de mes nouveautés."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="rounded-xl"
@@ -281,11 +282,11 @@ export default function EmailCollectCard({
 
             <div className="space-y-2">
               <Label htmlFor="ec-btn" className="font-medium text-sm">
-                Button Text
+                Texte du bouton
               </Label>
               <Input
                 id="ec-btn"
-                placeholder="Subscribe"
+                placeholder="S’inscrire"
                 value={buttonText}
                 onChange={(e) => setButtonText(e.target.value)}
                 className="rounded-xl"
@@ -297,7 +298,7 @@ export default function EmailCollectCard({
               disabled={isSaving}
               className="w-full rounded-xl"
             >
-              {isSaving ? 'Saving...' : 'Save'}
+              {isSaving ? 'Enregistrement…' : 'Enregistrer'}
             </Button>
           </div>
         </DialogContent>

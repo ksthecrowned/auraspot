@@ -16,7 +16,7 @@ Open-source link-in-bio page builder. Users create customizable profile pages at
 - **Auth**: Better Auth (email/password + GitHub, Google, Discord, Twitter OAuth)
 - **Payments**: Stripe (subscriptions + 7-day free trial)
 - **Email**: Resend (transactional + digest emails)
-- **File Storage**: Vercel Blob
+- **File Storage**: Cloudflare R2 (S3 API via `@aws-sdk/client-s3`, helpers in `src/lib/storage.ts`)
 - **Analytics**: Custom (views, clicks, device/geo tracking via `ua-parser-js`)
 - **Linting**: Biome + Ultracite (extends `ultracite` in `biome.json`)
 - **Git Hooks**: Husky (pre-commit: `bunx biome check --write --staged --no-errors-on-unmatched`)
@@ -50,7 +50,7 @@ src/
 │   ├── api/
 │   │   ├── auth/[...all]/     # Better Auth handler
 │   │   ├── trpc/[trpc]/       # tRPC handler
-│   │   ├── upload/            # Vercel Blob uploads
+│   │   ├── upload/            # R2 uploads (avatar, bento images)
 │   │   ├── webhook/stripe/    # Stripe webhooks
 │   │   ├── og/                # OG image generation (Edge runtime)
 │   │   ├── cron/digest/       # Weekly analytics digest email
@@ -169,7 +169,7 @@ src/
 
 ### Environment Variables
 - Validated in `src/env.mjs` using `@t3-oss/env-nextjs`
-- Required server: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `RESEND_API_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `BLOB_READ_WRITE_TOKEN`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRO_MONTHLY_PRICE_ID`, `STRIPE_PRO_YEARLY_PRICE_ID`
+- Required server: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `RESEND_API_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_BASE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRO_MONTHLY_PRICE_ID`, `STRIPE_PRO_YEARLY_PRICE_ID`
 - Required client: `NEXT_PUBLIC_URL`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
 - Optional: OAuth credentials (GitHub, Google), Vercel API tokens (for custom domains)
 

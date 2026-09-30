@@ -57,27 +57,27 @@ const WEATHER_EMOJI: Record<string, string> = {
 };
 
 const WEATHER_DESC: Record<string, string> = {
-  '0': 'Clear sky',
-  '1': 'Mostly clear',
-  '2': 'Partly cloudy',
-  '3': 'Overcast',
-  '45': 'Foggy',
-  '48': 'Rime fog',
-  '51': 'Light drizzle',
-  '53': 'Drizzle',
-  '55': 'Heavy drizzle',
-  '61': 'Light rain',
-  '63': 'Rain',
-  '65': 'Heavy rain',
-  '71': 'Light snow',
-  '73': 'Snow',
-  '75': 'Heavy snow',
-  '80': 'Light showers',
-  '81': 'Showers',
-  '82': 'Heavy showers',
-  '95': 'Thunderstorm',
-  '96': 'Thunderstorm with hail',
-  '99': 'Severe thunderstorm',
+  '0': 'Ciel dégagé',
+  '1': 'Plutôt dégagé',
+  '2': 'Partiellement nuageux',
+  '3': 'Couvert',
+  '45': 'Brouillard',
+  '48': 'Brouillard givrant',
+  '51': 'Bruine légère',
+  '53': 'Bruine',
+  '55': 'Forte bruine',
+  '61': 'Pluie légère',
+  '63': 'Pluie',
+  '65': 'Forte pluie',
+  '71': 'Neige légère',
+  '73': 'Neige',
+  '75': 'Forte neige',
+  '80': 'Averses légères',
+  '81': 'Averses',
+  '82': 'Fortes averses',
+  '95': 'Orage',
+  '96': 'Orage avec grêle',
+  '99': 'Violent orage',
 };
 
 function useWeather(lat: number, lng: number) {
@@ -101,7 +101,7 @@ function useWeather(lat: number, lng: number) {
         setWeather({
           temp: Math.round(data.current.temperature_2m),
           feelsLike: Math.round(data.current.apparent_temperature),
-          description: WEATHER_DESC[code] ?? 'Unknown',
+          description: WEATHER_DESC[code] ?? 'Inconnu',
           icon: WEATHER_EMOJI[code] ?? '🌡️',
           humidity: data.current.relative_humidity_2m,
           windSpeed: Math.round(data.current.wind_speed_10m),
@@ -233,8 +233,8 @@ function WeatherContent({
       <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-2xl bg-muted/30">
         <span className="text-2xl">🌤️</span>
         <p className="text-muted-foreground text-xs">
-          {editable && 'Set location'}
-          {!editable && !weather && 'Loading...'}
+          {editable && 'Choisir un lieu'}
+          {!editable && !weather && 'Chargement…'}
         </p>
       </div>
     );
@@ -270,8 +270,8 @@ export default function WeatherCard({
   const handleUseMyLocation = useCallback(() => {
     if (!navigator.geolocation) {
       toast({
-        title: 'Geolocation not supported',
-        description: 'Your browser does not support geolocation.',
+        title: 'Géolocalisation indisponible',
+        description: 'Votre navigateur ne permet pas la géolocalisation.',
       });
       return;
     }
@@ -282,20 +282,20 @@ export default function WeatherCard({
         setLongitude(String(position.coords.longitude));
         setLocating(false);
         toast({
-          title: 'Location updated',
-          description: 'Coordinates have been filled in.',
+          title: 'Position mise à jour',
+          description: 'Les coordonnées ont été remplies.',
         });
       },
       (err) => {
         setLocating(false);
         const msgs: Record<number, string> = {
-          1: 'Permission denied. Go to browser settings to allow location for this site.',
-          2: 'Position unavailable. Try again or enter coordinates manually.',
-          3: 'Request timed out. Try again.',
+          1: 'Autorisation refusée. Autorisez la localisation pour ce site dans les réglages du navigateur.',
+          2: 'Position indisponible. Réessayez ou saisissez les coordonnées.',
+          3: 'Délai dépassé. Réessayez.',
         };
         toast({
-          title: 'Could not get location',
-          description: msgs[err.code] ?? 'Unknown error.',
+          title: 'Impossible d’obtenir la position',
+          description: msgs[err.code] ?? 'Erreur inconnue.',
         });
       },
       { enableHighAccuracy: false, timeout: 10000 }
@@ -384,7 +384,9 @@ export default function WeatherCard({
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-cal text-xl">Edit Weather</DialogTitle>
+            <DialogTitle className="font-cal text-xl">
+              Modifier la météo
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <Button
@@ -395,7 +397,7 @@ export default function WeatherCard({
               onClick={handleUseMyLocation}
             >
               <Locate className="mr-2 h-4 w-4" />
-              {locating ? 'Getting location...' : 'Use my location'}
+              {locating ? 'Localisation…' : 'Utiliser ma position'}
             </Button>
 
             <div className="grid grid-cols-2 gap-3">
@@ -427,11 +429,11 @@ export default function WeatherCard({
 
             <div className="space-y-2">
               <Label htmlFor="w-name" className="font-medium text-sm">
-                Location Name (optional)
+                Nom du lieu (facultatif)
               </Label>
               <Input
                 id="w-name"
-                placeholder="Auto-detected from coordinates"
+                placeholder="Déduit des coordonnées"
                 value={locationName}
                 onChange={(e) => setLocationName(e.target.value)}
                 className="rounded-xl"
@@ -443,7 +445,7 @@ export default function WeatherCard({
               disabled={isPending}
               className="w-full rounded-xl"
             >
-              {isPending ? 'Saving...' : 'Save'}
+              {isPending ? 'Enregistrement…' : 'Enregistrer'}
             </Button>
           </div>
         </DialogContent>

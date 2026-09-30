@@ -68,11 +68,11 @@ function AiNoteButton({
     onFinish: (_p, text) => {
       setOpen(false);
       setPrompt('');
-      toast({ title: 'Note generated!', description: 'AI content applied.' });
+      toast({ title: 'Note générée', description: 'Le texte a été appliqué.' });
     },
     onError: (err) => {
       toast({
-        title: 'Error',
+        title: 'Erreur',
         description: err.message,
         variant: 'destructive',
       });
@@ -110,7 +110,7 @@ function AiNoteButton({
         >
           <p className="font-medium text-xs">Write with AI</p>
           <Input
-            placeholder="e.g. write a short intro about my photography"
+            placeholder="ex. une courte présentation de mon travail"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             className="h-8 rounded-lg text-xs"
@@ -127,7 +127,7 @@ function AiNoteButton({
             ) : (
               <Sparkles className="mr-1 h-3 w-3" />
             )}
-            {isLoading ? 'Writing...' : 'Generate (1 credit)'}
+            {isLoading ? 'Rédaction…' : 'Générer (1 crédit)'}
           </Button>
         </form>
       </PopoverContent>
@@ -150,7 +150,7 @@ function NoteEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit,
-      Placeholder.configure({ placeholder: 'Write something...' }),
+      Placeholder.configure({ placeholder: 'Écrivez quelque chose…' }),
     ],
     content: initialContent,
     editable: true,
@@ -232,12 +232,12 @@ function NoteEditor({
           {preview ? (
             <>
               <PenLine className="h-3 w-3" />
-              Edit
+              Modifier
             </>
           ) : (
             <>
               <Eye className="h-3 w-3" />
-              Preview
+              Aperçu
             </>
           )}
         </Button>
@@ -265,7 +265,7 @@ function NoteEditor({
           }
         }}
       >
-        {isSaving ? 'Saving...' : 'Save'}
+        {isSaving ? 'Enregistrement…' : 'Enregistrer'}
       </Button>
     </div>
   );
@@ -329,7 +329,7 @@ export default function NoteCard({
           <NoteContent key={bento.text} html={bento.text} />
         ) : (
           <p className="text-muted-foreground text-xs">
-            {editable ? 'Empty note' : ''}
+            {editable ? 'Note vide' : ''}
           </p>
         )}
 
@@ -357,7 +357,9 @@ export default function NoteCard({
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-cal text-xl">Edit Note</DialogTitle>
+            <DialogTitle className="font-cal text-xl">
+              Modifier la note
+            </DialogTitle>
           </DialogHeader>
           {editOpen && (
             <NoteEditor

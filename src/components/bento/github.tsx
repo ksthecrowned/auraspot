@@ -85,7 +85,7 @@ function GitHubContribGraph({ username }: { username: string }) {
     <div className="overflow-hidden rounded-lg border border-border/40 bg-muted/20 p-2">
       <Image
         src={`https://ghchart.rshah.org/${username}`}
-        alt={`${username}'s contributions`}
+        alt={`Contributions de ${username}`}
         width={720}
         height={100}
         className="w-full"
@@ -127,13 +127,13 @@ function CompactGitHub({
         <div className="flex items-center gap-4 text-xs">
           <div className="text-center">
             <span className="font-cal text-foreground">{stats.followers}</span>
-            <span className="ml-1 text-muted-foreground">followers</span>
+            <span className="ml-1 text-muted-foreground">abonnés</span>
           </div>
           <div className="text-center">
             <span className="font-cal text-foreground">
               {stats.publicRepos}
             </span>
-            <span className="ml-1 text-muted-foreground">repos</span>
+            <span className="ml-1 text-muted-foreground">dépôts</span>
           </div>
         </div>
       )}
@@ -223,21 +223,21 @@ function LargeGitHub({
         <div className="mt-5 grid grid-cols-3 gap-3">
           <div className="flex flex-col items-center gap-1 rounded-xl border border-border/40 bg-muted/20 py-3">
             <span className="font-cal text-lg">
-              {stats.publicRepos.toLocaleString()}
+              {stats.publicRepos.toLocaleString('fr-FR')}
             </span>
-            <span className="text-[11px] text-muted-foreground">Repos</span>
+            <span className="text-[11px] text-muted-foreground">Dépôts</span>
           </div>
           <div className="flex flex-col items-center gap-1 rounded-xl border border-border/40 bg-muted/20 py-3">
             <span className="font-cal text-lg">
-              {stats.followers.toLocaleString()}
+              {stats.followers.toLocaleString('fr-FR')}
             </span>
-            <span className="text-[11px] text-muted-foreground">Followers</span>
+            <span className="text-[11px] text-muted-foreground">Abonnés</span>
           </div>
           <div className="flex flex-col items-center gap-1 rounded-xl border border-border/40 bg-muted/20 py-3">
             <span className="font-cal text-lg">
-              {stats.stars.toLocaleString()}
+              {stats.stars.toLocaleString('fr-FR')}
             </span>
-            <span className="text-[11px] text-muted-foreground">Stars</span>
+            <span className="text-[11px] text-muted-foreground">Étoiles</span>
           </div>
         </div>
       )}
@@ -299,7 +299,7 @@ export default function GitHubCard({
         <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-2xl bg-muted/30">
           <FaGithub className="h-8 w-8 text-muted-foreground" />
           <p className="text-muted-foreground text-xs">
-            {editable ? 'Set username' : ''}
+            {editable ? 'Choisir un compte' : ''}
           </p>
         </div>
       );
@@ -363,13 +363,13 @@ export default function GitHubCard({
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-cal text-xl">
-              Edit GitHub Card
+              Modifier le bloc GitHub
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="gh-username" className="font-medium text-sm">
-                GitHub Username
+                Nom d’utilisateur GitHub
               </Label>
               <Input
                 id="gh-username"
@@ -397,7 +397,7 @@ export default function GitHubCard({
               disabled={isPending}
               className="w-full rounded-xl"
             >
-              {isPending ? 'Saving...' : 'Save'}
+              {isPending ? 'Enregistrement…' : 'Enregistrer'}
             </Button>
           </div>
         </DialogContent>

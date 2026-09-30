@@ -47,8 +47,11 @@ export default async function PersonalityPageShell({
       accentColor={personality?.accentColor}
     >
       {/* Full-width clip so the halo fades out instead of being cut at the column edge. */}
-      <div className="w-full overflow-x-clip" style={accentStyle}>
-        <div className="mx-auto flex min-h-screen w-full max-w-md animate-fade-in flex-col px-4 pt-5 pb-12">
+      <div
+        className="flex min-h-screen w-full flex-col overflow-x-clip"
+        style={accentStyle}
+      >
+        <div className="mx-auto w-full max-w-6xl px-4 pt-5 md:px-8">
           <SiteHeader
             actions={
               backLink ? (
@@ -59,7 +62,9 @@ export default async function PersonalityPageShell({
               ) : undefined
             }
           />
+        </div>
 
+        <div className="mx-auto flex w-full max-w-md flex-1 animate-fade-in flex-col px-4 pb-12">
           <section className="relative mt-10 flex flex-col items-center gap-3 text-center">
             <div
               aria-hidden="true"
