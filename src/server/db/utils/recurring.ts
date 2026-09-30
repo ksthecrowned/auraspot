@@ -13,7 +13,7 @@ import {
   applyPaymentEvent,
   insertPendingPayment,
   startMobileMoneyPayment,
-  syncMobileMoneyPayment,
+  syncPayment,
 } from './support';
 
 // Mobile money cannot debit a wallet without the payer's PIN, so a monthly
@@ -39,12 +39,10 @@ async function closeStalePendingPayments() {
 
   let closed = 0;
   for (const row of rows) {
-    // The operator may know the final status even if nobody polled.
-    const status = isMobileMoneyOperator(row.provider)
-      ? await syncMobileMoneyPayment({ paymentId: row.id }).catch(
-          () => 'pending'
-        )
-      : 'pending';
+    // The provider may know the final status even if nobody polled.
+    const status = await syncPayment({ paymentId: row.id }).catch(
+      () => 'pending'
+    );
     if (status === 'pending') {
       await applyPaymentEvent({
         eventId: `expire:${row.id}`,

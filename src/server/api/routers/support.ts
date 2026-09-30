@@ -17,7 +17,7 @@ import {
   requestWithdrawal,
   setSupportVisibility,
   startMobileMoneyPayment,
-  syncMobileMoneyPayment,
+  syncPayment,
 } from '@/server/db/utils/support';
 import { TRPCError } from '@trpc/server';
 import {
@@ -107,7 +107,7 @@ export const supportRouter = createTRPCRouter({
   syncCheckout: rateLimitedPolling
     .input(CheckoutPaymentSchema)
     .mutation(async ({ input }) => {
-      const status = await syncMobileMoneyPayment({
+      const status = await syncPayment({
         paymentId: input.paymentId,
       }).catch(() => 'pending' as const);
       if (!status) {

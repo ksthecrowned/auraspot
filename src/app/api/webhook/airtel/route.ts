@@ -1,4 +1,4 @@
-import { syncMobileMoneyPayment } from '@/server/db/utils/support';
+import { syncPayment } from '@/server/db/utils/support';
 
 const UUID_RE = /^[0-9a-f-]{36}$/i;
 
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   } | null;
   const providerReference = body?.transaction?.id;
   if (providerReference && UUID_RE.test(providerReference)) {
-    await syncMobileMoneyPayment({ providerReference }).catch(() => null);
+    await syncPayment({ providerReference }).catch(() => null);
   }
   return Response.json({ ok: true });
 }

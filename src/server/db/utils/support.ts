@@ -14,7 +14,12 @@ import {
   operatorServes,
   requestToPay,
 } from '@/server/payments/mobile-money';
-import type { PaymentStatus } from '@/server/payments/nyole';
+import {
+  NYOLE_PENDING_PREFIX,
+  NYOLE_PROVIDER,
+  type PaymentStatus,
+  getNyoleSessionStatus,
+} from '@/server/payments/nyole';
 import { getCheckoutProvider } from '@/server/payments/provider';
 import { canTransition } from '@/server/payments/transitions';
 import { and, desc, eq, gte, inArray, isNotNull, sql } from 'drizzle-orm';
@@ -568,11 +573,12 @@ export const startMobileMoneyPayment = async (input: {
   return { ok: true as const };
 };
 
-// Reads the status from the operator and applies it. Used by the checkout
-// page (polling) and by operator callbacks, whose payload is never trusted.
-export const syncMobileMoneyPayment = async (
+// Reads the status from the provider and applies it. Used by the checkout
+// page (polling), provider webhooks (whose payload is never trusted) and the
+// stale-payment cleanup.
+export const syncPayment = async (
   where: { paymentId: string } | { providerReference: string }
-) => {
+): Promise<PaymentStatus | null> => {
   const row = await db.query.payment.findFirst({
     where: (table, { eq: equals }) =>
       'paymentId' in where
@@ -583,12 +589,32 @@ export const syncMobileMoneyPayment = async (
   if (!row) {
     return null;
   }
-  if (row.status !== 'pending' || !isMobileMoneyOperator(row.provider)) {
+  const nyole = row.provider === NYOLE_PROVIDER;
+  // An expired Nyole payment can still be paid late (see canTransition).
+  const open =
+    row.status === 'pending' || (nyole && row.status === 'cancelled');
+  if (!open) {
     return row.status;
   }
-  const status = await getProviderStatus(row.provider, row.providerReference);
-  if (status === 'pending') {
-    return 'pending';
+
+  let status: PaymentStatus;
+  if (nyole) {
+    // Session not created yet: nothing to ask Nyole.
+    if (row.providerReference.startsWith(NYOLE_PENDING_PREFIX)) {
+      return row.status;
+    }
+    status = await getNyoleSessionStatus(row.providerReference);
+  } else if (isMobileMoneyOperator(row.provider)) {
+    status = await getProviderStatus(row.provider, row.providerReference);
+  } else {
+    return row.status;
+  }
+
+  if (
+    status === 'pending' ||
+    (row.status === 'cancelled' && status !== 'success')
+  ) {
+    return row.status;
   }
   await applyPaymentEvent({
     eventId: `${row.provider}:${row.providerReference}:${status}`,
