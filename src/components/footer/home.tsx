@@ -4,24 +4,24 @@ import type { ReactNode } from 'react';
 
 export default function HomeFooter() {
   const footerLinks = {
-    Discover: [
+    Découvrir: [
       {
         href: '/explore',
         label: 'Personnalités',
       },
     ],
-    Company: [
+    AuraSpot: [
       {
-        href: `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Need help with ${SITE_NAME}`)}`,
-        label: 'Support',
+        href: `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Aide ${SITE_NAME}`)}`,
+        label: 'Aide',
       },
       {
         href: '/legal/privacy',
-        label: 'Privacy Policy',
+        label: 'Confidentialité',
       },
       {
         href: '/legal/terms',
-        label: 'Terms of Service',
+        label: 'Conditions',
       },
     ],
   };

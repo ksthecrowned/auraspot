@@ -12,16 +12,16 @@ export default function HomeNavbar() {
     <NavbarShell>
       <Link
         href="/explore"
-        className="text-muted-foreground text-sm transition-colors hover:text-foreground"
+        className="hidden text-muted-foreground text-sm transition-colors hover:text-foreground sm:inline"
       >
         Personnalités
       </Link>
       {session && (
         <Link
           href="/account/supports"
-          className="text-muted-foreground text-sm transition-colors hover:text-foreground"
+          className="hidden text-muted-foreground text-sm transition-colors hover:text-foreground sm:inline"
         >
-          Soutiens
+          Mes dons
         </Link>
       )}
       {!session && (
@@ -29,12 +29,12 @@ export default function HomeNavbar() {
           href="/app/sign-in"
           className="text-muted-foreground text-sm transition-colors hover:text-foreground"
         >
-          Sign in
+          Se connecter
         </Link>
       )}
       <Link href={session ? '/app' : '/claim-link'}>
         <GradientButton size="sm">
-          {session ? 'Go to App' : 'Get Started'}
+          {session ? 'Mon espace' : 'Créer ma page'}
         </GradientButton>
       </Link>
     </NavbarShell>

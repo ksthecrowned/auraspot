@@ -6,7 +6,7 @@ import {
   supportCommissionBps,
 } from '@/lib/money';
 import { getCheckoutProvider } from '@/server/payments/provider';
-import { and, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNotNull, sql } from 'drizzle-orm';
 import { db } from '../db';
 import {
   ledgerEntry,
@@ -862,4 +862,24 @@ export const countSupportsByPersonality = async (personalityIds: string[]) => {
     .groupBy(support.personalityId);
 
   return new Map(rows.map((row) => [row.personalityId, Number(row.count)]));
+};
+
+// Personalities with the most successful supports since `since` (home page).
+export const topSupportedPersonalityIds = async (
+  since: Date,
+  limit: number
+) => {
+  const rows = await db
+    .select({
+      personalityId: support.personalityId,
+      count: sql<number>`count(distinct ${support.id})`,
+    })
+    .from(support)
+    .innerJoin(payment, eq(payment.supportId, support.id))
+    .where(and(eq(payment.status, 'success'), gte(support.createdAt, since)))
+    .groupBy(support.personalityId)
+    .orderBy(desc(sql`count(distinct ${support.id})`))
+    .limit(limit);
+
+  return rows.map((row) => row.personalityId);
 };

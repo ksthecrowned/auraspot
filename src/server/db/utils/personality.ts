@@ -3,7 +3,73 @@ import { db } from '../db';
 import { link, personalityClaim, personalityManager } from '../schema';
 import { invalidateProfileLinkCache } from './link';
 import { getViewsSinceByLinks } from './link-view';
-import { countSupportsByPersonality } from './support';
+import {
+  countSupportsByPersonality,
+  topSupportedPersonalityIds,
+} from './support';
+
+// Home page "À la une": most supported over the last 30 days, topped up
+// with the most recent public profiles when there are not enough supports.
+export const getFeaturedPersonalities = async (limit: number) => {
+  const since = new Date(Date.now() - 30 * 86_400_000);
+  const topIds = await topSupportedPersonalityIds(since, limit * 2);
+
+  const columns = {
+    id: true,
+    link: true,
+    name: true,
+    image: true,
+    location: true,
+    verificationStatus: true,
+  } as const;
+  const withCategory = { category: { columns: { name: true } } } as const;
+
+  const top =
+    topIds.length > 0
+      ? await db.query.link.findMany({
+          where: (table, { and: also, eq: equals, inArray }) =>
+            also(
+              inArray(table.id, topIds),
+              equals(table.status, 'active'),
+              equals(table.isPublic, true)
+            ),
+          columns,
+          with: withCategory,
+        })
+      : [];
+  const ranked = topIds
+    .map((id) => top.find((row) => row.id === id))
+    .filter((row) => row !== undefined)
+    .slice(0, limit);
+
+  const recent =
+    ranked.length < limit
+      ? await db.query.link.findMany({
+          where: (table, { and: also, eq: equals, notInArray }) =>
+            also(
+              equals(table.status, 'active'),
+              equals(table.isPublic, true),
+              ranked.length > 0
+                ? notInArray(
+                    table.id,
+                    ranked.map((row) => row.id)
+                  )
+                : undefined
+            ),
+          columns,
+          with: withCategory,
+          orderBy: (table, { desc }) => desc(table.createdAt),
+          limit: limit - ranked.length,
+        })
+      : [];
+
+  const rows = [...ranked, ...recent];
+  const counts = await countSupportsByPersonality(rows.map((row) => row.id));
+  return rows.map((row) => ({
+    ...withSlug(row),
+    supportCount: counts.get(row.id) ?? 0,
+  }));
+};
 
 // Profiles a user owns or manages, with 30-day views and support counts.
 export const getDashboardProfileLinks = async (userId: string) => {
