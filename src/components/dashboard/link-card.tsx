@@ -6,8 +6,8 @@ import {
   AURA_ERROR,
   AURA_SECONDARY_BUTTON,
 } from '@/components/forms/aura-fields';
+import { AURA_CARD_CLASS } from '@/components/forms/aura-fields';
 import LinkQRModal from '@/components/modals/link-qr-modal';
-import { AURA_CARD_CLASS } from '@/components/personality-page-shell';
 import {
   Dialog,
   DialogContent,

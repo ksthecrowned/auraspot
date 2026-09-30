@@ -1,7 +1,7 @@
 import { DashboardTabs } from '@/components/dashboard/dashboard-tabs';
 import { EmptyState } from '@/components/dashboard/empty-state';
 import { DashboardLinkCard } from '@/components/dashboard/link-card';
-import { AURA_CARD_CLASS } from '@/components/personality-page-shell';
+import { AURA_CARD_CLASS } from '@/components/forms/aura-fields';
 import { Skeleton } from '@/components/ui/skeleton';
 import UserSettings from '@/components/user-settings';
 import { formatThousands } from '@/lib/money';

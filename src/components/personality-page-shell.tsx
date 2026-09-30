@@ -2,6 +2,7 @@ import PersonalityVerificationBadge from '@/app/[link]/_components/personality-v
 import ThemeWrapper from '@/app/[link]/_components/theme-wrapper';
 import { AuraAvatar } from '@/components/aura-avatar';
 import { Wordmark } from '@/components/brand';
+import { AURA_CARD_CLASS } from '@/components/forms/aura-fields';
 import { cn } from '@/lib/utils';
 import { getPersonalityAppearance } from '@/server/db/utils/personality';
 import { ArrowLeft } from 'lucide-react';
@@ -96,6 +97,3 @@ export default async function PersonalityPageShell({
     </ThemeWrapper>
   );
 }
-
-export const AURA_CARD_CLASS =
-  'rounded-[1.25rem] border border-border/70 bg-card p-5 shadow-[0_1px_2px_rgba(11,13,26,0.05),0_8px_24px_-12px_rgba(180,60,240,0.25)] sm:p-6';

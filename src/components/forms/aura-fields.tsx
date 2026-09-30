@@ -1,6 +1,10 @@
 import { cn } from '@/lib/utils';
 
 // Shared look for the forms around a personality profile.
+// Client-safe: no server imports here (it is used by client components).
+
+export const AURA_CARD_CLASS =
+  'rounded-[1.25rem] border border-border/70 bg-card p-5 shadow-[0_1px_2px_rgba(11,13,26,0.05),0_8px_24px_-12px_rgba(180,60,240,0.25)] sm:p-6';
 
 export const AURA_PRIMARY_BUTTON =
   'aura-cta flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 font-brand font-semibold text-base shadow-[0_10px_30px_-10px_rgba(180,60,240,0.6)] transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50';

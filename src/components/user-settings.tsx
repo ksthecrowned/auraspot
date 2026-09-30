@@ -1,7 +1,7 @@
 import { AuraAvatar } from '@/components/aura-avatar';
 import EmailDigestToggle from '@/components/email-digest-toggle';
 import { AURA_INPUT } from '@/components/forms/aura-fields';
-import { AURA_CARD_CLASS } from '@/components/personality-page-shell';
+import { AURA_CARD_CLASS } from '@/components/forms/aura-fields';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { auth } from '@/lib/auth';

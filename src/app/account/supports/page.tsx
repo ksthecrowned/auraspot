@@ -1,11 +1,10 @@
 import { AuraAvatar } from '@/components/aura-avatar';
+import { AURA_CARD_CLASS } from '@/components/forms/aura-fields';
 import {
   CancelRecurringButton,
   SupportPrivacyToggle,
 } from '@/components/forms/supporter-history-actions';
-import PersonalityPageShell, {
-  AURA_CARD_CLASS,
-} from '@/components/personality-page-shell';
+import PersonalityPageShell from '@/components/personality-page-shell';
 import { auth } from '@/lib/auth';
 import { formatFcfa } from '@/lib/money';
 import { api } from '@/trpc/server';

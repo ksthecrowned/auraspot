@@ -1,7 +1,7 @@
 import PersonalityVerificationBadge from '@/app/[link]/_components/personality-verification-badge';
 import { AuraAvatar } from '@/components/aura-avatar';
 import { AuraOrb, Wordmark } from '@/components/brand';
-import { AURA_CARD_CLASS } from '@/components/personality-page-shell';
+import { AURA_CARD_CLASS } from '@/components/forms/aura-fields';
 import { formatThousands } from '@/lib/money';
 import { cn } from '@/lib/utils';
 import {
