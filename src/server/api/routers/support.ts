@@ -17,6 +17,7 @@ import {
   requestWithdrawal,
   setSupportVisibility,
   startMobileMoneyPayment,
+  startNyolePayment,
   syncPayment,
 } from '@/server/db/utils/support';
 import { TRPCError } from '@trpc/server';
@@ -37,6 +38,8 @@ const PAY_ERRORS = {
   'invalid-phone': 'Ce numéro de téléphone n’est pas valide.',
   'operator-refused':
     'L’opérateur a refusé la demande. Vérifiez le numéro et réessayez avec un nouveau don.',
+  'provider-refused':
+    'Nyole n’a pas pu ouvrir le paiement. Réessayez avec un nouveau don.',
 } as const;
 
 const rateLimitedPolling = createRateLimitedProcedure(generalLimit);
@@ -101,6 +104,20 @@ export const supportRouter = createTRPCRouter({
         });
       }
       return result;
+    }),
+
+  // Creates the Nyole session; the client then redirects to its url.
+  payWithNyole: rateLimitedSupport
+    .input(CheckoutPaymentSchema)
+    .mutation(async ({ input }) => {
+      const result = await startNyolePayment(input);
+      if ('error' in result) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: PAY_ERRORS[result.error ?? 'provider-refused'],
+        });
+      }
+      return { url: result.url };
     }),
 
   // Polled by the checkout page while the payer approves on their phone.

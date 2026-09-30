@@ -17,8 +17,12 @@ import {
 import {
   NYOLE_PENDING_PREFIX,
   NYOLE_PROVIDER,
+  NyoleError,
   type PaymentStatus,
+  createNyoleSession,
   getNyoleSessionStatus,
+  nyoleCheckoutUrl,
+  nyoleEnabled,
 } from '@/server/payments/nyole';
 import { getCheckoutProvider } from '@/server/payments/provider';
 import { canTransition } from '@/server/payments/transitions';
@@ -300,6 +304,7 @@ export const getCheckout = async (paymentId: string) => {
     columns: {
       id: true,
       provider: true,
+      providerReference: true,
       status: true,
       amount: true,
       currency: true,
@@ -324,8 +329,15 @@ export const getCheckout = async (paymentId: string) => {
     currency: row.currency,
     personalityName: row.support.personality.name,
     personalitySlug: row.support.personality.link,
-    // No operator chosen yet: the payer can pick MTN MoMo or Airtel Money.
+    // No provider chosen yet: the payer can pick MTN MoMo, Airtel or Nyole.
     canPay: row.provider === 'sandbox' && row.status === 'pending',
+    // Nyole session open: the payer can go back to it.
+    resumeUrl:
+      row.provider === NYOLE_PROVIDER &&
+      row.status === 'pending' &&
+      !row.providerReference.startsWith(NYOLE_PENDING_PREFIX)
+        ? nyoleCheckoutUrl(row.providerReference)
+        : null,
   };
 };
 
@@ -571,6 +583,81 @@ export const startMobileMoneyPayment = async (input: {
     };
   }
   return { ok: true as const };
+};
+
+function checkoutReturnUrl(paymentId: string) {
+  const base = env.NEXT_PUBLIC_URL.replace(TRAILING_SLASH_RE, '');
+  return `${base}/support/checkout/${paymentId}`;
+}
+
+// The payer chose Nyole on the checkout page: reserve the payment, create a
+// hosted session and send them there. Idempotency-Key = payment id, so a
+// double click or a retry after a crash gets the same session back.
+export const startNyolePayment = async (input: { paymentId: string }) => {
+  if (!nyoleEnabled()) {
+    return { error: 'not-configured' as const };
+  }
+  const placeholder = `${NYOLE_PENDING_PREFIX}${input.paymentId}`;
+  await db
+    .update(payment)
+    .set({
+      provider: NYOLE_PROVIDER,
+      providerReference: placeholder,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(payment.id, input.paymentId),
+        eq(payment.provider, 'sandbox'),
+        eq(payment.status, 'pending')
+      )
+    );
+
+  const row = await db.query.payment.findFirst({
+    where: (table, { eq: equals }) => equals(table.id, input.paymentId),
+    columns: {
+      provider: true,
+      providerReference: true,
+      status: true,
+      amount: true,
+      currency: true,
+    },
+  });
+  if (!row || row.provider !== NYOLE_PROVIDER || row.status !== 'pending') {
+    return { error: 'not-payable' as const };
+  }
+  if (!row.providerReference.startsWith(NYOLE_PENDING_PREFIX)) {
+    return { ok: true as const, url: nyoleCheckoutUrl(row.providerReference) };
+  }
+
+  try {
+    const session = await createNyoleSession({
+      paymentId: input.paymentId,
+      amount: row.amount,
+      currency: row.currency,
+      returnUrl: checkoutReturnUrl(input.paymentId),
+    });
+    await db
+      .update(payment)
+      .set({ providerReference: session.id, updatedAt: new Date() })
+      .where(
+        and(
+          eq(payment.id, input.paymentId),
+          eq(payment.providerReference, placeholder)
+        )
+      );
+    return { ok: true as const, url: session.url };
+  } catch (error) {
+    await applyPaymentEvent({
+      eventId: `${NYOLE_PROVIDER}:${placeholder}:request-failed`,
+      providerReference: placeholder,
+      status: 'failed',
+    });
+    return {
+      error: 'provider-refused' as const,
+      message: error instanceof NyoleError ? error.message : undefined,
+    };
+  }
 };
 
 // Reads the status from the provider and applies it. Used by the checkout
