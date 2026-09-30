@@ -14,6 +14,10 @@ export const SITE_URL = (
 
 export const CONTACT_EMAIL = `contact@${ROOT_DOMAIN}`;
 
+// AGPL-3.0: the source must be offered to users of the running site.
+export const SOURCE_URL = 'https://github.com/ksthecrowned/auraspot';
+export const UPSTREAM_URL = 'https://github.com/vanxh/openbio';
+
 export const LOGO_URL = `${SITE_URL}/logo.png`;
 
 export function profileUrl(slug: string) {

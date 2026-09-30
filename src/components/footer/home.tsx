@@ -1,5 +1,11 @@
 import { Wordmark } from '@/components/brand';
-import { CONTACT_EMAIL, SITE_NAME, TAGLINE } from '@/lib/site';
+import {
+  CONTACT_EMAIL,
+  SITE_NAME,
+  SOURCE_URL,
+  TAGLINE,
+  UPSTREAM_URL,
+} from '@/lib/site';
 import Link from 'next/link';
 
 const COLUMNS = [
@@ -69,9 +75,40 @@ export default function HomeFooter() {
           </div>
         ))}
       </div>
-      <p className="mt-10 border-border/60 border-t py-6 text-muted-foreground text-xs">
-        © {new Date().getFullYear()} {SITE_NAME}
-      </p>
+      <div className="mt-10 flex flex-col gap-2 border-border/60 border-t py-6 text-muted-foreground text-xs sm:flex-row sm:items-center sm:justify-between">
+        <p>
+          © {new Date().getFullYear()} {SITE_NAME}
+        </p>
+        {/* AGPL-3.0 notices: source offered to users, upstream credited. */}
+        <p className="flex flex-wrap gap-x-3 gap-y-1">
+          <a
+            href={SOURCE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors hover:text-foreground"
+          >
+            Code source
+          </a>
+          <span>·</span>
+          <a
+            href={UPSTREAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors hover:text-foreground"
+          >
+            Basé sur OpenBio
+          </a>
+          <span>·</span>
+          <a
+            href="https://www.gnu.org/licenses/agpl-3.0.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="transition-colors hover:text-foreground"
+          >
+            Licence AGPL-3.0
+          </a>
+        </p>
+      </div>
     </footer>
   );
 }
