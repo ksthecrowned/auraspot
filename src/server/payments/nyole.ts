@@ -16,6 +16,8 @@ const DEFAULT_BASE_URL = 'https://app.nyole.com';
 const TRAILING_SLASH_RE = /\/$/;
 const UUID_RE = /^[0-9a-f-]{36}$/i;
 const SIGNATURE_TOLERANCE_S = 5 * 60;
+// A hung call would leave a payment reserved and stall the stale-payment cron.
+const REQUEST_TIMEOUT_MS = 10_000;
 
 export class NyoleError extends Error {}
 
@@ -42,6 +44,23 @@ export function nyoleCheckoutUrl(sessionId: string) {
   return `${baseUrl()}/checkout/${encodeURIComponent(sessionId)}`;
 }
 
+// What the checkout page offers for a pending Nyole payment: go back to the
+// open session, or try again when no session was created (Nyole refused or
+// did not answer; the payment keeps its placeholder reference).
+export function nyoleCheckoutAction(row: {
+  provider: string;
+  status: PaymentStatus;
+  providerReference: string;
+}): { kind: 'resume'; url: string } | { kind: 'retry' } | null {
+  if (row.provider !== NYOLE_PROVIDER || row.status !== 'pending') {
+    return null;
+  }
+  if (row.providerReference.startsWith(NYOLE_PENDING_PREFIX)) {
+    return { kind: 'retry' };
+  }
+  return { kind: 'resume', url: nyoleCheckoutUrl(row.providerReference) };
+}
+
 // Idempotency-Key = our payment id: a retry returns the same session.
 export async function createNyoleSession(input: {
   paymentId: string;
@@ -56,6 +75,7 @@ export async function createNyoleSession(input: {
       'Content-Type': 'application/json',
       'Idempotency-Key': input.paymentId,
     },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     body: JSON.stringify({
       amount: input.amount,
       currency: input.currency,
@@ -97,7 +117,10 @@ export async function getNyoleSessionStatus(
 ): Promise<PaymentStatus> {
   const res = await fetch(
     `${baseUrl()}/api/v1/checkout/sessions/${encodeURIComponent(sessionId)}/status`,
-    { headers: { Authorization: `Bearer ${secretKey()}` } }
+    {
+      headers: { Authorization: `Bearer ${secretKey()}` },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    }
   );
   if (!res.ok) {
     throw new NyoleError(`Statut Nyole indisponible (${res.status})`);

@@ -21,6 +21,7 @@ import {
   type PaymentStatus,
   createNyoleSession,
   getNyoleSessionStatus,
+  nyoleCheckoutAction,
   nyoleCheckoutUrl,
   nyoleEnabled,
 } from '@/server/payments/nyole';
@@ -331,13 +332,8 @@ export const getCheckout = async (paymentId: string) => {
     personalitySlug: row.support.personality.link,
     // No provider chosen yet: the payer can pick MTN MoMo, Airtel or Nyole.
     canPay: row.provider === 'sandbox' && row.status === 'pending',
-    // Nyole session open: the payer can go back to it.
-    resumeUrl:
-      row.provider === NYOLE_PROVIDER &&
-      row.status === 'pending' &&
-      !row.providerReference.startsWith(NYOLE_PENDING_PREFIX)
-        ? nyoleCheckoutUrl(row.providerReference)
-        : null,
+    // Nyole chosen: resume the open session, or retry if none was created.
+    nyoleAction: nyoleCheckoutAction(row),
   };
 };
 
@@ -637,22 +633,38 @@ export const startNyolePayment = async (input: { paymentId: string }) => {
       currency: row.currency,
       returnUrl: checkoutReturnUrl(input.paymentId),
     });
-    await db
+    // Only a payment still pending gets the session: never hand out a
+    // session for a payment another request closed meanwhile.
+    const [saved] = await db
       .update(payment)
       .set({ providerReference: session.id, updatedAt: new Date() })
       .where(
         and(
           eq(payment.id, input.paymentId),
-          eq(payment.providerReference, placeholder)
+          eq(payment.providerReference, placeholder),
+          eq(payment.status, 'pending')
         )
-      );
+      )
+      .returning({ id: payment.id });
+    if (!saved) {
+      const current = await db.query.payment.findFirst({
+        where: (table, { eq: equals }) => equals(table.id, input.paymentId),
+        columns: { providerReference: true, status: true },
+      });
+      // A concurrent request saved the same session (same Idempotency-Key).
+      if (
+        current?.status === 'pending' &&
+        current.providerReference === session.id
+      ) {
+        return { ok: true as const, url: session.url };
+      }
+      return { error: 'not-payable' as const };
+    }
     return { ok: true as const, url: session.url };
   } catch (error) {
-    await applyPaymentEvent({
-      eventId: `${NYOLE_PROVIDER}:${placeholder}:request-failed`,
-      providerReference: placeholder,
-      status: 'failed',
-    });
+    // Refused, timed out or concurrent request in flight: the payment keeps
+    // its placeholder, so a retry reuses the same Idempotency-Key. Failing it
+    // here could close a payment whose session another request just opened.
     return {
       error: 'provider-refused' as const,
       message: error instanceof NyoleError ? error.message : undefined,

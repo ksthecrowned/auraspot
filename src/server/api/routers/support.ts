@@ -39,7 +39,7 @@ const PAY_ERRORS = {
   'operator-refused':
     'L’opérateur a refusé la demande. Vérifiez le numéro et réessayez avec un nouveau don.',
   'provider-refused':
-    'Nyole n’a pas pu ouvrir le paiement. Réessayez avec un nouveau don.',
+    'Nyole n’a pas pu ouvrir le paiement. Réessayez dans un instant.',
 } as const;
 
 const rateLimitedPolling = createRateLimitedProcedure(generalLimit);

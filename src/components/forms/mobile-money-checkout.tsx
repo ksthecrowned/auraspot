@@ -285,9 +285,15 @@ export default function MobileMoneyCheckout({
         event.preventDefault();
         try {
           if (viaNyole) {
-            const { url } = await payWithNyole.mutateAsync({ paymentId });
-            setRedirecting(true);
-            window.location.assign(url);
+            const result = await payWithNyole
+              .mutateAsync({ paymentId })
+              .catch(() => null);
+            // On error the payment stays open: the message shows below and
+            // the payer can click again.
+            if (result) {
+              setRedirecting(true);
+              window.location.assign(result.url);
+            }
             return;
           }
           await pay.mutateAsync({

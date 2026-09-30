@@ -115,10 +115,10 @@ export default async function CheckoutPage({ params }: PageProps) {
           />
         )}
 
-        {checkout.resumeUrl && (
+        {checkout.nyoleAction && (
           <NyolePending
             paymentId={checkout.id}
-            resumeUrl={checkout.resumeUrl}
+            action={checkout.nyoleAction}
             retryHref={`/support/${checkout.personalitySlug}`}
           />
         )}

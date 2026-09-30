@@ -1,6 +1,10 @@
-import { describe, expect, test } from 'bun:test';
+import { afterEach, describe, expect, test } from 'bun:test';
 import { createHmac } from 'node:crypto';
 import {
+  NYOLE_PENDING_PREFIX,
+  createNyoleSession,
+  getNyoleSessionStatus,
+  nyoleCheckoutAction,
   nyoleWebhookTarget,
   toPaymentStatus,
   verifyNyoleSignature,
@@ -133,5 +137,89 @@ describe('nyoleWebhookTarget', () => {
     expect(nyoleWebhookTarget('not json')).toBeNull();
     expect(nyoleWebhookTarget('null')).toBeNull();
     expect(nyoleWebhookTarget('{}')).toBeNull();
+  });
+});
+
+// A hung Nyole call must not leave a payment reserved forever or stall the
+// stale-payment cron: every request carries an abort signal.
+describe('Nyole requests', () => {
+  const realFetch = globalThis.fetch;
+  const originalKey = process.env.NYOLE_SECRET_KEY;
+  let seen: RequestInit | undefined;
+
+  function stubFetch(body: unknown) {
+    globalThis.fetch = ((_url: unknown, init?: RequestInit) => {
+      seen = init;
+      return Promise.resolve(
+        new Response(JSON.stringify(body), { status: 201 })
+      );
+    }) as unknown as typeof fetch;
+  }
+
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+    process.env.NYOLE_SECRET_KEY = originalKey;
+    seen = undefined;
+  });
+
+  test('session creation has a timeout', async () => {
+    process.env.NYOLE_SECRET_KEY = 'af_test_sec_unit';
+    stubFetch({ id: 'cs_1', url: 'https://app.nyole.com/checkout/cs_1' });
+    await createNyoleSession({
+      paymentId: '6f1c2b8e-4a53-4c1e-9a0b-2f3d4e5f6a7b',
+      amount: 1000,
+      currency: 'XAF',
+      returnUrl: 'http://localhost:3000/support/checkout/x',
+    });
+    expect(seen?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  test('status reads have a timeout', async () => {
+    process.env.NYOLE_SECRET_KEY = 'af_test_sec_unit';
+    stubFetch({ status: 'PENDING' });
+    await getNyoleSessionStatus('cs_1');
+    expect(seen?.signal).toBeInstanceOf(AbortSignal);
+  });
+});
+
+describe('nyoleCheckoutAction', () => {
+  const id = '6f1c2b8e-4a53-4c1e-9a0b-2f3d4e5f6a7b';
+
+  test('offers to resume an open session', () => {
+    expect(
+      nyoleCheckoutAction({
+        provider: 'nyole',
+        status: 'pending',
+        providerReference: 'cs_1',
+      })
+    ).toEqual({ kind: 'resume', url: 'https://app.nyole.com/checkout/cs_1' });
+  });
+
+  // Session creation failed or hung: the payer must be able to try again.
+  test('offers to retry when no session was created', () => {
+    expect(
+      nyoleCheckoutAction({
+        provider: 'nyole',
+        status: 'pending',
+        providerReference: `${NYOLE_PENDING_PREFIX}${id}`,
+      })
+    ).toEqual({ kind: 'retry' });
+  });
+
+  test('offers nothing once the payment is final or not Nyole', () => {
+    expect(
+      nyoleCheckoutAction({
+        provider: 'nyole',
+        status: 'success',
+        providerReference: 'cs_1',
+      })
+    ).toBeNull();
+    expect(
+      nyoleCheckoutAction({
+        provider: 'mtn_momo',
+        status: 'pending',
+        providerReference: id,
+      })
+    ).toBeNull();
   });
 });

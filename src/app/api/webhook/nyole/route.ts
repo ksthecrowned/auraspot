@@ -6,8 +6,9 @@ import {
 } from '@/server/payments/nyole';
 
 // Nyole signs every event (X-Afriflow-Signature). The payload only says which
-// payment to re-check: the status always comes from the Nyole API. Answer 200
-// even for unknown payments so Nyole stops retrying.
+// payment to re-check: the status always comes from the Nyole API. Unknown
+// payments get 200 so Nyole stops retrying; a failed status read gets 503 so
+// Nyole retries (72 h) instead of losing a late payment.
 export async function POST(request: Request) {
   const rawBody = await request.text();
   const secret = env.NYOLE_SECRET_KEY;
@@ -24,7 +25,11 @@ export async function POST(request: Request) {
   }
   const target = nyoleWebhookTarget(rawBody);
   if (target) {
-    await syncPayment(target).catch(() => null);
+    try {
+      await syncPayment(target);
+    } catch {
+      return Response.json({ error: 'retry' }, { status: 503 });
+    }
   }
   return Response.json({ ok: true });
 }
