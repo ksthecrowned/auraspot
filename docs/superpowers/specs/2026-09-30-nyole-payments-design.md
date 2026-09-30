@@ -120,7 +120,8 @@ versements aux personnalités suivent le processus actuel
   « Reprendre sur Nyole ».
 - `src/app/api/webhook/nyole/route.ts` (nouveau).
 - `src/env.mjs`, `.env.example` : `NYOLE_SECRET_KEY`, `NYOLE_BASE_URL`
-  (optionnel, défaut `https://app.nyole.com/api/v1`).
+  (optionnel, défaut `https://app.nyole.com` ; les chemins `/api/v1/...`,
+  `/checkout/<id>` et `/api/checkout/sandbox` en dérivent).
 - Aucune migration : `provider` est un texte libre et reçoit `'nyole'`.
 
 ## Tests
