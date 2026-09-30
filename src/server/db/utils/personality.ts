@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../db';
 import { link, personalityClaim, personalityManager } from '../schema';
 import { invalidateProfileLinkCache } from './link';
+import { countSupportsByPersonality } from './support';
 
 function withSlug<T extends { link: string }>(row: T) {
   return { ...row, slug: row.link };
@@ -163,7 +164,13 @@ export const searchPublicPersonalities = async (input: {
     limit: input.limit,
   });
 
-  return rows.map((row) => withSlug(row));
+  const supportCounts = await countSupportsByPersonality(
+    rows.map((row) => row.id)
+  );
+  return rows.map((row) => ({
+    ...withSlug(row),
+    supportCount: supportCounts.get(row.id) ?? 0,
+  }));
 };
 
 const OPEN_CLAIM_STATUSES = ['PENDING', 'MORE_INFORMATION_REQUIRED'] as const;

@@ -6,7 +6,7 @@ import {
   supportCommissionBps,
 } from '@/lib/money';
 import { getCheckoutProvider } from '@/server/payments/provider';
-import { and, desc, eq, isNotNull, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import { db } from '../db';
 import {
   ledgerEntry,
@@ -839,4 +839,27 @@ export const getSupportersPreview = async (
     count: Number(countRows[0]?.count ?? 0),
     recent: names.map((displayName) => ({ displayName })),
   };
+};
+
+// Successful supports per personality, for directory cards. No amounts.
+export const countSupportsByPersonality = async (personalityIds: string[]) => {
+  if (personalityIds.length === 0) {
+    return new Map<string, number>();
+  }
+  const rows = await db
+    .select({
+      personalityId: support.personalityId,
+      count: sql<number>`count(distinct ${support.id})`,
+    })
+    .from(support)
+    .innerJoin(payment, eq(payment.supportId, support.id))
+    .where(
+      and(
+        inArray(support.personalityId, personalityIds),
+        eq(payment.status, 'success')
+      )
+    )
+    .groupBy(support.personalityId);
+
+  return new Map(rows.map((row) => [row.personalityId, Number(row.count)]));
 };
