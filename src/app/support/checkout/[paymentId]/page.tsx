@@ -3,6 +3,7 @@ import {
   AURA_SECONDARY_BUTTON,
 } from '@/components/forms/aura-fields';
 import MobileMoneyCheckout from '@/components/forms/mobile-money-checkout';
+import NyolePending from '@/components/forms/nyole-pending';
 import PersonalityPageShell from '@/components/personality-page-shell';
 import { auth } from '@/lib/auth';
 import { formatFcfa } from '@/lib/money';
@@ -12,6 +13,7 @@ import {
   configuredOperators,
   isMobileMoneyOperator,
 } from '@/server/payments/mobile-money';
+import { nyoleEnabled } from '@/server/payments/nyole';
 import { CheckCircle2, Clock, XCircle } from 'lucide-react';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
@@ -66,7 +68,9 @@ export default async function CheckoutPage({ params }: PageProps) {
   const awaitingApproval =
     isMobileMoneyOperator(checkout.provider) && checkout.status === 'pending';
   const offers = configuredOperators();
-  // Operator not chosen yet: the form replaces the "pending" notice.
+  const nyole = nyoleEnabled();
+  const hasMethods = offers.length > 0 || nyole;
+  // Provider not chosen yet: the form replaces the "pending" notice.
   const choosing = checkout.canPay;
   const canRetry =
     checkout.status === 'failed' || checkout.status === 'cancelled';
@@ -102,15 +106,24 @@ export default async function CheckoutPage({ params }: PageProps) {
           </p>
         )}
 
-        {((choosing && offers.length > 0) || awaitingApproval) && (
+        {((choosing && hasMethods) || awaitingApproval) && (
           <MobileMoneyCheckout
             paymentId={checkout.id}
             awaitingApproval={awaitingApproval}
             offers={offers}
+            nyole={nyole}
           />
         )}
 
-        {choosing && offers.length === 0 && (
+        {checkout.resumeUrl && (
+          <NyolePending
+            paymentId={checkout.id}
+            resumeUrl={checkout.resumeUrl}
+            retryHref={`/support/${checkout.personalitySlug}`}
+          />
+        )}
+
+        {choosing && !hasMethods && (
           <p className={cn(AURA_NOTICE, 'text-center text-muted-foreground')}>
             Le paiement mobile est momentanément indisponible. Réessayez plus
             tard.

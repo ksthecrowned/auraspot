@@ -12,25 +12,41 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
+import { usePaymentPolling } from '@/hooks/use-payment-polling';
 import { PHONE_COUNTRIES, phoneCountry } from '@/lib/phone-countries';
 import { cn } from '@/lib/utils';
 import { api } from '@/trpc/react';
-import { Check, ChevronDown, Loader2, Smartphone } from 'lucide-react';
+import {
+  Check,
+  ChevronDown,
+  CreditCard,
+  Loader2,
+  Smartphone,
+} from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect, useId, useState } from 'react';
+import { useId, useState } from 'react';
 
 type Operator = 'mtn_momo' | 'airtel_money';
+type Choice = Operator | 'nyole';
 type Offer = { operator: Operator; countries: string[] };
 
 // Official logos in public/payments (trademarks of their owners). Airtel:
-// Wikimedia Commons, public domain text logo.
+// Wikimedia Commons, public domain text logo. Nyole has no logo here: its
+// page offers cards and mobile money, so a card icon stands for it.
 const BRANDS: Record<
-  Operator,
-  { name: string; logo: string; tile: string; logoClass: string }
+  Choice,
+  {
+    name: string;
+    subtitle: string;
+    logo: string | null;
+    tile: string;
+    logoClass: string;
+  }
 > = {
   mtn_momo: {
     name: 'MTN MoMo',
+    subtitle: 'Mobile Money',
     // App icon provided by the project (MoMo from MTN).
     logo: '/payments/momo.png',
     tile: '',
@@ -39,13 +55,19 @@ const BRANDS: Record<
   },
   airtel_money: {
     name: 'Airtel Money',
+    subtitle: 'Mobile Money',
     logo: '/payments/airtel.svg',
     tile: 'bg-white ring-1 ring-black/5',
     logoClass: 'h-7 w-auto',
   },
+  nyole: {
+    name: 'Carte ou Mobile Money',
+    subtitle: 'Visa, Mastercard, MTN, Airtel · via Nyole',
+    logo: null,
+    tile: 'bg-muted',
+    logoClass: '',
+  },
 };
-
-const POLL_MS = 3000;
 
 function defaultCountry(countries: string[]) {
   return countries.includes('CG') ? 'CG' : (countries[0] ?? 'CG');
@@ -56,7 +78,7 @@ function OperatorCard({
   selected,
   onSelect,
 }: {
-  operator: Operator;
+  operator: Choice;
   selected: boolean;
   onSelect: () => void;
 }) {
@@ -84,19 +106,23 @@ function OperatorCard({
           brand.tile
         )}
       >
-        <Image
-          src={brand.logo}
-          alt=""
-          width={40}
-          height={40}
-          className={brand.logoClass}
-          unoptimized={brand.logo.endsWith('.svg')}
-        />
+        {brand.logo ? (
+          <Image
+            src={brand.logo}
+            alt=""
+            width={40}
+            height={40}
+            className={brand.logoClass}
+            unoptimized={brand.logo.endsWith('.svg')}
+          />
+        ) : (
+          <CreditCard className="size-5" />
+        )}
       </span>
       <span className="min-w-0 flex-1">
         <span className="block font-semibold text-sm">{brand.name}</span>
         <span className="block text-muted-foreground text-xs">
-          Mobile Money
+          {brand.subtitle}
         </span>
       </span>
       <span
@@ -181,65 +207,76 @@ function PhoneField({
   );
 }
 
-// Operator choice + phone number, then waits while the payer approves the
-// USSD prompt on their phone.
+// Shown while the payer approves the USSD prompt on their phone.
+function AwaitingApproval() {
+  return (
+    <div className="flex flex-col items-center gap-3 py-2 text-center">
+      <span className="relative inline-flex size-12 items-center justify-center rounded-full bg-muted">
+        <Smartphone className="size-5" />
+        <span className="absolute inset-0 animate-ping rounded-full bg-muted-foreground/10" />
+      </span>
+      <p className="font-medium">Validez le paiement sur votre téléphone</p>
+      <p className="text-muted-foreground text-sm">
+        Entrez votre code secret dans la fenêtre qui s’affiche. Cette page se
+        met à jour toute seule.
+      </p>
+    </div>
+  );
+}
+
+// Payment method choice. Direct MTN MoMo / Airtel: phone number, then wait
+// while the payer approves the USSD prompt. Nyole: redirect to its page.
 export default function MobileMoneyCheckout({
   paymentId,
   awaitingApproval = false,
   offers,
+  nyole,
 }: {
   paymentId: string;
   // true when the request was already sent (e.g. the page was reloaded).
   awaitingApproval?: boolean;
   // Operators configured on the server, with the countries they serve.
   offers: Offer[];
+  // Nyole configured on the server.
+  nyole: boolean;
 }) {
   const router = useRouter();
-  const [operator, setOperator] = useState<Operator>(
-    offers[0]?.operator ?? 'mtn_momo'
+  const [choice, setChoice] = useState<Choice>(
+    offers[0]?.operator ?? (nyole ? 'nyole' : 'mtn_momo')
   );
   const countries =
-    offers.find((offer) => offer.operator === operator)?.countries ?? [];
+    offers.find((offer) => offer.operator === choice)?.countries ?? [];
   const [country, setCountry] = useState(defaultCountry(countries));
   const [phone, setPhone] = useState('');
   const [waiting, setWaiting] = useState(awaitingApproval);
   const pay = api.support.pay.useMutation();
-  const { mutateAsync: syncStatus } = api.support.syncCheckout.useMutation();
+  const payWithNyole = api.support.payWithNyole.useMutation();
+  const viaNyole = choice === 'nyole';
+  const error = viaNyole ? payWithNyole.error : pay.error;
+  // Kept busy while the browser leaves for Nyole.
+  const [redirecting, setRedirecting] = useState(false);
+  const busy = pay.isPending || payWithNyole.isPending || redirecting;
 
-  useEffect(() => {
-    if (!waiting) {
-      return;
-    }
-    let stopped = false;
-    const timer = setInterval(async () => {
-      const result = await syncStatus({ paymentId }).catch(() => null);
-      if (!stopped && result && result.status !== 'pending') {
-        stopped = true;
-        clearInterval(timer);
-        router.refresh();
-      }
-    }, POLL_MS);
-    return () => {
-      stopped = true;
-      clearInterval(timer);
-    };
-  }, [waiting, paymentId, syncStatus, router]);
+  usePaymentPolling(paymentId, waiting);
 
   if (waiting) {
-    return (
-      <div className="flex flex-col items-center gap-3 py-2 text-center">
-        <span className="relative inline-flex size-12 items-center justify-center rounded-full bg-muted">
-          <Smartphone className="size-5" />
-          <span className="absolute inset-0 animate-ping rounded-full bg-muted-foreground/10" />
-        </span>
-        <p className="font-medium">Validez le paiement sur votre téléphone</p>
-        <p className="text-muted-foreground text-sm">
-          Entrez votre code secret dans la fenêtre qui s’affiche. Cette page se
-          met à jour toute seule.
-        </p>
-      </div>
-    );
+    return <AwaitingApproval />;
   }
+
+  const copy = viaNyole
+    ? {
+        label: 'Continuer vers Nyole',
+        hint: 'Vous serez redirigé vers la page de paiement sécurisée Nyole.',
+      }
+    : {
+        label: `Payer avec ${BRANDS[choice].name}`,
+        hint: 'Vous recevrez une demande de validation sur votre téléphone.',
+      };
+
+  const choices: Choice[] = [
+    ...offers.map((offer) => offer.operator),
+    ...(nyole ? (['nyole'] as const) : []),
+  ];
 
   return (
     <form
@@ -247,7 +284,18 @@ export default function MobileMoneyCheckout({
       onSubmit={async (event) => {
         event.preventDefault();
         try {
-          await pay.mutateAsync({ paymentId, operator, country, phone });
+          if (viaNyole) {
+            const { url } = await payWithNyole.mutateAsync({ paymentId });
+            setRedirecting(true);
+            window.location.assign(url);
+            return;
+          }
+          await pay.mutateAsync({
+            paymentId,
+            operator: choice,
+            country,
+            phone,
+          });
           setWaiting(true);
         } catch {
           // The error is shown below. A refused request marks the payment
@@ -262,18 +310,19 @@ export default function MobileMoneyCheckout({
           aria-label="Moyen de paiement"
           className={cn(
             'grid gap-2',
-            offers.length > 1 ? 'sm:grid-cols-2' : 'grid-cols-1'
+            choices.length > 1 ? 'sm:grid-cols-2' : 'grid-cols-1'
           )}
         >
-          {offers.map((offer) => (
+          {choices.map((item) => (
             <OperatorCard
-              key={offer.operator}
-              operator={offer.operator}
-              selected={operator === offer.operator}
+              key={item}
+              operator={item}
+              selected={choice === item}
               onSelect={() => {
-                setOperator(offer.operator);
+                setChoice(item);
+                const offer = offers.find((o) => o.operator === item);
                 // Keep the country valid for the chosen operator.
-                if (!offer.countries.includes(country)) {
+                if (offer && !offer.countries.includes(country)) {
                   setCountry(defaultCountry(offer.countries));
                 }
               }}
@@ -282,31 +331,27 @@ export default function MobileMoneyCheckout({
         </fieldset>
       </div>
 
-      <PhoneField
-        countries={countries}
-        country={country}
-        onCountryChange={setCountry}
-        value={phone}
-        onChange={setPhone}
-      />
+      {!viaNyole && (
+        <PhoneField
+          countries={countries}
+          country={country}
+          onCountryChange={setCountry}
+          value={phone}
+          onChange={setPhone}
+        />
+      )}
 
-      {pay.error && <p className={AURA_ERROR}>{pay.error.message}</p>}
+      {error && <p className={AURA_ERROR}>{error.message}</p>}
 
       <div className="flex flex-col gap-2">
         <button
           type="submit"
           className={AURA_PRIMARY_BUTTON}
-          disabled={pay.isPending || !phone}
+          disabled={busy || (!viaNyole && !phone)}
         >
-          {pay.isPending ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            `Payer avec ${BRANDS[operator].name}`
-          )}
+          {busy ? <Loader2 className="size-4 animate-spin" /> : copy.label}
         </button>
-        <p className="text-center text-muted-foreground text-xs">
-          Vous recevrez une demande de validation sur votre téléphone.
-        </p>
+        <p className="text-center text-muted-foreground text-xs">{copy.hint}</p>
       </div>
     </form>
   );
