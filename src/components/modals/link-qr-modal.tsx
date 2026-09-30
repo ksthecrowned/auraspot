@@ -22,13 +22,16 @@ import {
 } from '@/components/ui/tooltip';
 import { toast } from '@/components/ui/use-toast';
 import { QRCodeSVG, getQRAsCanvas } from '@/lib/qr';
-import { LOGO_URL, ROOT_DOMAIN, SITE_URL } from '@/lib/site';
+import { ROOT_DOMAIN, SITE_URL } from '@/lib/site';
 import { cn } from '@/lib/utils';
 import { Check, CircleHelp, Copy, Download } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import type React from 'react';
 import { useRef, useState } from 'react';
 import { HexColorInput, HexColorPicker } from 'react-colorful';
+// Imported so it is served same-origin under /_next/static: an absolute
+// SITE_URL logo breaks on subdomains and custom domains (proxy + CORS).
+import logo from '../../../public/logo.png';
 
 const PRESET_COLORS = [
   '#000000',
@@ -67,7 +70,7 @@ export default function LinkQRModal({
     imageSettings: {
       height: 40,
       width: 40,
-      src: LOGO_URL,
+      src: logo.src,
       excavate: true,
     },
   };
@@ -94,8 +97,8 @@ export default function LinkQRModal({
       downloadRef.current.click();
       URL.revokeObjectURL(url);
       toast({
-        title: 'Downloaded!',
-        description: 'QR code saved as PNG.',
+        title: 'Téléchargé',
+        description: 'Le QR code a été enregistré en PNG.',
       });
     });
   };
@@ -119,8 +122,8 @@ export default function LinkQRModal({
       const item = new ClipboardItem({ 'image/png': blob });
       navigator.clipboard.write([item]);
       toast({
-        title: 'Copied!',
-        description: 'QR code copied to clipboard.',
+        title: 'Copié',
+        description: 'Le QR code a été copié dans le presse-papiers.',
       });
     });
   };
@@ -132,10 +135,10 @@ export default function LinkQRModal({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto p-5 sm:max-w-xl sm:p-6">
         <TooltipProvider>
           <DialogHeader>
-            <DialogTitle className="font-cal text-xl">QR Code</DialogTitle>
+            <DialogTitle className="font-cal text-xl">QR code</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6">
@@ -143,15 +146,14 @@ export default function LinkQRModal({
             <div className="space-y-2.5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-medium text-sm">QR Code Preview</span>
+                  <span className="font-medium text-sm">Aperçu</span>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <CircleHelp className="h-3.5 w-3.5 text-muted-foreground" />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>
-                        This QR code links to your profile at {ROOT_DOMAIN}/
-                        {link}
+                        Ce QR code mène à la page {ROOT_DOMAIN}/{link}
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -162,6 +164,8 @@ export default function LinkQRModal({
                     size="icon"
                     className="h-8 w-8 text-muted-foreground hover:text-foreground"
                     onClick={downloadQR}
+                    title="Télécharger en PNG"
+                    aria-label="Télécharger en PNG"
                   >
                     <Download className="h-4 w-4" />
                   </Button>
@@ -170,6 +174,8 @@ export default function LinkQRModal({
                     size="icon"
                     className="h-8 w-8 text-muted-foreground hover:text-foreground"
                     onClick={copyToClipboard}
+                    title="Copier l’image"
+                    aria-label="Copier l’image"
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
@@ -193,7 +199,7 @@ export default function LinkQRModal({
                     <CircleHelp className="h-3.5 w-3.5 text-muted-foreground" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Show the AuraSpot logo in the center of the QR code</p>
+                    <p>Afficher le logo AuraSpot au centre du QR code</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -204,13 +210,13 @@ export default function LinkQRModal({
 
             {/* QR Code Color */}
             <div className="space-y-3">
-              <span className="font-medium text-sm">QR Code Color</span>
-              <div className="flex items-center gap-3">
+              <span className="font-medium text-sm">Couleur</span>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <Popover>
                   <PopoverTrigger asChild>
                     <button
                       type="button"
-                      className="flex shrink-0 items-center overflow-hidden rounded-lg border border-border transition-colors hover:border-foreground/30"
+                      className="flex w-fit shrink-0 items-center overflow-hidden rounded-lg border border-border transition-colors hover:border-foreground/30"
                     >
                       <div
                         className="h-9 w-10 shrink-0"
@@ -236,7 +242,7 @@ export default function LinkQRModal({
                   </PopoverContent>
                 </Popover>
 
-                <div className="flex flex-1 items-center justify-between">
+                <div className="flex flex-1 flex-wrap items-center justify-between gap-2">
                   {PRESET_COLORS.map((color) => {
                     const isSelected =
                       fgColor.toUpperCase() === color.toUpperCase();
@@ -246,7 +252,7 @@ export default function LinkQRModal({
                         type="button"
                         onClick={() => setFgColor(color)}
                         className={cn(
-                          'relative flex h-8 w-8 items-center justify-center rounded-full transition-all',
+                          'relative flex size-7 shrink-0 items-center justify-center rounded-full transition-all',
                           isSelected
                             ? 'ring-1 ring-black ring-offset-2 dark:ring-white'
                             : 'ring-black/10 hover:ring-4 dark:ring-white/10'
@@ -272,25 +278,13 @@ export default function LinkQRModal({
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-end gap-3 pt-2">
+            <div className="flex pt-2 sm:justify-end">
               <Button
                 variant="outline"
-                className="rounded-xl px-6"
+                className="w-full rounded-xl px-6 sm:w-auto"
                 onClick={() => setOpen(false)}
               >
-                Cancel
-              </Button>
-              <Button
-                className="rounded-xl px-6"
-                onClick={() => {
-                  toast({
-                    title: 'Settings saved!',
-                    description: 'Your QR code customization has been saved.',
-                  });
-                  setOpen(false);
-                }}
-              >
-                Save changes
+                Fermer
               </Button>
             </div>
           </div>
