@@ -11,7 +11,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Label } from '@/components/ui/label';
 import { usePaymentPolling } from '@/hooks/use-payment-polling';
 import { PHONE_COUNTRIES, phoneCountry } from '@/lib/phone-countries';
 import { cn } from '@/lib/utils';
@@ -25,6 +24,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import type React from 'react';
 import { useId, useState } from 'react';
 
 type Operator = 'mtn_momo' | 'airtel_money';
@@ -38,33 +38,28 @@ const BRANDS: Record<
   Choice,
   {
     name: string;
-    subtitle: string;
+    // Only when the name alone is not enough.
+    detail?: string;
     logo: string | null;
-    tile: string;
     logoClass: string;
   }
 > = {
   mtn_momo: {
     name: 'MTN MoMo',
-    subtitle: 'Mobile Money',
     // App icon provided by the project (MoMo from MTN).
     logo: '/payments/momo.png',
-    tile: '',
-    // The icon has a transparent margin: zoom in to fill the tile.
-    logoClass: 'size-full scale-[1.2] object-contain',
+    // The icon has a transparent margin: zoom in to fill its square.
+    logoClass: 'size-7 scale-[1.2] rounded-md object-contain',
   },
   airtel_money: {
     name: 'Airtel Money',
-    subtitle: 'Mobile Money',
     logo: '/payments/airtel.svg',
-    tile: 'bg-white ring-1 ring-black/5',
-    logoClass: 'h-7 w-auto',
+    logoClass: 'h-6 w-auto',
   },
   nyole: {
     name: 'Carte ou Mobile Money',
-    subtitle: 'Visa, Mastercard, MTN, Airtel · via Nyole',
+    detail: 'Visa, Mastercard · via Nyole',
     logo: null,
-    tile: 'bg-muted',
     logoClass: '',
   },
 };
@@ -73,79 +68,87 @@ function defaultCountry(countries: string[]) {
   return countries.includes('CG') ? 'CG' : (countries[0] ?? 'CG');
 }
 
-function OperatorCard({
-  operator,
+// One payment method, laid out like Nyole's checkout: radio, name and logo
+// on one row; the selected card unfolds its fields (the phone number).
+function MethodCard({
+  choice,
   selected,
   onSelect,
+  children,
 }: {
-  operator: Choice;
+  choice: Choice;
   selected: boolean;
   onSelect: () => void;
+  children?: React.ReactNode;
 }) {
-  const brand = BRANDS[operator];
+  const brand = BRANDS[choice];
   return (
-    <label
+    <div
       className={cn(
-        'relative flex cursor-pointer items-center gap-3 rounded-2xl border bg-background p-3 text-left transition-all has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring/40',
+        'overflow-hidden rounded-2xl border-2 bg-background transition-colors',
         selected
-          ? 'border-transparent shadow-[0_0_0_2px_var(--aura-accent,#f75fc0),0_8px_24px_-12px_rgba(180,60,240,0.45)]'
+          ? 'border-foreground'
           : 'border-border hover:border-foreground/30'
       )}
     >
-      <input
-        type="radio"
-        name="mobile-money-operator"
-        value={operator}
-        checked={selected}
-        onChange={onSelect}
-        className="sr-only"
-      />
-      <span
-        className={cn(
-          'inline-flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl',
-          brand.tile
-        )}
-      >
-        {brand.logo ? (
-          <Image
-            src={brand.logo}
-            alt=""
-            width={40}
-            height={40}
-            className={brand.logoClass}
-            unoptimized={brand.logo.endsWith('.svg')}
-          />
-        ) : (
-          <CreditCard className="size-5" />
-        )}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block font-semibold text-sm">{brand.name}</span>
-        <span className="block text-muted-foreground text-xs">
-          {brand.subtitle}
+      <label className="flex w-full cursor-pointer items-center gap-3 px-4 py-3.5 text-left has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring/40 has-[:focus-visible]:ring-inset">
+        <input
+          type="radio"
+          name="payment-method"
+          value={choice}
+          checked={selected}
+          onChange={onSelect}
+          className="sr-only"
+        />
+        <span
+          className={cn(
+            'grid size-[22px] shrink-0 place-content-center rounded-full border-2 transition-colors',
+            selected ? 'border-foreground' : 'border-border'
+          )}
+        >
+          {selected && <span className="size-2.5 rounded-full bg-foreground" />}
         </span>
-      </span>
-      <span
-        className={cn(
-          'inline-flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors',
-          selected
-            ? 'aura-cta border-transparent text-white'
-            : 'border-border text-transparent'
-        )}
-      >
-        <Check className="size-3" strokeWidth={3} />
-      </span>
-    </label>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-semibold text-[15px] leading-tight">
+            {brand.name}
+          </span>
+          {brand.detail && (
+            <span className="mt-0.5 block truncate text-muted-foreground text-xs">
+              {brand.detail}
+            </span>
+          )}
+        </span>
+        <span className="grid h-9 w-14 shrink-0 place-content-center overflow-hidden rounded-lg bg-muted">
+          {brand.logo ? (
+            <Image
+              src={brand.logo}
+              alt=""
+              width={28}
+              height={28}
+              className={brand.logoClass}
+              unoptimized={brand.logo.endsWith('.svg')}
+            />
+          ) : (
+            <CreditCard className="size-5" />
+          )}
+        </span>
+      </label>
+      {selected && children && (
+        <div className="flex flex-col gap-4 px-4 pb-4">{children}</div>
+      )}
+    </div>
   );
 }
 
 function PhoneField({
+  label,
   countries,
   country,
   onCountryChange,
   value,
   onChange,
 }: {
+  label: string;
   countries: string[];
   country: string;
   onCountryChange: (iso: string) => void;
@@ -159,13 +162,18 @@ function PhoneField({
   );
 
   return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor={inputId}>Numéro Mobile Money</Label>
-      <div className="flex h-11 items-stretch overflow-hidden rounded-xl border border-input bg-background shadow-xs focus-within:ring-2 focus-within:ring-ring/40">
+    <div>
+      <label
+        htmlFor={inputId}
+        className="mb-1.5 block font-medium text-[12.5px] text-muted-foreground"
+      >
+        {label}
+      </label>
+      <div className="flex h-12 items-stretch overflow-hidden rounded-xl border border-border bg-muted focus-within:ring-2 focus-within:ring-ring/40">
         <DropdownMenu>
           <DropdownMenuTrigger
             disabled={options.length < 2}
-            className="flex shrink-0 items-center gap-1.5 border-input border-r bg-muted/40 px-3 text-sm outline-none transition-colors hover:bg-muted disabled:cursor-default disabled:hover:bg-muted/40"
+            className="flex shrink-0 items-center gap-1.5 border-border border-r px-3 text-[13px] outline-none transition-colors hover:bg-foreground/5 disabled:cursor-default disabled:hover:bg-transparent"
             aria-label={`Indicatif : ${current?.name ?? ''}`}
           >
             {current && <CountryFlag iso={current.iso} />}
@@ -199,10 +207,13 @@ function PhoneField({
           placeholder={current?.example}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="min-w-0 flex-1 bg-transparent px-3 text-base tabular-nums outline-none placeholder:text-muted-foreground/60 md:text-sm"
+          className="min-w-0 flex-1 bg-transparent px-3.5 font-medium text-base tabular-nums outline-none placeholder:font-normal placeholder:text-muted-foreground/60 md:text-sm"
           required
         />
       </div>
+      <p className="mt-1.5 text-[11.5px] text-muted-foreground">
+        Le numéro qui recevra la demande de paiement.
+      </p>
     </div>
   );
 }
@@ -310,42 +321,37 @@ export default function MobileMoneyCheckout({
         }
       }}
     >
-      <div className="flex flex-col gap-2">
-        <span className="font-medium text-sm">Moyen de paiement</span>
-        <fieldset
-          aria-label="Moyen de paiement"
-          className={cn(
-            'grid gap-2',
-            choices.length > 1 ? 'sm:grid-cols-2' : 'grid-cols-1'
-          )}
-        >
-          {choices.map((item) => (
-            <OperatorCard
-              key={item}
-              operator={item}
-              selected={choice === item}
-              onSelect={() => {
-                setChoice(item);
-                const offer = offers.find((o) => o.operator === item);
-                // Keep the country valid for the chosen operator.
-                if (offer && !offer.countries.includes(country)) {
-                  setCountry(defaultCountry(offer.countries));
-                }
-              }}
-            />
-          ))}
-        </fieldset>
-      </div>
-
-      {!viaNyole && (
-        <PhoneField
-          countries={countries}
-          country={country}
-          onCountryChange={setCountry}
-          value={phone}
-          onChange={setPhone}
-        />
-      )}
+      <fieldset className="flex min-w-0 flex-col gap-2.5">
+        <legend className="mb-2.5 font-medium text-[12.5px] text-muted-foreground">
+          Payer avec
+        </legend>
+        {choices.map((item) => (
+          <MethodCard
+            key={item}
+            choice={item}
+            selected={choice === item}
+            onSelect={() => {
+              setChoice(item);
+              const offer = offers.find((o) => o.operator === item);
+              // Keep the country valid for the chosen operator.
+              if (offer && !offer.countries.includes(country)) {
+                setCountry(defaultCountry(offer.countries));
+              }
+            }}
+          >
+            {item !== 'nyole' && (
+              <PhoneField
+                label={`Numéro ${BRANDS[item].name}`}
+                countries={countries}
+                country={country}
+                onCountryChange={setCountry}
+                value={phone}
+                onChange={setPhone}
+              />
+            )}
+          </MethodCard>
+        ))}
+      </fieldset>
 
       {error && <p className={AURA_ERROR}>{error.message}</p>}
 
