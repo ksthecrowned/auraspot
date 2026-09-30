@@ -1,3 +1,9 @@
+import {
+  type SocialLinkInput,
+  bioFromPlainText,
+  normalizeSocialLinks,
+  plainTextFromBio,
+} from '@/lib/admin-fiche';
 import { slugifyPersonalityName } from '@/lib/personality';
 import { and, count, desc, eq } from 'drizzle-orm';
 import { db } from '../db';
@@ -7,6 +13,7 @@ import {
   payment,
   personalityClaim,
   personalityReport,
+  socialLink,
   support,
   withdrawal,
 } from '../schema';
@@ -126,6 +133,143 @@ export const setPersonalityPublication = async (input: {
   }
   await invalidateProfileLinkCache(row.id);
   return { ok: true as const, personality: row };
+};
+
+type FicheFields = {
+  name: string;
+  categoryId: string | null;
+  location: string | null;
+  bio?: string;
+  isPublic: boolean;
+  socialLinks: SocialLinkInput[];
+};
+
+type FicheError = 'invalid-social' | 'slug-taken' | 'not-found';
+
+// Everything the admin form needs to edit a fiche.
+export const getPersonalityForAdmin = async (personalityId: string) => {
+  const row = await db.query.link.findFirst({
+    where: (table, { eq: equals }) => equals(table.id, personalityId),
+    columns: {
+      id: true,
+      link: true,
+      name: true,
+      image: true,
+      bio: true,
+      location: true,
+      categoryId: true,
+      isPublic: true,
+      claimStatus: true,
+      verificationStatus: true,
+    },
+    with: {
+      socialLinks: {
+        columns: { platform: true, url: true },
+        orderBy: (table, { asc }) => asc(table.sortOrder),
+      },
+    },
+  });
+  if (!row) {
+    return null;
+  }
+  const { link: rowSlug, bio, ...rest } = row;
+  return { ...rest, slug: rowSlug, bio: plainTextFromBio(bio) };
+};
+
+async function replaceSocialLinks(
+  personalityId: string,
+  links: { platform: string; url: string }[]
+) {
+  await db
+    .delete(socialLink)
+    .where(eq(socialLink.personalityId, personalityId));
+  if (links.length > 0) {
+    await db.insert(socialLink).values(
+      links.map((item, index) => ({
+        personalityId,
+        platform: item.platform,
+        url: item.url,
+        sortOrder: index,
+      }))
+    );
+  }
+}
+
+// A fiche created by the admin belongs to the admin account until the
+// person claims it: unclaimed and unverified, so it cannot take donations.
+export const createPersonalityFiche = async (
+  input: FicheFields & { slug: string; ownerId: string }
+): Promise<
+  | { ok: true; personality: { id: string; slug: string } }
+  | { ok: false; error: FicheError; index?: number }
+> => {
+  const socials = normalizeSocialLinks(input.socialLinks);
+  if (!socials.ok) {
+    return { ok: false, error: 'invalid-social', index: socials.index };
+  }
+  let created: { id: string; link: string } | undefined;
+  try {
+    [created] = await db
+      .insert(link)
+      .values({
+        link: input.slug,
+        name: input.name,
+        userId: input.ownerId,
+        categoryId: input.categoryId,
+        location: input.location,
+        bio: input.bio === undefined ? null : bioFromPlainText(input.bio),
+        isPublic: input.isPublic,
+        claimStatus: 'unclaimed',
+        verificationStatus: 'unverified',
+      })
+      .returning({ id: link.id, link: link.link });
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      return { ok: false, error: 'slug-taken' };
+    }
+    throw error;
+  }
+  if (!created) {
+    return { ok: false, error: 'not-found' };
+  }
+  try {
+    await replaceSocialLinks(created.id, socials.links);
+  } catch (error) {
+    // No half-created fiche: drop it and let the admin retry.
+    await db.delete(link).where(eq(link.id, created.id));
+    throw error;
+  }
+  return { ok: true, personality: { id: created.id, slug: created.link } };
+};
+
+export const updatePersonalityFiche = async (
+  input: FicheFields & { personalityId: string }
+): Promise<
+  | { ok: true; personality: { id: string; slug: string } }
+  | { ok: false; error: FicheError; index?: number }
+> => {
+  const socials = normalizeSocialLinks(input.socialLinks);
+  if (!socials.ok) {
+    return { ok: false, error: 'invalid-social', index: socials.index };
+  }
+  const [updated] = await db
+    .update(link)
+    .set({
+      name: input.name,
+      categoryId: input.categoryId,
+      location: input.location,
+      isPublic: input.isPublic,
+      ...(input.bio === undefined ? {} : { bio: bioFromPlainText(input.bio) }),
+      updatedAt: new Date(),
+    })
+    .where(eq(link.id, input.personalityId))
+    .returning({ id: link.id, link: link.link });
+  if (!updated) {
+    return { ok: false, error: 'not-found' };
+  }
+  await replaceSocialLinks(updated.id, socials.links);
+  await invalidateProfileLinkCache(updated.id);
+  return { ok: true, personality: { id: updated.id, slug: updated.link } };
 };
 
 export const listCategoriesForAdmin = async () => {

@@ -1,7 +1,9 @@
 import { adminProcedure, createTRPCRouter } from '@/server/api/trpc';
 import {
   createCategory,
+  createPersonalityFiche,
   getAdminOverview,
+  getPersonalityForAdmin,
   listCategoriesForAdmin,
   listPaymentsForAdmin,
   listPersonalitiesForAdmin,
@@ -10,6 +12,7 @@ import {
   reviewPersonalityReport,
   setPersonalityPublication,
   updateCategory,
+  updatePersonalityFiche,
 } from '@/server/db/utils/admin';
 import {
   listClaimsForReview,
@@ -18,16 +21,41 @@ import {
 } from '@/server/db/utils/personality';
 import { TRPCError } from '@trpc/server';
 import {
+  AdminPersonalityIdSchema,
   AdminPersonalitySearchSchema,
   CreateCategorySchema,
+  CreatePersonalitySchema,
   ReviewPersonalityReportSchema,
   SetPersonalityPublicationSchema,
   UpdateCategorySchema,
+  UpdatePersonalitySchema,
 } from '../schemas/admin';
 import {
   ReviewPersonalityClaimSchema,
   SetPersonalityVerificationSchema,
 } from '../schemas/personality';
+
+function ficheError(result: {
+  error: 'invalid-social' | 'slug-taken' | 'not-found';
+  index?: number;
+}) {
+  if (result.error === 'invalid-social') {
+    return new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `Le réseau n° ${(result.index ?? 0) + 1} n’est pas valide ou est en double.`,
+    });
+  }
+  if (result.error === 'slug-taken') {
+    return new TRPCError({
+      code: 'CONFLICT',
+      message: 'Cette adresse est déjà prise.',
+    });
+  }
+  return new TRPCError({
+    code: 'NOT_FOUND',
+    message: 'Cette fiche est introuvable.',
+  });
+}
 
 export const adminRouter = createTRPCRouter({
   overview: adminProcedure.query(() => {
@@ -38,6 +66,42 @@ export const adminRouter = createTRPCRouter({
     .input(AdminPersonalitySearchSchema)
     .query(({ input }) => {
       return listPersonalitiesForAdmin(input.query);
+    }),
+
+  personality: adminProcedure
+    .input(AdminPersonalityIdSchema)
+    .query(async ({ input }) => {
+      const row = await getPersonalityForAdmin(input.personalityId);
+      if (!row) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Cette fiche est introuvable.',
+        });
+      }
+      return row;
+    }),
+
+  createPersonality: adminProcedure
+    .input(CreatePersonalitySchema)
+    .mutation(async ({ ctx, input }) => {
+      const result = await createPersonalityFiche({
+        ...input,
+        ownerId: ctx.user.id,
+      });
+      if (!result.ok) {
+        throw ficheError(result);
+      }
+      return result.personality;
+    }),
+
+  updatePersonality: adminProcedure
+    .input(UpdatePersonalitySchema)
+    .mutation(async ({ input }) => {
+      const result = await updatePersonalityFiche(input);
+      if (!result.ok) {
+        throw ficheError(result);
+      }
+      return result.personality;
     }),
 
   setPublication: adminProcedure

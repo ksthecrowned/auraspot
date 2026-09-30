@@ -1,3 +1,5 @@
+import { PERSONALITY_PLATFORMS } from '@/lib/personality';
+import { ValidLinkSchema } from '@/types';
 import * as z from 'zod';
 
 export const AdminPersonalitySearchSchema = z.object({
@@ -29,4 +31,37 @@ export const CreatePersonalityReportSchema = z.object({
 export const ReviewPersonalityReportSchema = z.object({
   reportId: z.string().uuid(),
   decision: z.enum(['dismissed', 'suspend']),
+});
+
+const FicheFieldsSchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  categoryId: z.string().uuid().nullable(),
+  location: z
+    .string()
+    .trim()
+    .max(80)
+    .transform((value) => value || null),
+  // Plain text; sent only when edited so the owner's formatting is kept.
+  bio: z.string().max(1000).optional(),
+  isPublic: z.boolean(),
+  socialLinks: z
+    .array(
+      z.object({
+        platform: z.enum(PERSONALITY_PLATFORMS),
+        value: z.string().trim().max(300),
+      })
+    )
+    .max(PERSONALITY_PLATFORMS.length),
+});
+
+export const CreatePersonalitySchema = FicheFieldsSchema.extend({
+  slug: ValidLinkSchema,
+});
+
+export const UpdatePersonalitySchema = FicheFieldsSchema.extend({
+  personalityId: z.string().uuid(),
+});
+
+export const AdminPersonalityIdSchema = z.object({
+  personalityId: z.string().uuid(),
 });

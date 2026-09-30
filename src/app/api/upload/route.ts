@@ -1,3 +1,4 @@
+import { isAdminEmail } from '@/lib/admin';
 import { auth } from '@/lib/auth';
 import { redis } from '@/lib/redis';
 import {
@@ -34,9 +35,12 @@ export async function POST(request: NextRequest) {
     columns: { id: true, image: true, userId: true },
   });
 
-  if (
-    !(profileLink && (await isProfileLinkEditor(session.user.id, profileLink)))
-  ) {
+  // Owners and managers edit their fiche; the admin edits any fiche.
+  const allowed =
+    profileLink &&
+    (isAdminEmail(session.user.email) ||
+      (await isProfileLinkEditor(session.user.id, profileLink)));
+  if (!allowed) {
     return NextResponse.json({ error: 'Introuvable' }, { status: 404 });
   }
 

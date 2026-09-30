@@ -1,4 +1,5 @@
 import { PublicationToggle } from '@/components/admin/publication-toggle';
+import { VerificationToggle } from '@/components/admin/verification-toggle';
 import { api } from '@/trpc/server';
 import Link from 'next/link';
 import { adminPageMetadata } from '../access';
@@ -36,7 +37,15 @@ export default async function AdminPersonalitiesPage({
 
   return (
     <>
-      <h1 className="font-cal text-4xl">Fiches</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-cal text-4xl">Fiches</h1>
+        <Link
+          href="/admin/personalities/new"
+          className="rounded-md bg-foreground px-3 py-2 font-medium text-background text-sm"
+        >
+          Nouvelle fiche
+        </Link>
+      </div>
       <form action="/admin/personalities" className="mt-6 flex gap-2">
         <input
           name="q"
@@ -70,7 +79,22 @@ export default async function AdminPersonalitiesPage({
                   {item.category ? ` · ${item.category.name}` : ''}
                 </p>
               </div>
-              <PublicationToggle personalityId={item.id} status={item.status} />
+              <div className="flex flex-wrap items-start gap-2">
+                <Link
+                  href={`/admin/personalities/${item.id}`}
+                  className="inline-flex h-9 items-center rounded-md border border-border px-3 text-sm"
+                >
+                  Modifier
+                </Link>
+                <VerificationToggle
+                  personalityId={item.id}
+                  verified={item.verificationStatus === 'verified'}
+                />
+                <PublicationToggle
+                  personalityId={item.id}
+                  status={item.status}
+                />
+              </div>
             </li>
           ))}
         </ul>
