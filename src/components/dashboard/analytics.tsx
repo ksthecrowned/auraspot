@@ -1,20 +1,20 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+  AURA_CARD_CLASS,
+  AURA_SECONDARY_BUTTON,
+  SegmentedControl,
+} from '@/components/forms/aura-fields';
 import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
+import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/components/ui/use-toast';
+import { formatThousands } from '@/lib/money';
+import { cn } from '@/lib/utils';
 import { api } from '@/trpc/react';
 import {
   Copy,
@@ -24,495 +24,456 @@ import {
   Mail,
   Monitor,
   MousePointerClick,
+  Percent,
   Users,
 } from 'lucide-react';
+import { type ReactNode, useId, useState } from 'react';
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
 
-const viewsConfig = {
-  views: {
-    label: 'Views',
-    color: 'var(--chart-1)',
-  },
-} satisfies ChartConfig;
+const PERIODS = [
+  { value: '7', label: '7 j' },
+  { value: '30', label: '30 j' },
+  { value: '90', label: '90 j' },
+] as const;
 
-const clicksConfig = {
-  clicks: {
-    label: 'Clicks',
-    color: 'var(--chart-2)',
-  },
-} satisfies ChartConfig;
+type Period = (typeof PERIODS)[number]['value'];
 
-function formatDate(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+const DEVICE_LABELS: Record<string, string> = {
+  desktop: 'Ordinateur',
+  mobile: 'Mobile',
+  tablet: 'Tablette',
+  unknown: 'Inconnu',
+};
+
+const WWW_RE = /^www\./;
+const TRAILING_SLASH_RE = /\/$/;
+const COLON_RE = /:/g;
+
+function formatDay(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+  });
 }
 
-export default function Analytics({ linkId }: { linkId: string }) {
-  const { data, isLoading } = api.profileLink.analytics.useQuery({
-    linkId,
-    days: 30,
-  });
+function formatFullDate(value: string | Date) {
+  return new Date(value).toLocaleDateString('fr-FR');
+}
 
+function hostOf(value: string) {
+  try {
+    const url = new URL(value);
+    return (
+      url.hostname.replace(WWW_RE, '') +
+      url.pathname.replace(TRAILING_SLASH_RE, '')
+    );
+  } catch {
+    return value;
+  }
+}
+
+function StatTile({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Eye;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className={cn(AURA_CARD_CLASS, 'flex flex-col gap-1 p-4 sm:p-5')}>
+      <span className="flex items-center gap-1.5 text-muted-foreground text-xs">
+        <Icon className="size-3.5" />
+        {label}
+      </span>
+      <span className="font-bold font-brand text-2xl sm:text-3xl">{value}</span>
+    </div>
+  );
+}
+
+function Panel({
+  title,
+  description,
+  action,
+  children,
+}: {
+  title: string;
+  description?: string;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section className={cn(AURA_CARD_CLASS, 'flex flex-col gap-4')}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="font-bold font-brand text-lg">{title}</h2>
+          {description && (
+            <p className="text-muted-foreground text-sm">{description}</p>
+          )}
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function EmptyLine({ children }: { children: ReactNode }) {
+  return (
+    <p className="py-6 text-center text-muted-foreground text-sm">{children}</p>
+  );
+}
+
+function BarList({
+  items,
+  empty,
+}: {
+  items: { key: string; label: ReactNode; count: number }[];
+  empty: string;
+}) {
+  if (items.length === 0) {
+    return <EmptyLine>{empty}</EmptyLine>;
+  }
+  const max = Math.max(...items.map((item) => item.count), 1);
+  return (
+    <ul className="flex flex-col gap-3">
+      {items.map((item) => (
+        <li key={item.key} className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="min-w-0 truncate">{item.label}</span>
+            <span className="shrink-0 font-medium tabular-nums">
+              {formatThousands(item.count)}
+            </span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="aura-cta h-full rounded-full transition-all"
+              style={{ width: `${Math.round((item.count / max) * 100)}%` }}
+            />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function TrendChart({
+  data,
+  dataKey,
+  label,
+  color,
+}: {
+  data: { date: string; value: number }[];
+  dataKey: string;
+  label: string;
+  color: string;
+}) {
+  const gradientId = useId().replace(COLON_RE, '');
+  const config = { value: { label, color } } satisfies ChartConfig;
+
+  return (
+    <ChartContainer config={config} className="h-[240px] w-full">
+      <AreaChart data={data} margin={{ left: 4, right: 4 }}>
+        <defs>
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity={0.35} />
+            <stop offset="100%" stopColor={color} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid vertical={false} strokeDasharray="3 3" />
+        <XAxis
+          dataKey="date"
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+          minTickGap={24}
+        />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Area
+          type="monotone"
+          dataKey="value"
+          name={dataKey}
+          fill={`url(#${gradientId})`}
+          stroke={color}
+          strokeWidth={2.5}
+        />
+      </AreaChart>
+    </ChartContainer>
+  );
+}
+
+function AnalyticsSkeleton() {
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-24 rounded-[1.25rem]" />
+        ))}
+      </div>
+      <Skeleton className="h-80 rounded-[1.25rem]" />
+      <Skeleton className="h-80 rounded-[1.25rem]" />
+    </div>
+  );
+}
+
+function SubscribersPanel({ linkId }: { linkId: string }) {
   const { data: subscribers } = api.profileLink.subscribers.useQuery({
     linkId,
   });
+  const count = subscribers?.length ?? 0;
 
-  if (isLoading) {
-    return (
-      <div className="grid gap-6">
-        <div className="grid grid-cols-2 gap-6">
-          {[1, 2].map((i) => (
-            <Card key={i}>
-              <CardHeader className="pb-2">
-                <div className="h-4 w-20 animate-pulse rounded bg-muted" />
-              </CardHeader>
-              <CardContent>
-                <div className="h-8 w-16 animate-pulse rounded bg-muted" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="h-[250px] animate-pulse rounded bg-muted" />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const copyAll = () => {
+    if (!subscribers) {
+      return;
+    }
+    navigator.clipboard
+      .writeText(subscribers.map((s) => s.email).join(', '))
+      .then(() =>
+        toast({
+          title: 'Adresses copiées',
+          description: `${count} adresse${count > 1 ? 's' : ''} dans le presse-papiers.`,
+        })
+      )
+      .catch(() => undefined);
+  };
 
-  if (!data) {
-    return null;
-  }
-
-  const viewsData = data.viewsOverTime.map((v) => ({
-    date: formatDate(v.date),
-    views: v.count,
-  }));
-
-  const clicksData = data.clicksOverTime.map((c) => ({
-    date: formatDate(c.date),
-    clicks: c.count,
-  }));
+  const exportCsv = () => {
+    if (!subscribers) {
+      return;
+    }
+    const csv = ['Email,Date']
+      .concat(
+        subscribers.map((s) => `${s.email},${formatFullDate(s.createdAt)}`)
+      )
+      .join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'abonnes.csv';
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <div className="grid gap-6">
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-medium text-sm">Total Views</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="font-cal text-3xl">{data.views}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-medium text-sm">Unique Views</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="font-cal text-3xl">{data.uniqueViews}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-medium text-sm">Total Clicks</CardTitle>
-            <MousePointerClick className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="font-cal text-3xl">{data.clicks}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="font-medium text-sm">Click Rate</CardTitle>
-            <MousePointerClick className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="font-cal text-3xl">
-              {data.views > 0
-                ? `${Math.round((data.clicks / data.views) * 100)}%`
-                : '0%'}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Views over time */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-cal">Views</CardTitle>
-          <CardDescription>Profile views over the last 30 days</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {viewsData.length === 0 ? (
-            <p className="py-12 text-center text-muted-foreground text-sm">
-              No view data yet
-            </p>
-          ) : (
-            <ChartContainer config={viewsConfig} className="h-[250px] w-full">
-              <AreaChart data={viewsData}>
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="date"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Area
-                  type="monotone"
-                  dataKey="views"
-                  fill="var(--color-views)"
-                  fillOpacity={0.2}
-                  stroke="var(--color-views)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ChartContainer>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Clicks over time */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-cal">Clicks</CardTitle>
-          <CardDescription>Card clicks over the last 30 days</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {clicksData.length === 0 ? (
-            <p className="py-12 text-center text-muted-foreground text-sm">
-              No click data yet
-            </p>
-          ) : (
-            <ChartContainer config={clicksConfig} className="h-[250px] w-full">
-              <AreaChart data={clicksData}>
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="date"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <Area
-                  type="monotone"
-                  dataKey="clicks"
-                  fill="var(--color-clicks)"
-                  fillOpacity={0.2}
-                  stroke="var(--color-clicks)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ChartContainer>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Top cards + referrers side by side */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Top clicked cards */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-cal">Top Links</CardTitle>
-            <CardDescription>Most clicked cards</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {data.topCards.length === 0 ? (
-              <p className="py-6 text-center text-muted-foreground text-sm">
-                No click data yet
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {data.topCards.map((c) => {
-                  const maxCount = data.topCards[0]?.count ?? 1;
-                  const pct = Math.round((c.count / maxCount) * 100);
-                  let label: string;
-                  try {
-                    const url = new URL(c.href);
-                    label = url.hostname.replace('www.', '') + url.pathname;
-                  } catch {
-                    label = c.href;
-                  }
-                  return (
-                    <div key={c.bentoId} className="space-y-1">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="truncate">{label}</span>
-                        <span className="shrink-0 text-muted-foreground">
-                          {c.count}
-                        </span>
-                      </div>
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-chart-3 transition-all"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Top referrers */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-cal">Top Referrers</CardTitle>
-            <CardDescription>Where your visitors come from</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {data.topReferrers.length === 0 ? (
-              <p className="py-6 text-center text-muted-foreground text-sm">
-                No referrer data yet
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {data.topReferrers.map((r) => {
-                  const maxCount = data.topReferrers[0]?.count ?? 1;
-                  const pct = Math.round((r.count / maxCount) * 100);
-                  let label = r.referrer;
-                  try {
-                    if (label !== 'Direct') {
-                      label = new URL(label).hostname.replace('www.', '');
-                    }
-                  } catch {
-                    // keep raw label
-                  }
-                  return (
-                    <div key={r.referrer} className="space-y-1">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="truncate">{label}</span>
-                        <span className="shrink-0 text-muted-foreground">
-                          {r.count}
-                        </span>
-                      </div>
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-primary transition-all"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Devices, Browsers & Geography */}
-      <div className="grid gap-6 md:grid-cols-3">
-        {/* Devices */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-cal">Devices</CardTitle>
-            <CardDescription>Visitor device types</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {data.deviceBreakdown?.devices?.length ? (
-              <div className="space-y-3">
-                {data.deviceBreakdown.devices.map((d) => {
-                  const maxCount = data.deviceBreakdown.devices[0]?.count ?? 1;
-                  const pct = Math.round((d.count / maxCount) * 100);
-                  return (
-                    <div key={d.device} className="space-y-1">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="flex items-center gap-1.5 capitalize">
-                          <Monitor className="h-3.5 w-3.5 text-muted-foreground" />
-                          {d.device}
-                        </span>
-                        <span className="shrink-0 text-muted-foreground">
-                          {d.count}
-                        </span>
-                      </div>
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-chart-4 transition-all"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="py-6 text-center text-muted-foreground text-sm">
-                No device data yet
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Browsers */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-cal">Browsers</CardTitle>
-            <CardDescription>Visitor browsers</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {data.deviceBreakdown?.browsers?.length ? (
-              <div className="space-y-3">
-                {data.deviceBreakdown.browsers.map((b) => {
-                  const maxCount = data.deviceBreakdown.browsers[0]?.count ?? 1;
-                  const pct = Math.round((b.count / maxCount) * 100);
-                  return (
-                    <div key={b.browser} className="space-y-1">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="truncate">{b.browser}</span>
-                        <span className="shrink-0 text-muted-foreground">
-                          {b.count}
-                        </span>
-                      </div>
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-chart-5 transition-all"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="py-6 text-center text-muted-foreground text-sm">
-                No browser data yet
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Countries */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-cal">Countries</CardTitle>
-            <CardDescription>Visitor locations</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {data.geoBreakdown?.length ? (
-              <div className="space-y-3">
-                {data.geoBreakdown.map((g) => {
-                  const maxCount = data.geoBreakdown[0]?.count ?? 1;
-                  const pct = Math.round((g.count / maxCount) * 100);
-                  return (
-                    <div key={g.country} className="space-y-1">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="flex items-center gap-1.5">
-                          <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-                          {g.country}
-                        </span>
-                        <span className="shrink-0 text-muted-foreground">
-                          {g.count}
-                        </span>
-                      </div>
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-primary transition-all"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="py-6 text-center text-muted-foreground text-sm">
-                No location data yet
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Email Subscribers */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <div>
-            <CardTitle className="font-cal">Subscribers</CardTitle>
-            <CardDescription>
-              {subscribers?.length ?? 0} email{' '}
-              {subscribers?.length === 1 ? 'subscriber' : 'subscribers'}
-            </CardDescription>
+    <Panel
+      title="Abonnés e-mail"
+      description={`${formatThousands(count)} abonné${count > 1 ? 's' : ''}`}
+      action={
+        count > 0 && (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={copyAll}
+              className={cn(
+                AURA_SECONDARY_BUTTON,
+                'w-auto px-3 py-1.5 text-xs'
+              )}
+            >
+              <Copy className="size-3.5" />
+              Copier
+            </button>
+            <button
+              type="button"
+              onClick={exportCsv}
+              className={cn(
+                AURA_SECONDARY_BUTTON,
+                'w-auto px-3 py-1.5 text-xs'
+              )}
+            >
+              <Download className="size-3.5" />
+              CSV
+            </button>
           </div>
-          {subscribers && subscribers.length > 0 && (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const emails = subscribers.map((s) => s.email).join(', ');
-                  navigator.clipboard
-                    .writeText(emails)
-                    .then(() => {
-                      toast({
-                        title: 'Copied!',
-                        description: `${subscribers.length} emails copied to clipboard.`,
-                      });
-                    })
-                    .catch(() => undefined);
-                }}
-              >
-                <Copy className="mr-1.5 h-3.5 w-3.5" />
-                Copy all
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const csv = ['Email,Date']
-                    .concat(
-                      subscribers.map(
-                        (s) =>
-                          `${s.email},${new Date(s.createdAt).toLocaleDateString()}`
-                      )
-                    )
-                    .join('\n');
-                  const blob = new Blob([csv], { type: 'text/csv' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = 'subscribers.csv';
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }}
-              >
-                <Download className="mr-1.5 h-3.5 w-3.5" />
-                Export CSV
-              </Button>
-            </div>
-          )}
-        </CardHeader>
-        <CardContent>
-          {subscribers?.length ? (
-            <div className="space-y-2">
-              {subscribers.map((s) => (
-                <div
-                  key={s.id}
-                  className="flex items-center justify-between rounded-lg border border-border px-3 py-2"
-                >
-                  <span className="truncate text-sm">{s.email}</span>
-                  <span className="shrink-0 text-muted-foreground text-xs">
-                    {new Date(s.createdAt).toLocaleDateString()}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-2 py-8 text-center">
-              <Mail className="h-8 w-8 text-muted-foreground/40" />
-              <p className="text-muted-foreground text-sm">
-                No subscribers yet. Add an Email Collect card to your profile.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        )
+      }
+    >
+      {count > 0 && subscribers ? (
+        <ul className="flex flex-col gap-2">
+          {subscribers.map((s) => (
+            <li
+              key={s.id}
+              className="flex items-center justify-between gap-3 rounded-xl border border-border/70 px-3 py-2"
+            >
+              <span className="truncate text-sm">{s.email}</span>
+              <span className="shrink-0 text-muted-foreground text-xs">
+                {formatFullDate(s.createdAt)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="flex flex-col items-center gap-2 py-6 text-center">
+          <Mail className="size-7 text-muted-foreground/40" />
+          <p className="max-w-xs text-muted-foreground text-sm">
+            Pas encore d’abonnés. Ajoutez un bloc « Collecte d’e-mails » à votre
+            fiche.
+          </p>
+        </div>
+      )}
+    </Panel>
+  );
+}
+
+export default function Analytics({ linkId }: { linkId: string }) {
+  const [period, setPeriod] = useState<Period>('30');
+  const { data, isLoading } = api.profileLink.analytics.useQuery({
+    linkId,
+    days: Number(period),
+  });
+
+  const periodLabel = `sur ${period} jours`;
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="w-full max-w-[16rem]">
+        <SegmentedControl
+          options={PERIODS}
+          value={period}
+          onChange={setPeriod}
+        />
+      </div>
+
+      {isLoading || !data ? (
+        isLoading ? (
+          <AnalyticsSkeleton />
+        ) : null
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+            <StatTile
+              icon={Eye}
+              label="Visites"
+              value={formatThousands(data.views)}
+            />
+            <StatTile
+              icon={Users}
+              label="Visiteurs uniques"
+              value={formatThousands(data.uniqueViews)}
+            />
+            <StatTile
+              icon={MousePointerClick}
+              label="Clics sur les blocs"
+              value={formatThousands(data.clicks)}
+            />
+            <StatTile
+              icon={Percent}
+              label="Taux de clic"
+              value={
+                data.views > 0
+                  ? `${Math.round((data.clicks / data.views) * 100)} %`
+                  : '0 %'
+              }
+            />
+          </div>
+
+          <Panel title="Visites" description={periodLabel}>
+            {data.viewsOverTime.length === 0 ? (
+              <EmptyLine>Pas encore de visites sur cette période.</EmptyLine>
+            ) : (
+              <TrendChart
+                label="Visites"
+                dataKey="views"
+                color="#B43CF0"
+                data={data.viewsOverTime.map((v) => ({
+                  date: formatDay(v.date),
+                  value: v.count,
+                }))}
+              />
+            )}
+          </Panel>
+
+          <Panel
+            title="Clics"
+            description={`Clics sur les blocs ${periodLabel}`}
+          >
+            {data.clicksOverTime.length === 0 ? (
+              <EmptyLine>Pas encore de clics sur cette période.</EmptyLine>
+            ) : (
+              <TrendChart
+                label="Clics"
+                dataKey="clicks"
+                color="#F75FC0"
+                data={data.clicksOverTime.map((c) => ({
+                  date: formatDay(c.date),
+                  value: c.count,
+                }))}
+              />
+            )}
+          </Panel>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            <Panel title="Blocs les plus cliqués">
+              <BarList
+                empty="Pas encore de clics sur cette période."
+                items={data.topCards.map((c) => ({
+                  key: c.bentoId,
+                  label: hostOf(c.href),
+                  count: c.count,
+                }))}
+              />
+            </Panel>
+            <Panel title="Provenance" description="D’où viennent vos visiteurs">
+              <BarList
+                empty="Pas encore de provenance connue."
+                items={data.topReferrers.map((r) => ({
+                  key: r.referrer,
+                  label:
+                    r.referrer === 'Direct'
+                      ? 'Accès direct'
+                      : hostOf(r.referrer),
+                  count: r.count,
+                }))}
+              />
+            </Panel>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            <Panel title="Appareils">
+              <BarList
+                empty="Pas encore de données."
+                items={(data.deviceBreakdown?.devices ?? []).map((d) => ({
+                  key: d.device,
+                  label: (
+                    <span className="flex items-center gap-1.5">
+                      <Monitor className="size-3.5 text-muted-foreground" />
+                      {DEVICE_LABELS[d.device] ?? d.device}
+                    </span>
+                  ),
+                  count: d.count,
+                }))}
+              />
+            </Panel>
+            <Panel title="Navigateurs">
+              <BarList
+                empty="Pas encore de données."
+                items={(data.deviceBreakdown?.browsers ?? []).map((b) => ({
+                  key: b.browser,
+                  label: b.browser,
+                  count: b.count,
+                }))}
+              />
+            </Panel>
+            <Panel title="Pays">
+              <BarList
+                empty="Pas encore de données."
+                items={(data.geoBreakdown ?? []).map((g) => ({
+                  key: g.country,
+                  label: (
+                    <span className="flex items-center gap-1.5">
+                      <Globe className="size-3.5 text-muted-foreground" />
+                      {g.country}
+                    </span>
+                  ),
+                  count: g.count,
+                }))}
+              />
+            </Panel>
+          </div>
+        </>
+      )}
+
+      <SubscribersPanel linkId={linkId} />
     </div>
   );
 }
