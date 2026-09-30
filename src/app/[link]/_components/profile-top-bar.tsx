@@ -1,7 +1,7 @@
 'use client';
 
-import { Wordmark } from '@/components/brand';
 import LinkQRModal from '@/components/modals/link-qr-modal';
+import SiteHeader from '@/components/site-header';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -47,94 +47,94 @@ export default function ProfileTopBar({
   };
 
   return (
-    <header className="flex items-center justify-between gap-3">
-      <Link href="/explore" aria-label="Découvrir des personnalités">
-        <Wordmark className="text-xl md:text-2xl" />
-      </Link>
-
-      <div className="flex items-center gap-1.5">
-        {profileLink.canEdit && (
-          <>
-            <Button
-              size="icon"
-              variant={preview ? 'default' : 'outline'}
-              className="size-9 rounded-full"
-              onClick={() => setPreview(!preview)}
-              data-tour="preview-toggle"
-              title={preview ? 'Revenir à l’édition' : 'Voir comme un visiteur'}
-            >
-              {preview ? (
-                <PenLine className="size-4" />
-              ) : (
-                <Eye className="size-4" />
-              )}
-            </Button>
-            <div
-              className="hidden items-center rounded-full border border-border p-0.5 md:flex"
-              data-tour="viewport-switcher"
-            >
+    <SiteHeader
+      actions={
+        <div className="flex items-center gap-1.5">
+          {profileLink.canEdit && (
+            <>
               <Button
                 size="icon"
-                variant={viewport === 'desktop' ? 'default' : 'ghost'}
-                className="size-8 rounded-full"
-                onClick={() => setViewport('desktop')}
-                title="Aperçu ordinateur"
+                variant={preview ? 'default' : 'outline'}
+                className="size-9 rounded-full"
+                onClick={() => setPreview(!preview)}
+                data-tour="preview-toggle"
+                title={
+                  preview ? 'Revenir à l’édition' : 'Voir comme un visiteur'
+                }
               >
-                <Monitor className="size-4" />
+                {preview ? (
+                  <PenLine className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
               </Button>
-              <Button
-                size="icon"
-                variant={viewport === 'mobile' ? 'default' : 'ghost'}
-                className="size-8 rounded-full"
-                onClick={() => setViewport('mobile')}
-                title="Aperçu mobile"
+              <div
+                className="hidden items-center rounded-full border border-border p-0.5 md:flex"
+                data-tour="viewport-switcher"
               >
-                <Smartphone className="size-4" />
-              </Button>
-            </div>
-          </>
-        )}
+                <Button
+                  size="icon"
+                  variant={viewport === 'desktop' ? 'default' : 'ghost'}
+                  className="size-8 rounded-full"
+                  onClick={() => setViewport('desktop')}
+                  title="Aperçu ordinateur"
+                >
+                  <Monitor className="size-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant={viewport === 'mobile' ? 'default' : 'ghost'}
+                  className="size-8 rounded-full"
+                  onClick={() => setViewport('mobile')}
+                  title="Aperçu mobile"
+                >
+                  <Smartphone className="size-4" />
+                </Button>
+              </div>
+            </>
+          )}
 
-        <Button
-          size="icon"
-          variant="outline"
-          className="size-9 rounded-full"
-          onClick={share}
-          title="Partager"
-        >
-          <Share2 className="size-4" />
-        </Button>
-        <LinkQRModal>
           <Button
             size="icon"
             variant="outline"
             className="size-9 rounded-full"
-            title="QR code"
+            onClick={share}
+            title="Partager"
           >
-            <QrCode className="size-4" />
+            <Share2 className="size-4" />
           </Button>
-        </LinkQRModal>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <LinkQRModal>
             <Button
               size="icon"
               variant="outline"
               className="size-9 rounded-full"
-              title="Plus"
+              title="QR code"
             >
-              <MoreHorizontal className="size-4" />
+              <QrCode className="size-4" />
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <Link href={`/report/${profileLink.link}`}>
-                <Flag className="mr-2 size-4" />
-                Signaler
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </header>
+          </LinkQRModal>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="icon"
+                variant="outline"
+                className="size-9 rounded-full"
+                title="Plus"
+              >
+                <MoreHorizontal className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link href={`/report/${profileLink.link}`}>
+                  <Flag className="mr-2 size-4" />
+                  Signaler
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      }
+    />
   );
 }

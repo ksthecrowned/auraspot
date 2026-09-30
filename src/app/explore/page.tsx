@@ -1,14 +1,15 @@
 import PersonalityVerificationBadge from '@/app/[link]/_components/personality-verification-badge';
 import { AuraAvatar } from '@/components/aura-avatar';
-import { AuraOrb, Wordmark } from '@/components/brand';
+import { AuraOrb } from '@/components/brand';
 import { AURA_CARD_CLASS } from '@/components/forms/aura-fields';
+import SiteHeader from '@/components/site-header';
 import { formatThousands } from '@/lib/money';
 import { cn } from '@/lib/utils';
 import {
   listActiveCategories,
   searchPublicPersonalities,
 } from '@/server/db/utils/personality';
-import { MapPin, Plus, Search, Tag } from 'lucide-react';
+import { MapPin, Search, Tag } from 'lucide-react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
@@ -74,18 +75,7 @@ export default async function PersonalitiesPage({
   return (
     <div className="w-full overflow-x-clip">
       <div className="mx-auto flex min-h-screen w-full max-w-6xl animate-fade-in flex-col px-4 pt-5 pb-16 md:px-8">
-        <header className="flex items-center justify-between gap-3">
-          <Link href="/" aria-label="Accueil AuraSpot">
-            <Wordmark className="text-xl md:text-2xl" />
-          </Link>
-          <Link
-            href="/claim-link"
-            className="aura-cta inline-flex items-center gap-1.5 rounded-full px-4 py-2 font-brand font-semibold text-sm shadow-[0_8px_24px_-10px_rgba(180,60,240,0.6)] transition-transform hover:scale-[1.03]"
-          >
-            <Plus className="size-4" />
-            Créer une page
-          </Link>
-        </header>
+        <SiteHeader />
 
         <section className="relative mt-14 flex flex-col items-center gap-3 text-center">
           <div

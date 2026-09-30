@@ -4,7 +4,7 @@ import {
   twitterMetadata,
 } from '@/app/shared-metadata';
 import HomeFooter from '@/components/footer/home';
-import HomeNavbar from '@/components/navbar/home';
+import SiteHeader from '@/components/site-header';
 import type { Metadata } from 'next';
 import type React from 'react';
 
@@ -23,8 +23,8 @@ export const metadata: Metadata = {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <section className="container mx-auto flex h-full w-full flex-col items-center justify-center gap-y-6 px-4 pt-24 pb-4 md:pb-8">
-      <HomeNavbar />
+    <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col items-center gap-y-8 px-4 pt-5 pb-8 md:px-8">
+      <SiteHeader />
 
       <div className="w-full max-w-3xl rounded-lg border border-border bg-background px-3 py-4 md:px-6 md:py-8">
         <article className="prose dark:prose-invert prose-headings:font-cal prose-p:text-sm">

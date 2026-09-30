@@ -1,8 +1,8 @@
 import PersonalityVerificationBadge from '@/app/[link]/_components/personality-verification-badge';
 import ThemeWrapper from '@/app/[link]/_components/theme-wrapper';
 import { AuraAvatar } from '@/components/aura-avatar';
-import { Wordmark } from '@/components/brand';
 import { AURA_CARD_CLASS } from '@/components/forms/aura-fields';
+import SiteHeader, { HEADER_PILL_CLASS } from '@/components/site-header';
 import { cn } from '@/lib/utils';
 import { getPersonalityAppearance } from '@/server/db/utils/personality';
 import { ArrowLeft } from 'lucide-react';
@@ -49,20 +49,16 @@ export default async function PersonalityPageShell({
       {/* Full-width clip so the halo fades out instead of being cut at the column edge. */}
       <div className="w-full overflow-x-clip" style={accentStyle}>
         <div className="mx-auto flex min-h-screen w-full max-w-md animate-fade-in flex-col px-4 pt-5 pb-12">
-          <header className="flex items-center justify-between gap-3">
-            <Link href="/explore" aria-label="Découvrir des personnalités">
-              <Wordmark className="text-xl" />
-            </Link>
-            {backLink && (
-              <Link
-                href={backLink.href}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-3 py-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
-              >
-                <ArrowLeft className="size-4" />
-                {backLink.label}
-              </Link>
-            )}
-          </header>
+          <SiteHeader
+            actions={
+              backLink ? (
+                <Link href={backLink.href} className={HEADER_PILL_CLASS}>
+                  <ArrowLeft className="size-4" />
+                  {backLink.label}
+                </Link>
+              ) : undefined
+            }
+          />
 
           <section className="relative mt-10 flex flex-col items-center gap-3 text-center">
             <div
