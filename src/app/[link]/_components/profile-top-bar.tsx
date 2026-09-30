@@ -49,7 +49,7 @@ export default function ProfileTopBar({
   return (
     <header className="flex items-center justify-between gap-3">
       <Link href="/personalities" aria-label="Découvrir des personnalités">
-        <Wordmark className="text-lg" />
+        <Wordmark className="text-xl md:text-2xl" />
       </Link>
 
       <div className="flex items-center gap-1.5">

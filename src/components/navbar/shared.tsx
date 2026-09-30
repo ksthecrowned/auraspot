@@ -19,7 +19,7 @@ export function NavbarShell({
         )}
       >
         <Link href="/" className="flex items-center">
-          <Wordmark className="text-xl" />
+          <Wordmark className="text-2xl" />
         </Link>
         <div className="ml-auto flex items-center gap-x-3">{children}</div>
       </nav>
