@@ -6,12 +6,8 @@ export default function HomeFooter() {
   const footerLinks = {
     Discover: [
       {
-        href: '/personalities',
-        label: 'Personnalités',
-      },
-      {
         href: '/explore',
-        label: 'Explore',
+        label: 'Personnalités',
       },
     ],
     Company: [

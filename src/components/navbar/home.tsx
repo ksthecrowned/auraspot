@@ -11,16 +11,10 @@ export default function HomeNavbar() {
   return (
     <NavbarShell>
       <Link
-        href="/personalities"
-        className="text-muted-foreground text-sm transition-colors hover:text-foreground"
-      >
-        Personnalités
-      </Link>
-      <Link
         href="/explore"
         className="text-muted-foreground text-sm transition-colors hover:text-foreground"
       >
-        Explore
+        Personnalités
       </Link>
       {session && (
         <Link

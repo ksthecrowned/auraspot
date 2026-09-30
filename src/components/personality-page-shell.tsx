@@ -50,10 +50,7 @@ export default async function PersonalityPageShell({
       <div className="w-full overflow-x-clip" style={accentStyle}>
         <div className="mx-auto flex min-h-screen w-full max-w-md animate-fade-in flex-col px-4 pt-5 pb-12">
           <header className="flex items-center justify-between gap-3">
-            <Link
-              href="/personalities"
-              aria-label="Découvrir des personnalités"
-            >
+            <Link href="/explore" aria-label="Découvrir des personnalités">
               <Wordmark className="text-xl" />
             </Link>
             {backLink && (

@@ -95,7 +95,7 @@ export default async function SupporterHistoryPage() {
     <PersonalityPageShell
       title="Mes soutiens"
       subtitle="Les montants ne sont visibles que par vous. Un nom public n’affiche jamais le montant."
-      back={{ href: '/personalities', label: 'Personnalités' }}
+      back={{ href: '/explore', label: 'Personnalités' }}
       bare
     >
       <div className="flex flex-col gap-10">
@@ -140,7 +140,7 @@ export default async function SupporterHistoryPage() {
           {history.supports.length === 0 ? (
             <p className="text-muted-foreground text-sm">
               Vous n’avez pas encore fait de don.{' '}
-              <Link href="/personalities" className={LINK_CLASS}>
+              <Link href="/explore" className={LINK_CLASS}>
                 Découvrir des personnalités
               </Link>
             </p>

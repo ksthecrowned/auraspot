@@ -67,7 +67,7 @@ export default function Page() {
           <Link href="/claim-link">
             <GradientButton size="lg">Claim your page</GradientButton>
           </Link>
-          <Link href="/personalities">
+          <Link href="/explore">
             <button
               className="inline-flex items-center gap-x-2 rounded-full border border-border bg-background px-6 py-3 font-medium text-base shadow-sm transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
               type="button"

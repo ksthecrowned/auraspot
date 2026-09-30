@@ -12,7 +12,7 @@ export default function ProfileFooter({
         <p className="text-muted-foreground text-xs">{customFooter}</p>
       ) : (
         <Link
-          href="/personalities"
+          href="/explore"
           className="text-muted-foreground text-sm transition-colors hover:text-foreground"
         >
           Découvrir d’autres personnalités sur{' '}
