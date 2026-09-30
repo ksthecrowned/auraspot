@@ -8,13 +8,12 @@ import { drizzle as drizzleNode } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from './schema';
 
-const isLocalDatabase =
-  env.DATABASE_URL.includes('@localhost') ||
-  env.DATABASE_URL.includes('@127.0.0.1');
+const isNeonDatabase = env.DATABASE_URL.includes('.neon.tech');
 
-// Local Postgres speaks the wire protocol. Neon HTTP does not.
-export const db: NeonHttpDatabase<typeof schema> = isLocalDatabase
-  ? (drizzleNode(new Pool({ connectionString: env.DATABASE_URL }), {
+// Neon HTTP only works against Neon. Any other Postgres (local, alwaysdata…)
+// speaks the wire protocol.
+export const db: NeonHttpDatabase<typeof schema> = isNeonDatabase
+  ? drizzleNeon(neon(env.DATABASE_URL), { schema })
+  : (drizzleNode(new Pool({ connectionString: env.DATABASE_URL }), {
       schema,
-    }) as unknown as NeonHttpDatabase<typeof schema>)
-  : drizzleNeon(neon(env.DATABASE_URL), { schema });
+    }) as unknown as NeonHttpDatabase<typeof schema>);

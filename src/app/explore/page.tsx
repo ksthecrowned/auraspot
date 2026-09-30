@@ -98,7 +98,7 @@ export default async function PersonalitiesPage({
           {categorySlug && (
             <input type="hidden" name="category" value={categorySlug} />
           )}
-          <label className="flex min-w-0 flex-[3] items-center gap-2 px-3">
+          <label className="flex min-w-0 flex-3 items-center gap-2 px-3">
             <Search className="size-4 shrink-0 text-muted-foreground" />
             <span className="sr-only">Nom</span>
             <input
@@ -110,7 +110,7 @@ export default async function PersonalitiesPage({
             />
           </label>
           <span className="h-6 w-px shrink-0 bg-border" />
-          <label className="flex min-w-0 flex-[2] items-center gap-2 px-3">
+          <label className="flex min-w-0 flex-2 items-center gap-2 px-3">
             <MapPin className="size-4 shrink-0 text-muted-foreground" />
             <span className="sr-only">Lieu</span>
             <input
