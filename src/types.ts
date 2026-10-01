@@ -135,6 +135,18 @@ export const MusicBentoSchema = z.object({
   position: PositionSchema,
 });
 
+// YouTube or TikTok video played in place (src/lib/video-embed.ts). Uploaded
+// video files are AssetBentoSchema with type 'video'.
+export const VideoEmbedBentoSchema = z.object({
+  id: z.string(),
+  type: z.literal('video-embed'),
+
+  url: z.string(), // Empty until the owner pastes a link.
+
+  size: SizeSchema,
+  position: PositionSchema,
+});
+
 export const CalendarBentoSchema = z.object({
   id: z.string(),
   type: z.literal('calendar'),
@@ -164,6 +176,7 @@ export const BentoSchema = LinkBentoSchema.or(NoteBentoSchema)
   .or(WeatherBentoSchema)
   .or(TwitterBentoSchema)
   .or(MusicBentoSchema)
+  .or(VideoEmbedBentoSchema)
   .or(CalendarBentoSchema)
   .or(ViewsBentoSchema);
 

@@ -29,6 +29,7 @@ import {
   Timer,
   Type,
   Undo2,
+  Video,
 } from 'lucide-react';
 import NextLink from 'next/link';
 import { useParams } from 'next/navigation';
@@ -294,6 +295,21 @@ export default function ActionBar() {
               >
                 <Music size={14} className="shrink-0" />
                 Music
+              </button>
+              <button
+                type="button"
+                className={menuItemClass}
+                onClick={() =>
+                  addCard({
+                    id: crypto.randomUUID(),
+                    type: 'video-embed',
+                    url: '',
+                    size: { sm: '4x2', md: '4x2' },
+                  })
+                }
+              >
+                <Video size={14} className="shrink-0" />
+                Vidéo
               </button>
               {!profileLink?.bento.some((b) => b.type === 'views') && (
                 <button

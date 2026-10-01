@@ -13,6 +13,7 @@ const MapCard = dynamic(() => import('./map'), { ssr: false });
 const GitHubCard = dynamic(() => import('./github'), { ssr: false });
 const CalendarCard = dynamic(() => import('./calendar'), { ssr: false });
 const MusicCard = dynamic(() => import('./music'), { ssr: false });
+const VideoEmbedCard = dynamic(() => import('./video-embed'), { ssr: false });
 const WeatherCard = dynamic(() => import('./weather'), { ssr: false });
 const TwitterCard = dynamic(() => import('./twitter'), { ssr: false });
 
@@ -63,6 +64,10 @@ export default function BentoCard({
 
   if (bento.type === 'music') {
     return <MusicCard bento={bento} editable={editable} />;
+  }
+
+  if (bento.type === 'video-embed') {
+    return <VideoEmbedCard bento={bento} editable={editable} />;
   }
 
   if (bento.type === 'calendar') {
