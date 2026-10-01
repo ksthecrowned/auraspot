@@ -149,7 +149,7 @@ function NoteEditor({
 
       {/* Editor or Preview */}
       {preview ? (
-        <div className="min-h-[200px] rounded-xl border border-border bg-card p-4">
+        <div className="min-h-50 rounded-xl border border-border bg-card p-4">
           <div className="prose dark:prose-invert prose-p:m-0 max-w-none prose-headings:font-cal">
             <NoteContent html={editor?.getHTML() ?? ''} />
           </div>

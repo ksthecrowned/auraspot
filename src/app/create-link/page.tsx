@@ -242,7 +242,7 @@ export default function Page() {
                       @{link || 'identifiant'}
                     </p>
                     {bio && (
-                      <p className="mt-1.5 line-clamp-2 max-w-[220px] text-[10px] text-muted-foreground leading-relaxed">
+                      <p className="mt-1.5 line-clamp-2 max-w-55 text-[10px] text-muted-foreground leading-relaxed">
                         {bio}
                       </p>
                     )}

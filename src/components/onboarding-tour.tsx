@@ -65,7 +65,7 @@ function Spotlight({ rect }: { rect: DOMRect }) {
 
   return (
     <svg
-      className="pointer-events-none fixed inset-0 z-[9998] h-full w-full"
+      className="pointer-events-none fixed inset-0 z-9998 h-full w-full"
       aria-hidden="true"
     >
       <defs>
@@ -128,7 +128,7 @@ function Tooltip({
 
   return (
     <div
-      className="fixed z-[9999] w-[280px] rounded-xl border border-border bg-card p-4 shadow-xl"
+      className="fixed z-9999 w-70 rounded-xl border border-border bg-card p-4 shadow-xl"
       style={style}
     >
       <button
