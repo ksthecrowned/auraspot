@@ -142,6 +142,7 @@ function MethodCard({
 
 export function PhoneField({
   label,
+  hint = 'Le numéro qui recevra la demande de paiement.',
   countries,
   country,
   onCountryChange,
@@ -149,6 +150,7 @@ export function PhoneField({
   onChange,
 }: {
   label: string;
+  hint?: string;
   countries: string[];
   country: string;
   onCountryChange: (iso: string) => void;
@@ -211,9 +213,7 @@ export function PhoneField({
           required
         />
       </div>
-      <p className="mt-1.5 text-[11.5px] text-muted-foreground">
-        Le numéro qui recevra la demande de paiement.
-      </p>
+      <p className="mt-1.5 text-[11.5px] text-muted-foreground">{hint}</p>
     </div>
   );
 }

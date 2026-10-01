@@ -126,6 +126,7 @@ export default function RequestWithdrawalForm({ page }: { page: PageData }) {
           </div>
           <PhoneField
             label={`Numéro ${OPERATOR_LABEL[operator]}`}
+            hint="Le numéro qui recevra l’argent. Il doit être à votre nom."
             countries={COUNTRY_ISOS}
             country={country}
             onCountryChange={setCountry}
