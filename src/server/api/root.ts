@@ -1,5 +1,4 @@
 import { adminRouter } from '@/server/api/routers/admin';
-import { aiRouter } from '@/server/api/routers/ai';
 import { personalityRouter } from '@/server/api/routers/personality';
 import { profileLinkRouter } from '@/server/api/routers/profile-link';
 import { supportRouter } from '@/server/api/routers/support';
@@ -12,7 +11,6 @@ export const appRouter = createTRPCRouter({
   personality: personalityRouter,
   admin: adminRouter,
   support: supportRouter,
-  ai: aiRouter,
 });
 
 export type AppRouter = typeof appRouter;

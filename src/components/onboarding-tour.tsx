@@ -37,8 +37,7 @@ const TOUR_STEPS: TourStep[] = [
   {
     target: '[data-tour="add-card"]',
     title: 'Add cards',
-    description:
-      'Build your page with links, images, maps, GitHub stats, countdowns, weather, email collection, and more.',
+    description: 'Build your page with links, images, music, and notes.',
     placement: 'top',
   },
   {

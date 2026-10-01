@@ -1,9 +1,7 @@
 'use client';
 
-import BioWriter from '@/components/ai/bio-writer';
 import { SocialIcon } from '@/components/icons/social-icons';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,7 +14,7 @@ import {
 } from '@/lib/social-platforms';
 import Logo from '@/public/logo.png';
 import { api } from '@/trpc/react';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -146,29 +144,9 @@ export default function Page() {
                 />
               </div>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="bio" className="font-medium text-sm">
-                    Bio
-                  </Label>
-                  <BioWriter
-                    name={name || link}
-                    links={filledSocials.map(
-                      ({ platform, value }) =>
-                        toSocialUrl(platform, value) ?? value
-                    )}
-                    onGenerated={setBio}
-                  >
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 gap-1 text-violet-500 text-xs"
-                    >
-                      <Sparkles className="h-3 w-3" />
-                      Écrire avec l’IA
-                    </Button>
-                  </BioWriter>
-                </div>
+                <Label htmlFor="bio" className="font-medium text-sm">
+                  Bio
+                </Label>
                 <textarea
                   id="bio"
                   rows={2}

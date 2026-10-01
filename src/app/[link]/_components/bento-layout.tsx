@@ -138,7 +138,9 @@ export default function BentoLayout({
 
   const hasDragged = useRef(false);
 
-  const bentos = profileLink?.bento ?? [];
+  const bentos = (profileLink?.bento ?? []).filter(
+    (bento) => bento.type !== 'map'
+  );
 
   const layouts = useMemo(
     () => ({

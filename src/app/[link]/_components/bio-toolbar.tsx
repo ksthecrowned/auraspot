@@ -1,6 +1,5 @@
 'use client';
 
-import BioWriter from '@/components/ai/bio-writer';
 import { Button } from '@/components/ui/button';
 import type { Editor } from '@tiptap/react';
 import {
@@ -11,19 +10,10 @@ import {
   LinkIcon,
   List,
   Palette,
-  Sparkles,
   Underline as UnderlineIcon,
 } from 'lucide-react';
 
-export default function BioToolbar({
-  editor,
-  name,
-  links,
-}: {
-  editor: Editor;
-  name: string;
-  links?: string[];
-}) {
+export default function BioToolbar({ editor }: { editor: Editor }) {
   const btnClass = 'h-6 w-6 p-0';
 
   return (
@@ -107,24 +97,6 @@ export default function BioToolbar({
       >
         <Palette className="h-3 w-3" />
       </Button>
-
-      <div className="mx-0.5 h-4 w-px bg-border" />
-
-      <BioWriter
-        name={name}
-        links={links}
-        onGenerated={(bio) => {
-          editor.commands.setContent(`<p>${bio}</p>`);
-        }}
-      >
-        <Button
-          variant="ghost"
-          size="sm"
-          className={`${btnClass} text-violet-500`}
-        >
-          <Sparkles className="h-3 w-3" />
-        </Button>
-      </BioWriter>
     </div>
   );
 }

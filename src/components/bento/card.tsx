@@ -8,8 +8,7 @@ import LinkCard from './link';
 import NoteCard from './note';
 import ViewsCard from './views';
 
-// Lazy-load heavy cards (external APIs, maps, iframes)
-const MapCard = dynamic(() => import('./map'), { ssr: false });
+// Lazy-load heavy cards (external APIs, iframes)
 const GitHubCard = dynamic(() => import('./github'), { ssr: false });
 const CalendarCard = dynamic(() => import('./calendar'), { ssr: false });
 const MusicCard = dynamic(() => import('./music'), { ssr: false });
@@ -36,10 +35,6 @@ export default function BentoCard({
 
   if (bento.type === 'image') {
     return <ImageCard bento={bento} editable={editable} />;
-  }
-
-  if (bento.type === 'map') {
-    return <MapCard bento={bento} editable={editable} />;
   }
 
   if (bento.type === 'github') {

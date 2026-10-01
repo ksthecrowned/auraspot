@@ -1,11 +1,5 @@
 import { relations } from 'drizzle-orm';
-import {
-  boolean,
-  integer,
-  pgTable,
-  text,
-  timestamp,
-} from 'drizzle-orm/pg-core';
+import { boolean, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { link } from './link';
 import { personalityClaim, personalityManager } from './personality';
 
@@ -15,14 +9,6 @@ export const user = pgTable('user', {
   email: text('email').unique().notNull(),
   emailVerified: boolean('email_verified').default(false).notNull(),
   image: text('image'),
-  plan: text('plan', { enum: ['free', 'pro', 'business'] })
-    .default('free')
-    .notNull(),
-  subscriptionId: text('subscription_id'),
-  subscriptionEndsAt: timestamp('subscription_ends_at', { withTimezone: true }),
-  trialEndsAt: timestamp('trial_ends_at', { withTimezone: true }),
-  aiCredits: integer('ai_credits').default(0).notNull(),
-  aiCreditsResetAt: timestamp('ai_credits_reset_at', { withTimezone: true }),
   emailDigest: boolean('email_digest').default(true).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true })
     .defaultNow()

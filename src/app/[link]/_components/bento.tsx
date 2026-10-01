@@ -25,20 +25,22 @@ export default function Bento({
 
   return (
     <BentoLayout>
-      {profileLink.bento.map((b, i) => (
-        <div key={b.id}>
-          <div
-            className="h-full w-full animate-fade-up"
-            style={{ animationDelay: `${i * 75}ms` }}
-          >
-            <BentoCard
-              bento={b}
-              editable={profileLink.canEdit && !preview}
-              linkId={profileLink.id}
-            />
+      {profileLink.bento
+        .filter((b) => b.type !== 'map')
+        .map((b, i) => (
+          <div key={b.id}>
+            <div
+              className="h-full w-full animate-fade-up"
+              style={{ animationDelay: `${i * 75}ms` }}
+            >
+              <BentoCard
+                bento={b}
+                editable={profileLink.canEdit && !preview}
+                linkId={profileLink.id}
+              />
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
     </BentoLayout>
   );
 }

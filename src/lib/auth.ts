@@ -54,13 +54,6 @@ export const auth = betterAuth({
         }
       : {}),
   },
-  user: {
-    additionalFields: {
-      plan: { type: 'string', defaultValue: 'free' },
-      subscriptionId: { type: 'string', required: false },
-      subscriptionEndsAt: { type: 'date', required: false },
-    },
-  },
   databaseHooks: {
     user: {
       create: {

@@ -94,13 +94,7 @@ export default function ProfileAbout({
         <EditorContent editor={editor} />
         {isEditable && editor && (
           <div className="invisible absolute left-0 z-40 mt-1 group-focus-within/bio:visible">
-            <BioToolbar
-              editor={editor}
-              name={profileLink.name}
-              links={profileLink.bento
-                .filter((b) => b.type === 'link' && 'href' in b)
-                .map((b) => (b as { href: string }).href)}
-            />
+            <BioToolbar editor={editor} />
           </div>
         )}
       </div>

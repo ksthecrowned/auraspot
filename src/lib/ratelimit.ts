@@ -53,6 +53,3 @@ export const supportCreateLimit = createLimit('rl:support-create', 10);
 
 /** External fetch endpoints (metadata, music) — 10 requests per minute */
 export const fetchLimit = createLimit('rl:fetch', 10);
-
-/** Static map images (Google Static Maps proxy) — 30 requests per minute */
-export const mapLimit = createLimit('rl:map', 30);

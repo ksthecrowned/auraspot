@@ -8,17 +8,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { api } from '@/trpc/react';
 import type { NoteBentoSchema } from '@/types';
-import { useCompletion } from '@ai-sdk/react';
 import Placeholder from '@tiptap/extension-placeholder';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -28,13 +20,11 @@ import {
   Heading2,
   Italic,
   List,
-  Loader2,
   PenLine,
   Pencil,
-  Sparkles,
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type * as z from 'zod';
 
 type BentoData = z.infer<typeof NoteBentoSchema>;
@@ -54,84 +44,6 @@ function NoteContent({ html }: { html: string }) {
       editor={editor}
       className="prose prose-sm dark:prose-invert prose-p:m-0 h-full w-full max-w-none overflow-hidden prose-headings:font-cal prose-headings:text-sm prose-p:text-xs"
     />
-  );
-}
-
-function AiNoteButton({
-  onGenerated,
-}: { onGenerated: (html: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const [prompt, setPrompt] = useState('');
-
-  const { completion, isLoading, complete } = useCompletion({
-    api: '/api/ai/generate',
-    onFinish: (_p, text) => {
-      setOpen(false);
-      setPrompt('');
-      toast({ title: 'Note générée', description: 'Le texte a été appliqué.' });
-    },
-    onError: (err) => {
-      toast({
-        title: 'Erreur',
-        description: err.message,
-        variant: 'destructive',
-      });
-    },
-  });
-
-  // Stream content into editor as tokens arrive
-  useEffect(() => {
-    if (completion) {
-      onGenerated(completion);
-    }
-  }, [completion, onGenerated]);
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-7 w-7 p-0 text-violet-500"
-        >
-          <Sparkles className="h-3 w-3" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-72 p-3" side="top" sideOffset={8}>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (prompt.trim()) {
-              complete('generate', { body: { type: 'note', prompt } });
-            }
-          }}
-          className="flex flex-col gap-2"
-        >
-          <p className="font-medium text-xs">Write with AI</p>
-          <Input
-            placeholder="ex. une courte présentation de mon travail"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            className="h-8 rounded-lg text-xs"
-            autoFocus
-          />
-          <Button
-            type="submit"
-            size="sm"
-            className="h-7 rounded-lg text-xs"
-            disabled={isLoading || !prompt.trim()}
-          >
-            {isLoading ? (
-              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-            ) : (
-              <Sparkles className="mr-1 h-3 w-3" />
-            )}
-            {isLoading ? 'Rédaction…' : 'Générer (1 crédit)'}
-          </Button>
-        </form>
-      </PopoverContent>
-    </Popover>
   );
 }
 
@@ -210,14 +122,6 @@ function NoteEditor({
             >
               <List className="h-3 w-3" />
             </Button>
-
-            <div className="mx-0.5 h-4 w-px bg-border" />
-
-            <AiNoteButton
-              onGenerated={(html) => {
-                editor.commands.setContent(html);
-              }}
-            />
           </div>
         )}
         {preview && <div />}
