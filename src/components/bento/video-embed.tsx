@@ -123,13 +123,24 @@ export default function VideoEmbedCard({
 
   const video = bento.url ? parseVideoUrl(bento.url) : null;
 
+  const { mutateAsync: resolveVideo, isPending: isResolving } =
+    api.profileLink.resolveVideoUrl.useMutation();
+
   const handleSave = async () => {
-    const trimmed = url.trim();
-    if (trimmed && !parseVideoUrl(trimmed)) {
-      setError(
-        'Ce lien ne mène pas à une vidéo. Collez le lien d’une vidéo YouTube (ou Short) ou TikTok.'
-      );
-      return;
+    let next = url.trim();
+    if (next && !parseVideoUrl(next)) {
+      // TikTok share links (vm.tiktok.com…) are resolved by the server.
+      const resolved = await resolveVideo({ url: next })
+        .then((result) => result.url)
+        .catch(() => null);
+      if (!resolved) {
+        setError(
+          'Ce lien ne mène pas à une vidéo. Collez le lien d’une vidéo YouTube (ou Short) ou TikTok.'
+        );
+        return;
+      }
+      next = resolved;
+      setUrl(resolved);
     }
     setError(null);
     queryClient.profileLink.getByLink.setData({ link: params.link }, (old) => {
@@ -139,13 +150,13 @@ export default function VideoEmbedCard({
       return {
         ...old,
         bento: old.bento.map((b) =>
-          b.id === bento.id ? { ...b, url: trimmed } : b
+          b.id === bento.id ? { ...b, url: next } : b
         ),
       };
     });
     await updateBento({
       link: params.link,
-      bento: { ...bento, url: trimmed },
+      bento: { ...bento, url: next },
     });
     setEditOpen(false);
   };
@@ -212,18 +223,17 @@ export default function VideoEmbedCard({
                 className="rounded-xl"
               />
               <p className="text-muted-foreground text-xs">
-                YouTube (vidéo, Short ou live) ou TikTok. Pour TikTok, utilisez
-                le lien complet de la vidéo, pas un lien raccourci
-                vm.tiktok.com.
+                YouTube (vidéo, Short ou live) ou TikTok, y compris le lien du
+                bouton « Partager » (vm.tiktok.com).
               </p>
               {error && <p className="text-destructive text-sm">{error}</p>}
             </div>
             <Button
               onClick={handleSave}
-              disabled={isPending}
+              disabled={isPending || isResolving}
               className="w-full rounded-xl"
             >
-              {isPending ? 'Enregistrement…' : 'Enregistrer'}
+              {isPending || isResolving ? 'Enregistrement…' : 'Enregistrer'}
             </Button>
           </div>
         </DialogContent>

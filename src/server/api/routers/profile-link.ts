@@ -50,6 +50,7 @@ import {
   updateProfileLinkBento,
 } from '@/server/db';
 import { getSupportersPreview } from '@/server/db/utils/support';
+import { resolveVideoUrl } from '@/server/video';
 import type { LinkBento } from '@/types';
 import { TRPCError } from '@trpc/server';
 import { after } from 'next/server';
@@ -430,6 +431,13 @@ export const profileLinkRouter = createTRPCRouter({
     .input(z.object({ tweetId: z.string() }))
     .query(async ({ input }) => {
       return await fetchTweet(input.tweetId);
+    }),
+
+  // Video block: a full YouTube/TikTok link, TikTok short links resolved.
+  resolveVideoUrl: rateLimitedFetch
+    .input(z.object({ url: z.string().trim().max(500) }))
+    .mutation(async ({ input }) => {
+      return { url: await resolveVideoUrl(input.url) };
     }),
 
   getMusicMetadata: rateLimitedFetch
