@@ -4,13 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import {
-  PERSONALITY_PLATFORMS,
-  PLATFORM_LABELS,
-  type PersonalityPlatform,
-  slugifyPersonalityName,
-} from '@/lib/personality';
+import { slugifyPersonalityName } from '@/lib/personality';
 import { ROOT_DOMAIN } from '@/lib/site';
+import {
+  PLATFORMS,
+  SOCIAL_PLATFORMS,
+  type SocialPlatform,
+  isSocialPlatform,
+} from '@/lib/social-platforms';
 import { type RouterOutputs, api } from '@/trpc/react';
 import { Loader2, Plus, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -18,13 +19,13 @@ import { type FormEvent, useState } from 'react';
 
 type Category = RouterOutputs['admin']['categories'][number];
 type Fiche = RouterOutputs['admin']['personality'];
-type SocialRow = { key: number; platform: PersonalityPlatform; value: string };
+type SocialRow = { key: number; platform: SocialPlatform; value: string };
 
 const FIELD_CLASS =
   'h-10 w-full rounded-md border border-input bg-background px-3 text-sm';
 
 let nextKey = 0;
-function socialRow(platform: PersonalityPlatform, value = ''): SocialRow {
+function socialRow(platform: SocialPlatform, value = ''): SocialRow {
   nextKey += 1;
   return { key: nextKey, platform, value };
 }
@@ -54,8 +55,8 @@ export function PersonalityFicheForm({
   const [socials, setSocials] = useState<SocialRow[]>(
     () =>
       fiche?.socialLinks.flatMap((item) =>
-        (PERSONALITY_PLATFORMS as readonly string[]).includes(item.platform)
-          ? [socialRow(item.platform as PersonalityPlatform, item.url)]
+        isSocialPlatform(item.platform)
+          ? [socialRow(item.platform, item.url)]
           : []
       ) ?? []
   );
@@ -63,7 +64,7 @@ export function PersonalityFicheForm({
   const [saved, setSaved] = useState(false);
 
   const usedPlatforms = new Set(socials.map((row) => row.platform));
-  const freePlatform = PERSONALITY_PLATFORMS.find(
+  const freePlatform = SOCIAL_PLATFORMS.find(
     (platform) => !usedPlatforms.has(platform)
   );
 
@@ -215,7 +216,7 @@ export function PersonalityFicheForm({
                     i === index
                       ? {
                           ...item,
-                          platform: event.target.value as PersonalityPlatform,
+                          platform: event.target.value as SocialPlatform,
                         }
                       : item
                   )
@@ -223,7 +224,7 @@ export function PersonalityFicheForm({
               }
               className={`${FIELD_CLASS} w-36 shrink-0`}
             >
-              {PERSONALITY_PLATFORMS.map((platform) => (
+              {SOCIAL_PLATFORMS.map((platform) => (
                 <option
                   key={platform}
                   value={platform}
@@ -231,18 +232,14 @@ export function PersonalityFicheForm({
                     platform !== row.platform && usedPlatforms.has(platform)
                   }
                 >
-                  {PLATFORM_LABELS[platform]}
+                  {PLATFORMS[platform].label}
                 </option>
               ))}
             </select>
             <Input
-              aria-label={`Lien ${PLATFORM_LABELS[row.platform]}`}
+              aria-label={`Lien ${PLATFORMS[row.platform].label}`}
               value={row.value}
-              placeholder={
-                row.platform === 'website'
-                  ? 'https://…'
-                  : '@identifiant ou lien'
-              }
+              placeholder={PLATFORMS[row.platform].handleHint}
               onChange={(event) =>
                 setSocials((current) =>
                   current.map((item, i) =>

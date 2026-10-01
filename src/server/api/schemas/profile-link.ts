@@ -1,3 +1,4 @@
+import { SOCIAL_PLATFORMS } from '@/lib/social-platforms';
 import { BentoSchema, ValidLinkSchema } from '@/types';
 import * as z from 'zod';
 
@@ -9,14 +10,16 @@ export const CreateLinkSchema = z.object({
   link: ValidLinkSchema,
   name: z.string().optional(),
   bio: z.string().optional(),
-  twitter: z.string().optional(),
-  github: z.string().optional(),
-  linkedin: z.string().optional(),
-  instagram: z.string().optional(),
-  telegram: z.string().optional(),
-  discord: z.string().optional(),
-  youtube: z.string().optional(),
-  twitch: z.string().optional(),
+  // Handles or links, turned into link blocks (see src/lib/social-platforms).
+  socials: z
+    .array(
+      z.object({
+        platform: z.enum(SOCIAL_PLATFORMS),
+        value: z.string().trim().max(300),
+      })
+    )
+    .max(SOCIAL_PLATFORMS.length)
+    .default([]),
 });
 
 export const GetByLinkSchema = z.object({

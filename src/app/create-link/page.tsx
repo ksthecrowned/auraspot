@@ -1,126 +1,56 @@
 'use client';
 
 import BioWriter from '@/components/ai/bio-writer';
+import { SocialIcon } from '@/components/icons/social-icons';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ROOT_DOMAIN } from '@/lib/site';
+import {
+  PLATFORMS,
+  SOCIAL_PLATFORMS,
+  type SocialPlatform,
+  toSocialUrl,
+} from '@/lib/social-platforms';
 import Logo from '@/public/logo.png';
 import { api } from '@/trpc/react';
-import { AtSign, Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import type { ComponentType } from 'react';
 import { useState } from 'react';
-import { BiLogoTelegram } from 'react-icons/bi';
-import { BsDiscord, BsTwitterX } from 'react-icons/bs';
-import {
-  FaGithub,
-  FaInstagram,
-  FaLinkedinIn,
-  FaTwitch,
-  FaYoutube,
-} from 'react-icons/fa';
 
-const SOCIALS = [
-  { key: 'twitter', name: 'X', icon: BsTwitterX, placeholder: 'username' },
-  { key: 'github', name: 'GitHub', icon: FaGithub, placeholder: 'username' },
-  {
-    key: 'instagram',
-    name: 'Instagram',
-    icon: FaInstagram,
-    placeholder: 'username',
-  },
-  {
-    key: 'linkedin',
-    name: 'LinkedIn',
-    icon: FaLinkedinIn,
-    placeholder: 'username',
-  },
-  { key: 'youtube', name: 'YouTube', icon: FaYoutube, placeholder: 'channel' },
-  {
-    key: 'discord',
-    name: 'Discord',
-    icon: BsDiscord,
-    placeholder: 'username',
-  },
-  {
-    key: 'telegram',
-    name: 'Telegram',
-    icon: BiLogoTelegram,
-    placeholder: 'username',
-  },
-  { key: 'twitch', name: 'Twitch', icon: FaTwitch, placeholder: 'username' },
-] as const;
-
-const SOCIAL_URLS: Record<string, string> = {
-  twitter: 'x.com',
-  github: 'github.com',
-  instagram: 'instagram.com',
-  linkedin: 'linkedin.com/in',
-  youtube: 'youtube.com/@',
-  discord: 'discord.com',
-  telegram: 't.me',
-  twitch: 'twitch.tv',
-};
-
-const SOCIAL_COLORS: Record<string, { text: string; bg: string }> = {
-  twitter: { text: 'text-foreground', bg: 'bg-foreground/5' },
-  github: { text: 'text-foreground', bg: 'bg-gray-500/5' },
-  instagram: { text: 'text-[#F56040]', bg: 'bg-[#F56040]/5' },
-  linkedin: { text: 'text-[#0A66C2]', bg: 'bg-[#0A66C2]/5' },
-  youtube: { text: 'text-[#FF0000]', bg: 'bg-[#FF0000]/5' },
-  discord: { text: 'text-[#5A65EA]', bg: 'bg-[#5A65EA]/5' },
-  telegram: { text: 'text-[#0088CC]', bg: 'bg-[#0088CC]/5' },
-  twitch: { text: 'text-[#9146FF]', bg: 'bg-[#9146FF]/5' },
-};
-
-const SOCIAL_ACTIONS: Record<string, string> = {
-  twitter: 'Suivre',
-  github: 'Suivre',
-  instagram: 'Suivre',
-  linkedin: 'Se connecter',
-  youtube: 'S’abonner',
-  discord: 'Rejoindre',
-  telegram: 'Écrire',
-  twitch: 'Suivre',
-};
+// Networks offered at signup: the social ones, which take a handle. Music
+// and other links are added later as blocks.
+const SIGNUP_PLATFORMS = SOCIAL_PLATFORMS.filter(
+  (platform) => PLATFORMS[platform].group === 'social'
+);
 
 function PreviewCard({
   platform,
-  username,
-  icon: Icon,
+  value,
 }: {
-  platform: string;
-  username: string;
-  icon: ComponentType<{ size?: number; className?: string }>;
+  platform: SocialPlatform;
+  value: string;
 }) {
-  const colors = SOCIAL_COLORS[platform] ?? {
-    text: 'text-foreground',
-    bg: 'bg-muted',
-  };
-  const action = SOCIAL_ACTIONS[platform] ?? 'Visit';
-  const url = SOCIAL_URLS[platform] ?? '';
-
+  const spec = PLATFORMS[platform];
+  const url = toSocialUrl(platform, value);
   return (
     <div className="flex h-full flex-col justify-between rounded-xl border border-border/50 bg-card p-3 shadow-sm">
       <div className="flex items-start justify-between">
-        <div
-          className={`flex h-8 w-8 items-center justify-center rounded-lg ${colors.bg}`}
-        >
-          <Icon size={16} className={colors.text} />
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+          <SocialIcon platform={platform} size={16} colored />
         </div>
         <span className="rounded-full bg-foreground px-2.5 py-0.5 text-[9px] text-background">
-          {action}
+          {spec.action}
         </span>
       </div>
       <div className="mt-2">
-        <p className="truncate font-medium text-[10px]">@{username}</p>
+        <p className="truncate font-medium text-[10px]">{spec.label}</p>
         <p className="truncate text-[8px] text-muted-foreground">
-          {url}/{username}
+          {url ? url.replace('https://', '') : value}
         </p>
       </div>
     </div>
@@ -134,19 +64,35 @@ export default function Page() {
 
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
-  const [socials, setSocials] = useState<Record<string, string>>({});
+  const [socials, setSocials] = useState<
+    Partial<Record<SocialPlatform, string>>
+  >({});
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const { mutateAsync: createLink } = api.profileLink.create.useMutation();
 
-  const handleSocialChange = (key: string, value: string) => {
+  const handleSocialChange = (key: SocialPlatform, value: string) => {
     setSocials((prev) => ({ ...prev, [key]: value }));
+    setError(null);
   };
 
-  const filledSocials = Object.entries(socials).filter(([, v]) => v);
+  const filledSocials = SIGNUP_PLATFORMS.flatMap((platform) => {
+    const value = socials[platform]?.trim();
+    return value ? [{ platform, value }] : [];
+  });
 
   const handlePublish = async () => {
     if (!link || !name) {
+      return;
+    }
+    const invalid = filledSocials.find(
+      ({ platform, value }) => !toSocialUrl(platform, value)
+    );
+    if (invalid) {
+      setError(
+        `${PLATFORMS[invalid.platform].label} : identifiant ou lien invalide.`
+      );
       return;
     }
     setLoading(true);
@@ -155,17 +101,15 @@ export default function Page() {
         link,
         name: name || undefined,
         bio: bio || undefined,
-        twitter: socials.twitter || undefined,
-        github: socials.github || undefined,
-        linkedin: socials.linkedin || undefined,
-        instagram: socials.instagram || undefined,
-        telegram: socials.telegram || undefined,
-        discord: socials.discord || undefined,
-        youtube: socials.youtube || undefined,
-        twitch: socials.twitch || undefined,
+        socials: filledSocials,
       });
       router.push(`/${link}`);
-    } catch {
+    } catch (createError) {
+      setError(
+        createError instanceof Error
+          ? createError.message
+          : 'La page n’a pas pu être créée.'
+      );
       setLoading(false);
     }
   };
@@ -181,7 +125,7 @@ export default function Page() {
                 <Image src={Logo} alt="AuraSpot" width={36} height={36} />
               </Link>
               <div>
-                <h1 className="font-cal text-xl">Set up your page</h1>
+                <h1 className="font-cal text-xl">Créez votre page</h1>
                 <p className="text-muted-foreground text-xs">
                   {ROOT_DOMAIN}/{link}
                 </p>
@@ -192,7 +136,7 @@ export default function Page() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name" className="font-medium text-sm">
-                  Display name
+                  Nom affiché
                 </Label>
                 <Input
                   id="name"
@@ -211,7 +155,8 @@ export default function Page() {
                   <BioWriter
                     name={name || link}
                     links={filledSocials.map(
-                      ([k, v]) => `${SOCIAL_URLS[k] ?? k}/${v}`
+                      ({ platform, value }) =>
+                        toSocialUrl(platform, value) ?? value
                     )}
                     onGenerated={setBio}
                   >
@@ -222,14 +167,14 @@ export default function Page() {
                       className="h-7 gap-1 text-violet-500 text-xs"
                     >
                       <Sparkles className="h-3 w-3" />
-                      Write with AI
+                      Écrire avec l’IA
                     </Button>
                   </BioWriter>
                 </div>
                 <textarea
                   id="bio"
                   rows={2}
-                  placeholder="Tell the world about yourself..."
+                  placeholder="Présentez-vous en quelques mots…"
                   className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50"
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
@@ -239,28 +184,36 @@ export default function Page() {
 
             {/* Social Links */}
             <div className="space-y-3">
-              <Label className="font-medium text-sm">Social links</Label>
+              <Label className="font-medium text-sm">Réseaux sociaux</Label>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {SOCIALS.map((social) => (
-                  <div
-                    key={social.key}
+                {SIGNUP_PLATFORMS.map((platform) => (
+                  <label
+                    key={platform}
                     className="flex items-center gap-2.5 rounded-xl border border-border/50 bg-background px-3 py-2.5"
                   >
-                    <social.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <div className="flex flex-1 items-center gap-1">
-                      <AtSign className="h-3 w-3 text-muted-foreground" />
-                      <input
-                        className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-                        placeholder={social.placeholder}
-                        value={socials[social.key] ?? ''}
-                        onChange={(e) =>
-                          handleSocialChange(social.key, e.target.value)
-                        }
-                      />
-                    </div>
-                  </div>
+                    <SocialIcon
+                      platform={platform}
+                      size={16}
+                      className="text-muted-foreground"
+                    />
+                    <input
+                      aria-label={PLATFORMS[platform].label}
+                      inputMode={platform === 'whatsapp' ? 'tel' : 'text'}
+                      className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                      placeholder={`${PLATFORMS[platform].label} · ${PLATFORMS[platform].handleHint}`}
+                      value={socials[platform] ?? ''}
+                      onChange={(e) =>
+                        handleSocialChange(platform, e.target.value)
+                      }
+                    />
+                  </label>
                 ))}
               </div>
+              <p className="text-muted-foreground text-xs">
+                Identifiant ou lien. Musique et autres liens s’ajoutent ensuite
+                depuis votre page.
+              </p>
+              {error && <p className="text-destructive text-sm">{error}</p>}
             </div>
 
             {/* Actions */}
@@ -269,7 +222,7 @@ export default function Page() {
                 href="/claim-link"
                 className="text-muted-foreground text-sm hover:text-foreground"
               >
-                ← Back
+                ← Retour
               </Link>
               <GradientButton
                 onClick={() => {
@@ -280,10 +233,10 @@ export default function Page() {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
+                    Création…
                   </>
                 ) : (
-                  'Create page'
+                  'Créer ma page'
                 )}
               </GradientButton>
             </div>
@@ -293,7 +246,7 @@ export default function Page() {
           <div className="hidden border-border/50 border-l bg-muted/20 lg:block">
             <div className="sticky top-0 p-5">
               <p className="mb-3 font-medium text-[10px] text-muted-foreground uppercase tracking-widest">
-                Live Preview
+                Aperçu
               </p>
 
               {/* Scaled-down profile preview */}
@@ -307,10 +260,10 @@ export default function Page() {
                       </AvatarFallback>
                     </Avatar>
                     <h3 className="mt-2.5 font-cal text-base">
-                      {name || 'Your Name'}
+                      {name || 'Votre nom'}
                     </h3>
                     <p className="text-[10px] text-muted-foreground">
-                      @{link || 'username'}
+                      @{link || 'identifiant'}
                     </p>
                     {bio && (
                       <p className="mt-1.5 line-clamp-2 max-w-[220px] text-[10px] text-muted-foreground leading-relaxed">
@@ -322,20 +275,13 @@ export default function Page() {
                   {/* Bento grid preview */}
                   {filledSocials.length > 0 && (
                     <div className="mt-4 grid grid-cols-2 gap-2">
-                      {filledSocials.map(([platform, username]) => {
-                        const social = SOCIALS.find((s) => s.key === platform);
-                        if (!social) {
-                          return null;
-                        }
-                        return (
-                          <PreviewCard
-                            key={platform}
-                            platform={platform}
-                            username={username}
-                            icon={social.icon}
-                          />
-                        );
-                      })}
+                      {filledSocials.map(({ platform, value }) => (
+                        <PreviewCard
+                          key={platform}
+                          platform={platform}
+                          value={value}
+                        />
+                      ))}
                     </div>
                   )}
 
@@ -348,7 +294,7 @@ export default function Page() {
                           className="flex h-20 items-center justify-center rounded-xl border border-border/40 border-dashed bg-muted/30"
                         >
                           <span className="text-[9px] text-muted-foreground/30">
-                            Card
+                            Bloc
                           </span>
                         </div>
                       ))}
@@ -358,7 +304,7 @@ export default function Page() {
                   {/* Footer */}
                   <div className="mt-4 text-center">
                     <span className="text-[8px] text-muted-foreground/50">
-                      {ROOT_DOMAIN}/{link || 'username'}
+                      {ROOT_DOMAIN}/{link || 'identifiant'}
                     </span>
                   </div>
                 </div>

@@ -1,6 +1,7 @@
 import { getMetadata } from '@/lib/metadata';
 import { fetchMusicMetadata } from '@/lib/music';
 import { fetchLimit, generalLimit, subscribeLimit } from '@/lib/ratelimit';
+import { PLATFORMS, normalizeSocialLinks } from '@/lib/social-platforms';
 import { fetchTweet } from '@/lib/twitter';
 import {
   addDomainToVercel,
@@ -50,6 +51,7 @@ import {
 } from '@/server/db';
 import { getSupportersPreview } from '@/server/db/utils/support';
 import type { LinkBento } from '@/types';
+import { TRPCError } from '@trpc/server';
 import { after } from 'next/server';
 import * as z from 'zod';
 import {
@@ -437,44 +439,30 @@ export const profileLinkRouter = createTRPCRouter({
     }),
 });
 
+// One link block per social network given at signup, in order.
 function generateInitialBento(input: z.infer<typeof CreateLinkSchema>) {
+  const socials = normalizeSocialLinks(input.socials);
+  if (!socials.ok) {
+    const platform = input.socials[socials.index]?.platform;
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `Le lien ${platform ? PLATFORMS[platform].label : ''} n’est pas valide.`,
+    });
+  }
   const bento: LinkBento[] = [];
   let position = { sm: { x: 0, y: 0 }, md: { x: 0, y: 0 } };
-
-  for (const [key, value] of Object.entries(input)) {
-    if (key === 'link' || !value) {
-      continue;
-    }
-
-    const url = getSocialUrl(key, value);
+  for (const social of socials.links) {
     bento.push({
       id: crypto.randomUUID(),
       type: 'link',
-      href: url,
+      href: social.url,
       clicks: 0,
       size: { sm: '2x2', md: '2x2' },
       position,
     });
-
     position = getNextPosition(position);
   }
   return bento;
-}
-
-function getSocialUrl(key: string, value: string) {
-  if (key === 'linkedin') {
-    return `https://www.linkedin.com/in/${value}`;
-  }
-  if (key === 'youtube') {
-    return `https://www.youtube.com/@${value.replace('@', '')}`;
-  }
-  if (key === 'twitch') {
-    return `https://www.twitch.tv/${value}`;
-  }
-  if (key === 'telegram') {
-    return `https://t.me/${value}`;
-  }
-  return `https://${key}.com/${value}`;
 }
 
 function getNextPosition(pos: {

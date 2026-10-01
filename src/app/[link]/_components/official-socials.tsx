@@ -1,43 +1,17 @@
 'use client';
 
-import { platformLabel, socialPlatformOf } from '@/lib/personality';
+import { SocialIcon } from '@/components/icons/social-icons';
+import {
+  PLATFORMS,
+  type SocialPlatform,
+  isSocialPlatform,
+  socialPlatformOf,
+} from '@/lib/social-platforms';
 import { type RouterOutputs, api } from '@/trpc/react';
 import { useParams } from 'next/navigation';
-import type { IconType } from 'react-icons';
-import { BsTwitterX } from 'react-icons/bs';
-import {
-  FaDiscord,
-  FaFacebook,
-  FaGithub,
-  FaGlobe,
-  FaInstagram,
-  FaLinkedin,
-  FaTelegram,
-  FaTiktok,
-  FaTwitch,
-  FaYoutube,
-} from 'react-icons/fa';
-
-const ICONS: Record<string, IconType> = {
-  instagram: FaInstagram,
-  twitter: BsTwitterX,
-  youtube: FaYoutube,
-  tiktok: FaTiktok,
-  facebook: FaFacebook,
-  github: FaGithub,
-  linkedin: FaLinkedin,
-  telegram: FaTelegram,
-  discord: FaDiscord,
-  twitch: FaTwitch,
-};
 
 // The full list stays available as blocks in the profile space.
 const MAX_SOCIALS = 5;
-
-const EXTRA_LABELS: Record<string, string> = {
-  discord: 'Discord',
-  twitch: 'Twitch',
-};
 
 type ProfileLinkData = NonNullable<RouterOutputs['profileLink']['getByLink']>;
 
@@ -54,12 +28,21 @@ function collectSocials(profileLink: ProfileLinkData) {
     .flatMap((block) =>
       block.type === 'link' && block.href ? [block.href] : []
     );
-  const fromProfile = profileLink.socialLinks.map((social) => social.url);
+  // Official links keep the platform they were saved with (a website too).
+  const fromProfile = profileLink.socialLinks.map((social) => ({
+    url: social.url,
+    platform: isSocialPlatform(social.platform)
+      ? social.platform
+      : socialPlatformOf(social.url),
+  }));
 
-  const seen = new Set<string>();
-  const socials: { platform: string; url: string }[] = [];
-  for (const url of [...fromBlocks, ...fromProfile]) {
-    const platform = socialPlatformOf(url);
+  const seen = new Set<SocialPlatform>();
+  const socials: { platform: SocialPlatform; url: string }[] = [];
+  const candidates = [
+    ...fromBlocks.map((url) => ({ url, platform: socialPlatformOf(url) })),
+    ...fromProfile,
+  ];
+  for (const { url, platform } of candidates) {
     if (platform && !seen.has(platform)) {
       seen.add(platform);
       socials.push({ platform, url });
@@ -93,23 +76,18 @@ export default function OfficialSocials({
       aria-label="Réseaux sociaux"
       className="flex flex-wrap items-center @4xl:justify-start justify-center gap-2"
     >
-      {socials.map((social) => {
-        const Icon = ICONS[social.platform] ?? FaGlobe;
-        return (
-          <a
-            key={social.platform}
-            href={social.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            title={
-              EXTRA_LABELS[social.platform] ?? platformLabel(social.platform)
-            }
-            className="hover:-translate-y-0.5 flex size-10 items-center justify-center rounded-xl border border-border bg-background/80 text-foreground/80 shadow-sm transition-all hover:text-foreground"
-          >
-            <Icon className="size-4" />
-          </a>
-        );
-      })}
+      {socials.map((social) => (
+        <a
+          key={social.platform}
+          href={social.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={PLATFORMS[social.platform].label}
+          className="hover:-translate-y-0.5 flex size-10 items-center justify-center rounded-xl border border-border bg-background/80 text-foreground/80 shadow-sm transition-all hover:text-foreground"
+        >
+          <SocialIcon platform={social.platform} size={16} />
+        </a>
+      ))}
     </nav>
   );
 }

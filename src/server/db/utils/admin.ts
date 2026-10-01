@@ -1,10 +1,9 @@
+import { bioFromPlainText, plainTextFromBio } from '@/lib/admin-fiche';
+import { slugifyPersonalityName } from '@/lib/personality';
 import {
   type SocialLinkInput,
-  bioFromPlainText,
   normalizeSocialLinks,
-  plainTextFromBio,
-} from '@/lib/admin-fiche';
-import { slugifyPersonalityName } from '@/lib/personality';
+} from '@/lib/social-platforms';
 import { and, count, desc, eq } from 'drizzle-orm';
 import { db } from '../db';
 import {

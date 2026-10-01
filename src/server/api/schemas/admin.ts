@@ -1,4 +1,4 @@
-import { PERSONALITY_PLATFORMS } from '@/lib/personality';
+import { SOCIAL_PLATFORMS } from '@/lib/social-platforms';
 import { ValidLinkSchema } from '@/types';
 import * as z from 'zod';
 
@@ -47,11 +47,11 @@ const FicheFieldsSchema = z.object({
   socialLinks: z
     .array(
       z.object({
-        platform: z.enum(PERSONALITY_PLATFORMS),
+        platform: z.enum(SOCIAL_PLATFORMS),
         value: z.string().trim().max(300),
       })
     )
-    .max(PERSONALITY_PLATFORMS.length),
+    .max(SOCIAL_PLATFORMS.length),
 });
 
 export const CreatePersonalitySchema = FicheFieldsSchema.extend({

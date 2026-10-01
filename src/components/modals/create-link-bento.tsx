@@ -1,5 +1,6 @@
 'use client';
 
+import { SocialIcon } from '@/components/icons/social-icons';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -9,85 +10,20 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import {
+  PLATFORMS,
+  SOCIAL_PLATFORMS,
+  type SocialPlatform,
+  toSocialUrl,
+} from '@/lib/social-platforms';
 import { api } from '@/trpc/react';
 import { LinkBentoSchema } from '@/types';
 import { Globe } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import type React from 'react';
 import { type ReactNode, useState } from 'react';
-import { BiLogoTelegram } from 'react-icons/bi';
-import { BsDiscord, BsThreads, BsTwitterX } from 'react-icons/bs';
-import {
-  FaGithub,
-  FaInstagram,
-  FaLinkedinIn,
-  FaTiktok,
-  FaTwitch,
-  FaYoutube,
-} from 'react-icons/fa';
-
-const SOCIAL_PRESETS = [
-  {
-    name: 'Instagram',
-    icon: <FaInstagram size={20} />,
-    color: '#E4405F',
-    placeholder: 'https://instagram.com/username',
-  },
-  {
-    name: 'YouTube',
-    icon: <FaYoutube size={20} />,
-    color: '#FF0000',
-    placeholder: 'https://youtube.com/@channel',
-  },
-  {
-    name: 'Twitter / X',
-    icon: <BsTwitterX size={18} />,
-    color: '#000000',
-    placeholder: 'https://x.com/username',
-  },
-  {
-    name: 'TikTok',
-    icon: <FaTiktok size={18} />,
-    color: '#000000',
-    placeholder: 'https://tiktok.com/@username',
-  },
-  {
-    name: 'LinkedIn',
-    icon: <FaLinkedinIn size={20} />,
-    color: '#0A66C2',
-    placeholder: 'https://linkedin.com/in/username',
-  },
-  {
-    name: 'GitHub',
-    icon: <FaGithub size={20} />,
-    color: '#333333',
-    placeholder: 'https://github.com/username',
-  },
-  {
-    name: 'Discord',
-    icon: <BsDiscord size={20} />,
-    color: '#5A65EA',
-    placeholder: 'https://discord.gg/invite',
-  },
-  {
-    name: 'Twitch',
-    icon: <FaTwitch size={18} />,
-    color: '#9146FF',
-    placeholder: 'https://twitch.tv/username',
-  },
-  {
-    name: 'Telegram',
-    icon: <BiLogoTelegram size={22} />,
-    color: '#0088CC',
-    placeholder: 'https://t.me/username',
-  },
-  {
-    name: 'Threads',
-    icon: <BsThreads size={18} />,
-    color: '#000000',
-    placeholder: 'https://threads.net/@username',
-  },
-] as const;
+// Every known network except the plain website, which is the default input.
+const PRESETS = SOCIAL_PLATFORMS.filter((platform) => platform !== 'website');
 
 export default function CreateLinkBentoModal({
   children,
@@ -104,8 +40,11 @@ export default function CreateLinkBentoModal({
 
   const { link } = useParams<{ link: string }>();
 
-  const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
+  const [selectedPreset, setSelectedPreset] = useState<SocialPlatform | null>(
+    null
+  );
   const [input, setInput] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const queryClient = api.useContext();
 
@@ -137,20 +76,32 @@ export default function CreateLinkBentoModal({
     if (!input) {
       return;
     }
+    // A network accepts its handle (@name, phone for WhatsApp) or a link.
+    const href = selectedPreset
+      ? toSocialUrl(selectedPreset, input)
+      : toSocialUrl('website', input);
+    if (!href) {
+      setError(
+        selectedPreset
+          ? `Ce n’est pas un identifiant ni un lien ${PLATFORMS[selectedPreset].label} valide.`
+          : 'Collez un lien complet, qui commence par https://'
+      );
+      return;
+    }
+    setError(null);
     createBento({
       link,
       bento: {
         id: crypto.randomUUID(),
         type: 'link',
-        href: input,
+        href,
       },
     });
   };
 
-  const activePreset =
-    selectedPreset !== null ? SOCIAL_PRESETS[selectedPreset] : undefined;
-
-  const placeholder = activePreset?.placeholder ?? 'https://example.com';
+  const placeholder = selectedPreset
+    ? PLATFORMS[selectedPreset].handleHint
+    : 'https://exemple.com';
 
   return (
     <Dialog
@@ -160,35 +111,40 @@ export default function CreateLinkBentoModal({
         if (!v) {
           setInput('');
           setSelectedPreset(null);
+          setError(null);
         }
       }}
     >
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-cal text-xl">Add Link</DialogTitle>
+          <DialogTitle className="font-cal text-xl">
+            Ajouter un lien
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-5">
           {/* Social presets grid */}
-          <div className="grid grid-cols-5 gap-2">
-            {SOCIAL_PRESETS.map((preset, i) => (
+          <div className="grid max-h-64 grid-cols-4 gap-2 overflow-y-auto sm:grid-cols-5">
+            {PRESETS.map((preset) => (
               <button
-                key={preset.name}
+                key={preset}
                 type="button"
+                aria-pressed={selectedPreset === preset}
                 onClick={() => {
-                  setSelectedPreset(selectedPreset === i ? null : i);
+                  setSelectedPreset(selectedPreset === preset ? null : preset);
                   setInput('');
+                  setError(null);
                 }}
-                className={`flex flex-col items-center gap-1.5 rounded-xl border-2 px-1 py-3 transition-all ${
-                  selectedPreset === i
+                className={`flex min-w-0 flex-col items-center gap-1.5 rounded-xl border-2 px-1 py-3 transition-all ${
+                  selectedPreset === preset
                     ? 'border-primary bg-primary/5'
                     : 'border-transparent bg-muted/50 hover:bg-muted'
                 }`}
               >
-                <span style={{ color: preset.color }}>{preset.icon}</span>
-                <span className="truncate font-medium text-[10px] leading-tight">
-                  {preset.name}
+                <SocialIcon platform={preset} size={20} colored />
+                <span className="w-full truncate text-center font-medium text-[10px] leading-tight">
+                  {PLATFORMS[preset].label}
                 </span>
               </button>
             ))}
@@ -198,7 +154,7 @@ export default function CreateLinkBentoModal({
           {selectedPreset === null && (
             <div className="flex items-center gap-2 text-muted-foreground text-xs">
               <div className="h-px flex-1 bg-border" />
-              <span>or paste any URL</span>
+              <span>ou collez n’importe quel lien</span>
               <div className="h-px flex-1 bg-border" />
             </div>
           )}
@@ -207,23 +163,32 @@ export default function CreateLinkBentoModal({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex items-center gap-2">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted">
-                {activePreset ? (
-                  <span style={{ color: activePreset.color }}>
-                    {activePreset.icon}
-                  </span>
+                {selectedPreset ? (
+                  <SocialIcon platform={selectedPreset} size={18} colored />
                 ) : (
                   <Globe className="h-4 w-4 text-muted-foreground" />
                 )}
               </div>
               <Input
-                type="url"
+                type="text"
+                inputMode={selectedPreset === 'whatsapp' ? 'tel' : 'url'}
+                aria-label={
+                  selectedPreset
+                    ? `Identifiant ou lien ${PLATFORMS[selectedPreset].label}`
+                    : 'Lien'
+                }
                 placeholder={placeholder}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  setError(null);
+                }}
                 className="rounded-xl"
                 autoFocus
               />
             </div>
+
+            {error && <p className="text-destructive text-sm">{error}</p>}
 
             <div className="flex items-center justify-end gap-3">
               <Button
@@ -232,14 +197,14 @@ export default function CreateLinkBentoModal({
                 className="rounded-xl px-6"
                 onClick={() => setOpen(false)}
               >
-                Cancel
+                Annuler
               </Button>
               <Button
                 type="submit"
                 disabled={!input || isPending}
                 className="rounded-xl px-6"
               >
-                {isPending ? 'Adding...' : 'Add link'}
+                {isPending ? 'Ajout…' : 'Ajouter le lien'}
               </Button>
             </div>
           </form>

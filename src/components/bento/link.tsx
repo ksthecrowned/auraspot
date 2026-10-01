@@ -1,6 +1,7 @@
 'use client';
 
 import CardOverlay from '@/components/bento/overlay';
+import { SocialIcon } from '@/components/icons/social-icons';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -11,6 +12,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { getMetadata } from '@/lib/metadata';
+import {
+  PLATFORMS,
+  type SocialPlatform,
+  socialPlatformOf,
+} from '@/lib/social-platforms';
 import { cn } from '@/lib/utils';
 import { api } from '@/trpc/react';
 import type { LinkBentoSchema } from '@/types';
@@ -20,15 +26,6 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import type React from 'react';
 import { useState } from 'react';
-import { BiLogoTelegram } from 'react-icons/bi';
-import { BsDiscord, BsTwitterX } from 'react-icons/bs';
-import {
-  FaGithub,
-  FaInstagram,
-  FaLinkedinIn,
-  FaTwitch,
-  FaYoutube,
-} from 'react-icons/fa';
 import type * as z from 'zod';
 
 type Metadata = Awaited<ReturnType<typeof getMetadata>>;
@@ -37,124 +34,27 @@ type BentoData = z.infer<typeof LinkBentoSchema>;
 // Sizes that have proper layouts for link cards
 export const LINK_CARD_SIZES = ['2x2', '4x1', '4x2'] as const;
 
-type PlatformInfo = {
-  icon: React.ReactNode;
-  color: string;
-  bg: string;
-  action: { label: string; className: string };
-};
+const LEADING_WWW_RE = /^(www\.|m\.)/;
+const TRAILING_SLASH_RE = /\/$/;
 
-const PLATFORM_MAP: Record<string, PlatformInfo> = {
-  twitter: {
-    icon: <BsTwitterX size={20} className="text-foreground" />,
-    color: '#000000',
-    bg: 'bg-foreground/5',
-    action: {
-      label: 'Suivre',
-      className:
-        'rounded-full bg-foreground text-background hover:bg-foreground/90',
-    },
-  },
-  linkedin: {
-    icon: <FaLinkedinIn size={20} className="text-[#0A66C2]" />,
-    color: '#0A66C2',
-    bg: 'bg-[#0A66C2]/5',
-    action: {
-      label: 'Se connecter',
-      className: 'rounded-full bg-[#0A66C2] text-white hover:bg-[#004182]',
-    },
-  },
-  github: {
-    icon: <FaGithub size={20} className="text-foreground" />,
-    color: '#333333',
-    bg: 'bg-gray-500/5',
-    action: {
-      label: 'Suivre',
-      className:
-        'rounded-full bg-foreground text-background hover:bg-foreground/90',
-    },
-  },
-  instagram: {
-    icon: <FaInstagram size={20} className="text-[#E1306C]" />,
-    color: '#E1306C',
-    bg: 'bg-[#E1306C]/5',
-    action: {
-      label: 'Suivre',
-      className:
-        'rounded-full bg-gradient-to-r from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white hover:opacity-90',
-    },
-  },
-  twitch: {
-    icon: <FaTwitch size={20} className="text-[#9146FF]" />,
-    color: '#9146FF',
-    bg: 'bg-[#9146FF]/5',
-    action: {
-      label: 'Suivre',
-      className: 'rounded-full bg-[#9146FF] text-white hover:bg-[#7c3aed]',
-    },
-  },
-  telegram: {
-    icon: <BiLogoTelegram size={24} className="text-[#0088CC]" />,
-    color: '#0088CC',
-    bg: 'bg-[#0088CC]/5',
-    action: {
-      label: 'Écrire',
-      className: 'rounded-full bg-[#0088CC] text-white hover:bg-[#0077b3]',
-    },
-  },
-  discord: {
-    icon: <BsDiscord size={24} className="text-[#5A65EA]" />,
-    color: '#5A65EA',
-    bg: 'bg-[#5A65EA]/5',
-    action: {
-      label: 'Rejoindre',
-      className: 'rounded-full bg-[#5A65EA] text-white hover:bg-[#4752c4]',
-    },
-  },
-  youtube: {
-    icon: <FaYoutube size={20} className="text-[#FF0000]" />,
-    color: '#FF0000',
-    bg: 'bg-[#FF0000]/5',
-    action: {
-      label: 'S’abonner',
-      className: 'rounded-full bg-[#FF0000] text-white hover:bg-[#cc0000]',
-    },
-  },
-};
+// Brand colours bright enough to need dark text on top (Snapchat's yellow).
+function isLightColor(hex: string) {
+  const value = Number.parseInt(hex.slice(1), 16);
+  const r = (value >> 16) & 255;
+  const g = (value >> 8) & 255;
+  const b = value & 255;
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.72;
+}
 
-function getPlatform(url: string): PlatformInfo | null | undefined {
-  const hostname = new URL(url).hostname;
-  if (hostname.includes('twitter.com') || hostname.includes('x.com')) {
-    return PLATFORM_MAP.twitter;
-  }
-  if (hostname.includes('linkedin.com')) {
-    return PLATFORM_MAP.linkedin;
-  }
-  if (hostname.includes('github.com')) {
-    return PLATFORM_MAP.github;
-  }
-  if (hostname.includes('instagram.com')) {
-    return PLATFORM_MAP.instagram;
-  }
-  if (hostname.includes('twitch.tv')) {
-    return PLATFORM_MAP.twitch;
-  }
-  if (hostname.includes('t.me') || hostname.includes('telegram.com')) {
-    return PLATFORM_MAP.telegram;
-  }
-  if (hostname.includes('discord.com')) {
-    return PLATFORM_MAP.discord;
-  }
-  if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) {
-    return PLATFORM_MAP.youtube;
-  }
-  return null;
+function platformOf(url: string): SocialPlatform | null {
+  const platform = socialPlatformOf(url);
+  return platform === 'website' ? null : platform;
 }
 
 function getIcon(url: string, metadata?: Metadata) {
-  const platform = getPlatform(url);
+  const platform = platformOf(url);
   if (platform) {
-    return platform.icon;
+    return <SocialIcon platform={platform} size={20} colored />;
   }
   const hostname = new URL(url).hostname;
   return (
@@ -169,110 +69,71 @@ function getIcon(url: string, metadata?: Metadata) {
 }
 
 function getLargeIcon(url: string) {
-  const hostname = new URL(url).hostname;
-  if (hostname.includes('twitter.com') || hostname.includes('x.com')) {
-    return <BsTwitterX size={32} className="text-foreground" />;
-  }
-  if (hostname.includes('linkedin.com')) {
-    return <FaLinkedinIn size={32} className="text-[#0A66C2]" />;
-  }
-  if (hostname.includes('github.com')) {
-    return <FaGithub size={32} className="text-foreground" />;
-  }
-  if (hostname.includes('instagram.com')) {
-    return <FaInstagram size={32} className="text-[#F56040]" />;
-  }
-  if (hostname.includes('twitch.tv')) {
-    return <FaTwitch size={32} className="text-[#9146FF]" />;
-  }
-  if (hostname.includes('t.me') || hostname.includes('telegram.com')) {
-    return <BiLogoTelegram size={36} className="text-[#0088CC]" />;
-  }
-  if (hostname.includes('discord.com')) {
-    return <BsDiscord size={36} className="text-[#5A65EA]" />;
-  }
-  if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) {
-    return <FaYoutube size={32} className="text-[#FF0000]" />;
-  }
-  return null;
+  const platform = platformOf(url);
+  return platform ? <SocialIcon platform={platform} size={32} colored /> : null;
+}
+
+function lastPathSegment(url: URL) {
+  const segments = url.pathname.split('/').filter(Boolean);
+  return segments.at(-1);
 }
 
 function getTitle(url: string, metadata?: Metadata) {
-  const urlObj = new URL(url);
-  const pathSegments = urlObj.pathname.split('/');
-  let userHandle = pathSegments.pop();
-  if (!userHandle) {
-    userHandle = pathSegments.pop();
+  const platform = platformOf(url);
+  // Handle-based profiles read as @handle; music and invite links keep the
+  // page title (an artist id is not a name).
+  if (platform && PLATFORMS[platform].handlePrefix) {
+    const handle = lastPathSegment(new URL(url));
+    if (handle) {
+      return handle.startsWith('@') ? handle : `@${handle}`;
+    }
   }
-
-  if (getPlatform(url)) {
-    return userHandle?.startsWith('@') ? userHandle : `@${userHandle}`;
-  }
-  return metadata?.title;
+  return metadata?.title ?? (platform ? PLATFORMS[platform].label : undefined);
 }
 
 function getDescription(url: string, metadata?: Metadata) {
-  const urlObj = new URL(url);
-  const hostname = urlObj.hostname;
-  const pathSegments = urlObj.pathname.split('/');
-  let userHandle = pathSegments.pop();
-  if (!userHandle) {
-    userHandle = pathSegments.pop();
-  }
-
-  if (hostname.includes('twitter.com') || hostname.includes('x.com')) {
-    return `x.com/${userHandle}`;
-  }
-  if (hostname.includes('linkedin.com')) {
-    return `linkedin.com/in/${userHandle}`;
-  }
-  if (hostname.includes('github.com')) {
-    return `github.com/${userHandle}`;
-  }
-  if (hostname.includes('instagram.com')) {
-    return `instagr.am/${userHandle}`;
-  }
-  if (hostname.includes('twitch.tv')) {
-    return `twitch.tv/${userHandle}`;
-  }
-  if (hostname.includes('t.me') || hostname.includes('telegram.com')) {
-    return `t.me/${userHandle}`;
-  }
-  if (hostname.includes('discord.com')) {
-    return 'discord.com';
-  }
-  if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) {
-    return `youtube.com/${userHandle}`;
+  const platform = platformOf(url);
+  if (platform) {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(LEADING_WWW_RE, '');
+    return `${host}${parsed.pathname.replace(TRAILING_SLASH_RE, '')}`;
   }
   return metadata?.description ?? null;
 }
 
 // A span, not a button: the whole card is already the link.
 function ActionPill({ url }: { url: string }) {
-  const platform = getPlatform(url);
+  const platform = platformOf(url);
   if (!platform) {
     return null;
   }
+  const { action, color } = PLATFORMS[platform];
+  const lightBrand = color ? isLightColor(color) : false;
   return (
     <span
       className={cn(
-        'inline-flex h-8 items-center px-4 font-semibold text-xs shadow-sm transition-colors',
-        platform.action.className
+        'inline-flex h-8 items-center rounded-full px-4 font-semibold text-xs shadow-sm transition-opacity hover:opacity-90',
+        color ? '' : 'bg-foreground text-background',
+        color && (lightBrand ? 'text-black' : 'text-white')
       )}
+      style={color ? { backgroundColor: color } : undefined}
     >
-      {platform.action.label}
+      {action}
     </span>
   );
 }
 
-// Soft brand-colored light in the top-left corner of the card.
+// Soft brand-coloured light, for the card corner and the wide layout.
+function brandTint(url: string, strength: number) {
+  const platform = platformOf(url);
+  const color = platform ? PLATFORMS[platform].color : null;
+  return color
+    ? `color-mix(in oklab, ${color} ${strength}%, transparent)`
+    : `color-mix(in oklab, var(--foreground) ${Math.round(strength / 2)}%, transparent)`;
+}
+
 function brandWash(url: string) {
-  const color = getPlatform(url)?.color;
-  const tint =
-    !color || color === '#000000' || color === '#333333'
-      ? 'color-mix(in oklab, var(--foreground) 7%, transparent)'
-      : `color-mix(in oklab, ${color} 14%, transparent)`;
-  return `radial-gradient(120% 100% at 0% 0%, ${tint}, transparent 65%)`;
+  return `radial-gradient(120% 100% at 0% 0%, ${brandTint(url, 14)}, transparent 65%)`;
 }
 
 // --- Layout Components ---
@@ -466,7 +327,7 @@ function WideLayout({
   onEdit?: () => void;
 }) {
   const href = bento.href ?? '';
-  const platform = getPlatform(href);
+  const platform = platformOf(href);
   const ogImage = metadata?.image;
 
   // Generic link with OG image: image on the right
@@ -511,10 +372,8 @@ function WideLayout({
     >
       {/* Branded icon area */}
       <div
-        className={cn(
-          'flex w-35 shrink-0 items-center justify-center',
-          platform?.bg ?? 'bg-muted/50'
-        )}
+        className="flex w-35 shrink-0 items-center justify-center"
+        style={{ backgroundColor: brandTint(href, 8) }}
       >
         <IconBadge href={href} metadata={metadata} size="lg" />
       </div>

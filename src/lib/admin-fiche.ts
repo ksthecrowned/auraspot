@@ -1,33 +1,5 @@
-import { type PersonalityPlatform, toSocialUrl } from '@/lib/personality';
-
-// Helpers for the admin fiche form: official social links and a plain-text
-// bio (the profile stores the bio as the rich-text editor's HTML).
-
-export type SocialLinkInput = { platform: PersonalityPlatform; value: string };
-
-export function normalizeSocialLinks(
-  inputs: SocialLinkInput[]
-):
-  | { ok: true; links: { platform: PersonalityPlatform; url: string }[] }
-  | { ok: false; index: number; reason: 'invalid' | 'duplicate' } {
-  const links: { platform: PersonalityPlatform; url: string }[] = [];
-  const seen = new Set<PersonalityPlatform>();
-  for (const [index, input] of inputs.entries()) {
-    if (!input.value.trim()) {
-      continue;
-    }
-    if (seen.has(input.platform)) {
-      return { ok: false, index, reason: 'duplicate' };
-    }
-    const url = toSocialUrl(input.platform, input.value);
-    if (!url) {
-      return { ok: false, index, reason: 'invalid' };
-    }
-    seen.add(input.platform);
-    links.push({ platform: input.platform, url });
-  }
-  return { ok: true, links };
-}
+// Plain-text bio for the admin fiche form: the profile stores the bio as the
+// rich-text editor's HTML.
 
 const PARAGRAPH_BREAK_RE = /\n\s*\n/;
 const LINE_BREAK_RE = /\n/g;
