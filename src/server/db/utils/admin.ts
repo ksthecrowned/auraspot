@@ -360,20 +360,34 @@ export const listPaymentsForAdmin = () => {
     .limit(50);
 };
 
-export const listWithdrawalsForAdmin = async () => {
+// Pending requests first (oldest first: paid in order), or the reviewed
+// ones (latest first).
+export const listWithdrawalsForAdmin = async (status: 'pending' | 'done') => {
   const rows = await db.query.withdrawal.findMany({
+    where: (table, { eq: equals, ne }) =>
+      status === 'pending'
+        ? equals(table.status, 'pending')
+        : ne(table.status, 'pending'),
     columns: {
       id: true,
       grossAmount: true,
       commissionAmount: true,
       netAmount: true,
       status: true,
+      payoutOperator: true,
+      payoutPhone: true,
+      payoutReference: true,
+      reviewNote: true,
+      reviewedAt: true,
       createdAt: true,
     },
     with: {
       personality: { columns: { name: true, link: true } },
+      requestedBy: { columns: { name: true, email: true } },
+      reviewedBy: { columns: { name: true } },
     },
-    orderBy: (table, { desc: latest }) => latest(table.createdAt),
+    orderBy: (table, { asc, desc: latest }) =>
+      status === 'pending' ? asc(table.createdAt) : latest(table.updatedAt),
     limit: 50,
   });
   return rows.map((row) => ({

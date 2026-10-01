@@ -204,8 +204,17 @@ export const supportRouter = createTRPCRouter({
         slug: input.slug,
         userId: ctx.user.id,
         grossAmount: input.grossAmount,
+        payoutOperator: input.payoutOperator,
+        payoutCountry: input.payoutCountry,
+        payoutPhone: input.payoutPhone,
       });
       if ('error' in result) {
+        if (result.error === 'invalid-phone') {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Ce numéro de téléphone n’est pas valide.',
+          });
+        }
         if (result.error === 'forbidden') {
           throw new TRPCError({ code: 'FORBIDDEN' });
         }

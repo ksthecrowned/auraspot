@@ -65,3 +65,33 @@ export const UpdatePersonalitySchema = FicheFieldsSchema.extend({
 export const AdminPersonalityIdSchema = z.object({
   personalityId: z.string().uuid(),
 });
+
+// Paid needs the MoMo/Airtel transfer reference, to find the transfer again;
+// refused needs a reason, sent to the person in the email.
+export const ReviewWithdrawalSchema = z
+  .object({
+    withdrawalId: z.string().uuid(),
+    decision: z.enum(['paid', 'refused']),
+    reference: z.string().trim().max(120).optional(),
+    note: z.string().trim().max(500).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.decision === 'paid' && (value.reference?.length ?? 0) < 3) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Indiquez la référence du transfert.',
+        path: ['reference'],
+      });
+    }
+    if (value.decision === 'refused' && (value.note?.length ?? 0) < 5) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Expliquez le refus en quelques mots.',
+        path: ['note'],
+      });
+    }
+  });
+
+export const AdminWithdrawalsSchema = z.object({
+  status: z.enum(['pending', 'done']).default('pending'),
+});

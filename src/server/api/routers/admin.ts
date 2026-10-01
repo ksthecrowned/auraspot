@@ -19,13 +19,16 @@ import {
   reviewPersonalityClaim,
   setPersonalityVerification,
 } from '@/server/db/utils/personality';
+import { reviewWithdrawal } from '@/server/db/utils/support';
 import { TRPCError } from '@trpc/server';
 import {
   AdminPersonalityIdSchema,
   AdminPersonalitySearchSchema,
+  AdminWithdrawalsSchema,
   CreateCategorySchema,
   CreatePersonalitySchema,
   ReviewPersonalityReportSchema,
+  ReviewWithdrawalSchema,
   SetPersonalityPublicationSchema,
   UpdateCategorySchema,
   UpdatePersonalitySchema,
@@ -154,9 +157,36 @@ export const adminRouter = createTRPCRouter({
     return listPaymentsForAdmin();
   }),
 
-  withdrawals: adminProcedure.query(() => {
-    return listWithdrawalsForAdmin();
-  }),
+  withdrawals: adminProcedure
+    .input(AdminWithdrawalsSchema)
+    .query(({ input }) => {
+      return listWithdrawalsForAdmin(input.status);
+    }),
+
+  reviewWithdrawal: adminProcedure
+    .input(ReviewWithdrawalSchema)
+    .mutation(async ({ ctx, input }) => {
+      const result = await reviewWithdrawal({
+        withdrawalId: input.withdrawalId,
+        reviewerId: ctx.user.id,
+        decision: input.decision,
+        reference: input.reference,
+        note: input.note,
+      });
+      if ('error' in result) {
+        if (result.error === 'invalid-transition') {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'Cette demande a déjà été traitée.',
+          });
+        }
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Cette demande est introuvable.',
+        });
+      }
+      return { ok: true };
+    }),
 
   reports: adminProcedure.query(() => {
     return listReportsForAdmin();

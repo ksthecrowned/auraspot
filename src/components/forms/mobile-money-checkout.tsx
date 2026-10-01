@@ -140,7 +140,7 @@ function MethodCard({
   );
 }
 
-function PhoneField({
+export function PhoneField({
   label,
   countries,
   country,

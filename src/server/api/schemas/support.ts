@@ -43,6 +43,11 @@ export const PayCheckoutSchema = z.object({
 export const RequestWithdrawalSchema = z.object({
   slug: z.string().trim().min(1).max(80),
   grossAmount: z.number().int().min(MIN_SUPPORT_AMOUNT).max(MAX_SUPPORT_AMOUNT),
+  // Where the net amount is sent. The number is checked per country by
+  // toMsisdn() (src/lib/phone-countries.ts).
+  payoutOperator: z.enum(['mtn_momo', 'airtel_money']),
+  payoutCountry: z.string().length(2),
+  payoutPhone: z.string().trim().min(6).max(24),
 });
 
 export const PaymentWebhookSchema = z.object({

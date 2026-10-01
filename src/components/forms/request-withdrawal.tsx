@@ -4,9 +4,11 @@ import {
   AURA_ERROR,
   AURA_PRIMARY_BUTTON,
 } from '@/components/forms/aura-fields';
+import { PhoneField } from '@/components/forms/mobile-money-checkout';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MIN_SUPPORT_AMOUNT, formatFcfa } from '@/lib/money';
+import { PHONE_COUNTRIES } from '@/lib/phone-countries';
 import { cn } from '@/lib/utils';
 import { type RouterOutputs, api } from '@/trpc/react';
 import { Loader2 } from 'lucide-react';
@@ -22,14 +24,33 @@ const STATUS = {
     tone: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
   },
   failed: { label: 'Échoué', tone: 'bg-destructive/10 text-destructive' },
-  cancelled: { label: 'Annulé', tone: 'bg-muted text-muted-foreground' },
+  cancelled: { label: 'Refusé', tone: 'bg-muted text-muted-foreground' },
   refunded: { label: 'Remboursé', tone: 'bg-muted text-muted-foreground' },
 } as const;
+
+const OPERATORS = [
+  { value: 'mtn_momo', label: 'MTN MoMo' },
+  { value: 'airtel_money', label: 'Airtel Money' },
+] as const;
+type Operator = (typeof OPERATORS)[number]['value'];
+
+const OPERATOR_LABEL: Record<string, string> = {
+  mtn_momo: 'MTN MoMo',
+  airtel_money: 'Airtel Money',
+};
+
+const COUNTRY_ISOS = PHONE_COUNTRIES.map((country) => country.iso);
 
 export default function RequestWithdrawalForm({ page }: { page: PageData }) {
   const router = useRouter();
   const requestWithdrawal = api.support.requestWithdrawal.useMutation();
   const [amount, setAmount] = useState('');
+  // The last number used is offered again.
+  const [operator, setOperator] = useState<Operator>(
+    page.lastPayout?.operator ?? 'mtn_momo'
+  );
+  const [country, setCountry] = useState(page.lastPayout?.iso ?? 'CG');
+  const [phone, setPhone] = useState(page.lastPayout?.national ?? '');
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -44,6 +65,9 @@ export default function RequestWithdrawalForm({ page }: { page: PageData }) {
       await requestWithdrawal.mutateAsync({
         slug: page.personality.slug,
         grossAmount: parsed,
+        payoutOperator: operator,
+        payoutCountry: country,
+        payoutPhone: phone,
       });
       setAmount('');
       router.refresh();
@@ -74,6 +98,40 @@ export default function RequestWithdrawalForm({ page }: { page: PageData }) {
               FCFA
             </span>
           </div>
+        </div>
+        <div className="flex flex-col gap-3">
+          <span className="font-medium text-sm">Recevoir sur</span>
+          <div className="grid grid-cols-2 gap-2">
+            {OPERATORS.map((item) => (
+              <label
+                key={item.value}
+                className={cn(
+                  'flex cursor-pointer items-center justify-center rounded-xl border-2 px-3 py-2.5 font-medium text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring/40',
+                  operator === item.value
+                    ? 'border-foreground'
+                    : 'border-border hover:border-foreground/30'
+                )}
+              >
+                <input
+                  type="radio"
+                  name="payout-operator"
+                  value={item.value}
+                  checked={operator === item.value}
+                  onChange={() => setOperator(item.value)}
+                  className="sr-only"
+                />
+                {item.label}
+              </label>
+            ))}
+          </div>
+          <PhoneField
+            label={`Numéro ${OPERATOR_LABEL[operator]}`}
+            countries={COUNTRY_ISOS}
+            country={country}
+            onCountryChange={setCountry}
+            value={phone}
+            onChange={setPhone}
+          />
         </div>
         {error && <p className={AURA_ERROR}>{error}</p>}
         <button
@@ -106,7 +164,20 @@ export default function RequestWithdrawalForm({ page }: { page: PageData }) {
                   <p className="text-muted-foreground text-xs">
                     Commission {formatFcfa(item.commissionAmount)} · net{' '}
                     {formatFcfa(item.netAmount)}
+                    {item.payoutPhone
+                      ? ` · ${OPERATOR_LABEL[item.payoutOperator ?? ''] ?? ''} ${item.payoutPhone}`
+                      : ''}
                   </p>
+                  {item.payoutReference && (
+                    <p className="text-muted-foreground text-xs">
+                      Référence : {item.payoutReference}
+                    </p>
+                  )}
+                  {item.reviewNote && (
+                    <p className="text-muted-foreground text-xs">
+                      Motif : {item.reviewNote}
+                    </p>
+                  )}
                 </div>
                 <span
                   className={cn(

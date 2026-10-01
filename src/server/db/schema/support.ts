@@ -181,6 +181,16 @@ export const withdrawal = pgTable(
     status: text('status', { enum: paymentStatuses })
       .default('pending')
       .notNull(),
+    // Where the net amount is sent: MoMo or Airtel number, "+242…".
+    payoutOperator: text('payout_operator'),
+    payoutPhone: text('payout_phone'),
+    // Set by the admin: transfer reference when paid, reason when refused.
+    payoutReference: text('payout_reference'),
+    reviewNote: text('review_note'),
+    reviewedByUserId: text('reviewed_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -240,5 +250,11 @@ export const withdrawalRelations = relations(withdrawal, ({ one }) => ({
   requestedBy: one(user, {
     fields: [withdrawal.requestedByUserId],
     references: [user.id],
+    relationName: 'withdrawal_requested_by',
+  }),
+  reviewedBy: one(user, {
+    fields: [withdrawal.reviewedByUserId],
+    references: [user.id],
+    relationName: 'withdrawal_reviewed_by',
   }),
 }));

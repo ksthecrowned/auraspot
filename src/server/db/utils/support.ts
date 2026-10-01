@@ -39,9 +39,10 @@ import {
 } from '../schema';
 
 const TRAILING_SLASH_RE = /\/$/;
-import { toMsisdn } from '@/lib/phone-countries';
+import { fromStoredPhone, toMsisdn } from '@/lib/phone-countries';
 import { canReceiveSupport } from '@/lib/support-eligibility';
 import { notifyPlanPaused } from './recurring-emails';
+import { notifyWithdrawalReviewed } from './withdrawal-emails';
 
 function isUniqueViolation(error: unknown): boolean {
   if (typeof error !== 'object' || error === null) {
@@ -820,11 +821,19 @@ export const getWithdrawalPage = async (slug: string, userId: string) => {
       commissionAmount: true,
       netAmount: true,
       status: true,
+      payoutOperator: true,
+      payoutPhone: true,
+      payoutReference: true,
+      reviewNote: true,
       createdAt: true,
     },
     orderBy: (table, { desc }) => desc(table.createdAt),
     limit: 20,
   });
+  const last = requests.find((item) => item.payoutPhone);
+  const lastPhone = last?.payoutPhone
+    ? fromStoredPhone(last.payoutPhone)
+    : null;
 
   return {
     personality: {
@@ -835,6 +844,12 @@ export const getWithdrawalPage = async (slug: string, userId: string) => {
     available,
     commissionBps: supportCommissionBps(),
     withdrawals: requests,
+    lastPayout:
+      last?.payoutOperator &&
+      isMobileMoneyOperator(last.payoutOperator) &&
+      lastPhone
+        ? { operator: last.payoutOperator, ...lastPhone }
+        : null,
   };
 };
 
@@ -842,7 +857,14 @@ export const requestWithdrawal = async (input: {
   slug: string;
   userId: string;
   grossAmount: number;
+  payoutOperator: MobileMoneyOperator;
+  payoutCountry: string;
+  payoutPhone: string;
 }) => {
+  const payout = toMsisdn(input.payoutCountry, input.payoutPhone);
+  if (!payout) {
+    return { error: 'invalid-phone' as const };
+  }
   const page = await getWithdrawalPage(input.slug, input.userId);
   if (!page) {
     return { error: 'not-found' as const };
@@ -871,6 +893,8 @@ export const requestWithdrawal = async (input: {
       netAmount: parts.netAmount,
       currency: SUPPORT_CURRENCY,
       status: 'pending',
+      payoutOperator: input.payoutOperator,
+      payoutPhone: `+${payout.msisdn}`,
     })
     .returning({
       id: withdrawal.id,
@@ -1183,4 +1207,42 @@ export const topSupportedPersonalityIds = async (
     .limit(limit);
 
   return rows.map((row) => row.personalityId);
+};
+
+// The admin paid the net amount by hand (MoMo / Airtel transfer) or refused
+// the request. Same ledger rules as the payout webhook: paid writes the fee
+// and the withdrawal; refused writes nothing, so the amount is available
+// again. The person who asked is told by email.
+export const reviewWithdrawal = async (input: {
+  withdrawalId: string;
+  reviewerId: string;
+  decision: 'paid' | 'refused';
+  reference?: string;
+  note?: string;
+}) => {
+  const status = input.decision === 'paid' ? 'success' : 'cancelled';
+  const result = await applyPayoutEvent({
+    eventId: `admin:${input.withdrawalId}:${status}`,
+    withdrawalId: input.withdrawalId,
+    status,
+  });
+  if ('error' in result) {
+    return result;
+  }
+  if (result.duplicate) {
+    return { ok: true as const, duplicate: true as const };
+  }
+  await db
+    .update(withdrawal)
+    .set({
+      payoutReference: input.decision === 'paid' ? input.reference : null,
+      reviewNote: input.decision === 'refused' ? input.note : null,
+      reviewedByUserId: input.reviewerId,
+      reviewedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(withdrawal.id, input.withdrawalId));
+  // The review is saved even if the email fails.
+  await notifyWithdrawalReviewed(input.withdrawalId).catch(() => null);
+  return { ok: true as const, duplicate: false as const };
 };
