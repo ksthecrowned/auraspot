@@ -10,8 +10,8 @@ import { Label } from '@/components/ui/label';
 import { ROOT_DOMAIN } from '@/lib/site';
 import {
   PLATFORMS,
-  SOCIAL_PLATFORMS,
   type SocialPlatform,
+  platformsByGroup,
   toSocialUrl,
 } from '@/lib/social-platforms';
 import Logo from '@/public/logo.png';
@@ -23,10 +23,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 // Networks offered at signup: the social ones, which take a handle. Music
-// and other links are added later as blocks.
-const SIGNUP_PLATFORMS = SOCIAL_PLATFORMS.filter(
-  (platform) => PLATFORMS[platform].group === 'social'
-);
+// platforms are added later as their own blocks.
+const SIGNUP_PLATFORMS = platformsByGroup('social');
 
 function PreviewCard({
   platform,

@@ -3,6 +3,7 @@
 import ProfileBuilder from '@/components/ai/profile-builder';
 import CreateLinkBentoModal from '@/components/modals/create-link-bento';
 import CustomDomainModal from '@/components/modals/custom-domain';
+import PlatformLinksModal from '@/components/modals/platform-links';
 import ThemeSettingsModal from '@/components/modals/theme-settings';
 import {
   Popover,
@@ -25,6 +26,7 @@ import {
   Palette,
   Plus,
   Redo2,
+  Share2,
   Sparkles,
   Timer,
   Type,
@@ -47,6 +49,8 @@ export default function ActionBar() {
   const { data: profileLink } = api.profileLink.getByLink.useQuery({ link });
   const [addOpen, setAddOpen] = useState(false);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [socialsOpen, setSocialsOpen] = useState(false);
+  const [musicOpen, setMusicOpen] = useState(false);
 
   const { mutate: updateProfileLink } = api.profileLink.update.useMutation({
     onSuccess: () => {
@@ -142,7 +146,29 @@ export default function ActionBar() {
                 <Plus size={20} />
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-52 p-1.5" side="top" sideOffset={12}>
+            <PopoverContent className="w-56 p-1.5" side="top" sideOffset={12}>
+              <button
+                type="button"
+                className={menuItemClass}
+                onClick={() => {
+                  setAddOpen(false);
+                  setSocialsOpen(true);
+                }}
+              >
+                <Share2 size={14} className="shrink-0" />
+                Réseaux sociaux
+              </button>
+              <button
+                type="button"
+                className={menuItemClass}
+                onClick={() => {
+                  setAddOpen(false);
+                  setMusicOpen(true);
+                }}
+              >
+                <Music size={14} className="shrink-0" />
+                Plateformes musique
+              </button>
               <button
                 type="button"
                 className={menuItemClass}
@@ -294,7 +320,7 @@ export default function ActionBar() {
                 }
               >
                 <Music size={14} className="shrink-0" />
-                Music
+                Titre musical
               </button>
               <button
                 type="button"
@@ -328,6 +354,15 @@ export default function ActionBar() {
               )}
             </PopoverContent>
           </Popover>
+
+          <button
+            type="button"
+            className={btnClass}
+            title="Réseaux sociaux"
+            onClick={() => setSocialsOpen(true)}
+          >
+            <Share2 size={20} />
+          </button>
 
           <ThemeSettingsModal>
             <button
@@ -434,6 +469,16 @@ export default function ActionBar() {
       <CreateLinkBentoModal
         open={linkModalOpen}
         onOpenChange={setLinkModalOpen}
+      />
+      <PlatformLinksModal
+        group="social"
+        open={socialsOpen}
+        onOpenChange={setSocialsOpen}
+      />
+      <PlatformLinksModal
+        group="music"
+        open={musicOpen}
+        onOpenChange={setMusicOpen}
       />
     </>
   );

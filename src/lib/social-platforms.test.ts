@@ -3,6 +3,8 @@ import {
   PLATFORMS,
   SOCIAL_PLATFORMS,
   normalizeSocialLinks,
+  planPlatformLinkSync,
+  platformsByGroup,
   socialPlatformOf,
   toSocialUrl,
 } from './social-platforms';
@@ -124,5 +126,59 @@ describe('normalizeSocialLinks', () => {
         { platform: 'twitter', value: 'a_two' },
       ])
     ).toEqual({ ok: false, index: 1, reason: 'duplicate' });
+  });
+});
+
+describe('platformsByGroup', () => {
+  test('music platforms are the listening ones', () => {
+    expect(platformsByGroup('music')).toEqual([
+      'spotify',
+      'applemusic',
+      'boomplay',
+      'audiomack',
+      'deezer',
+      'soundcloud',
+    ]);
+  });
+});
+
+describe('planPlatformLinkSync', () => {
+  const music = platformsByGroup('music');
+
+  test('creates, updates, and removes only the edited group', () => {
+    const plan = planPlatformLinkSync(
+      music,
+      { spotify: 'https://open.spotify.com/artist/new', deezer: '' },
+      [
+        { id: 'spotify', href: 'https://open.spotify.com/artist/old' },
+        { id: 'deezer', href: 'https://www.deezer.com/artist/1' },
+        { id: 'ig', href: 'https://instagram.com/roga' },
+      ]
+    );
+    expect(plan).toEqual({
+      ok: true,
+      actions: [
+        {
+          kind: 'update',
+          id: 'spotify',
+          href: 'https://open.spotify.com/artist/new',
+        },
+        { kind: 'delete', id: 'deezer' },
+      ],
+    });
+  });
+
+  test('adds a platform that was not on the page', () => {
+    const plan = planPlatformLinkSync(music, { audiomack: 'roga' }, []);
+    expect(plan).toEqual({
+      ok: true,
+      actions: [{ kind: 'create', href: 'https://audiomack.com/roga' }],
+    });
+  });
+
+  test('stops on the first invalid value', () => {
+    expect(
+      planPlatformLinkSync(music, { boomplay: 'pas un lien' }, [])
+    ).toEqual({ ok: false, platform: 'boomplay' });
   });
 });

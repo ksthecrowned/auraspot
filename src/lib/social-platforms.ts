@@ -232,6 +232,80 @@ export function isSocialPlatform(value: string): value is SocialPlatform {
   return (SOCIAL_PLATFORMS as readonly string[]).includes(value);
 }
 
+export function platformsByGroup(group: SocialGroup) {
+  return SOCIAL_PLATFORMS.filter(
+    (platform) => PLATFORMS[platform].group === group
+  );
+}
+
+export type PlatformSyncAction =
+  | { kind: 'create'; href: string }
+  | { kind: 'update'; id: string; href: string }
+  | { kind: 'delete'; id: string };
+
+function indexExistingLinks(
+  platforms: readonly SocialPlatform[],
+  existing: { id: string; href: string }[]
+) {
+  const allowed = new Set<SocialPlatform>(platforms);
+  const byPlatform = new Map<SocialPlatform, { id: string; href: string }>();
+  for (const card of existing) {
+    const platform = socialPlatformOf(card.href);
+    if (platform && allowed.has(platform) && !byPlatform.has(platform)) {
+      byPlatform.set(platform, card);
+    }
+  }
+  return byPlatform;
+}
+
+function actionForPlatform(
+  platform: SocialPlatform,
+  raw: string,
+  current: { id: string; href: string } | undefined
+): PlatformSyncAction | 'invalid' | null {
+  if (!raw) {
+    return current ? { kind: 'delete', id: current.id } : null;
+  }
+  const href = toSocialUrl(platform, raw);
+  if (!href) {
+    return 'invalid';
+  }
+  if (!current) {
+    return { kind: 'create', href };
+  }
+  return current.href === href
+    ? null
+    : { kind: 'update', id: current.id, href };
+}
+
+// What to create, update, or remove so the page's link blocks match the
+// form. Empty fields drop that platform's block. The first invalid value
+// stops the plan.
+export function planPlatformLinkSync(
+  platforms: readonly SocialPlatform[],
+  values: Partial<Record<SocialPlatform, string>>,
+  existing: { id: string; href: string }[]
+):
+  | { ok: true; actions: PlatformSyncAction[] }
+  | { ok: false; platform: SocialPlatform } {
+  const byPlatform = indexExistingLinks(platforms, existing);
+  const actions: PlatformSyncAction[] = [];
+  for (const platform of platforms) {
+    const action = actionForPlatform(
+      platform,
+      values[platform]?.trim() ?? '',
+      byPlatform.get(platform)
+    );
+    if (action === 'invalid') {
+      return { ok: false, platform };
+    }
+    if (action) {
+      actions.push(action);
+    }
+  }
+  return { ok: true, actions };
+}
+
 export function platformLabel(platform: string) {
   return isSocialPlatform(platform) ? PLATFORMS[platform].label : platform;
 }
