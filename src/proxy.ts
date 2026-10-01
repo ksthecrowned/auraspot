@@ -4,6 +4,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
 
 const IP_REGEX = /^\d+\.\d+\.\d+\.\d+/;
+const PORT_SUFFIX = /:\d+$/;
 
 const PASSTHROUGH_PREFIXES = ['/api', '/trpc', '/_next', '/app'];
 
@@ -49,7 +50,13 @@ function getSubdomain(hostname: string): string | null {
 }
 
 function isCustomDomain(hostname: string) {
-  return !hostname.endsWith(ROOT_DOMAIN) && !isPlainLocalhost(hostname);
+  const host = hostname.replace(PORT_SUFFIX, '').toLowerCase();
+  // The Vercel deployment URL is the app itself. Looking it up as a custom
+  // domain opens a Postgres connection on every request.
+  if (host === 'vercel.app' || host.endsWith('.vercel.app')) {
+    return false;
+  }
+  return !host.endsWith(ROOT_DOMAIN.toLowerCase()) && !isPlainLocalhost(host);
 }
 
 let pool: Pool | undefined;
@@ -59,12 +66,22 @@ async function resolveCustomDomain(hostname: string): Promise<string | null> {
   if (!dbUrl) {
     return null;
   }
-  pool ??= new Pool({ connectionString: dbUrl, max: 2 });
-  const { rows } = await pool.query<{ link: string }>(
-    'SELECT link FROM link WHERE custom_domain = $1 LIMIT 1',
-    [hostname]
-  );
-  return rows[0]?.link ?? null;
+  try {
+    pool ??= new Pool({
+      connectionString: dbUrl,
+      max: 1,
+      idleTimeoutMillis: 1000,
+      connectionTimeoutMillis: 5000,
+      allowExitOnIdle: true,
+    });
+    const { rows } = await pool.query<{ link: string }>(
+      'SELECT link FROM link WHERE custom_domain = $1 LIMIT 1',
+      [hostname]
+    );
+    return rows[0]?.link ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function rewriteToProfile(request: NextRequest, slug: string) {

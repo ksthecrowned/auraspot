@@ -14,6 +14,15 @@ const isNeonDatabase = env.DATABASE_URL.includes('.neon.tech');
 // speaks the wire protocol.
 export const db: NeonHttpDatabase<typeof schema> = isNeonDatabase
   ? drizzleNeon(neon(env.DATABASE_URL), { schema })
-  : (drizzleNode(new Pool({ connectionString: env.DATABASE_URL }), {
-      schema,
-    }) as unknown as NeonHttpDatabase<typeof schema>);
+  : (drizzleNode(
+      new Pool({
+        connectionString: env.DATABASE_URL,
+        // AlwaysData caps this role at 50 connections. Each Vercel isolate
+        // must hold at most one, and release it as soon as it goes idle.
+        max: 1,
+        idleTimeoutMillis: 1000,
+        connectionTimeoutMillis: 5000,
+        allowExitOnIdle: true,
+      }),
+      { schema }
+    ) as unknown as NeonHttpDatabase<typeof schema>);
