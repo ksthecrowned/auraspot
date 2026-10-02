@@ -208,6 +208,8 @@ export const RESERVED_LINKS = [
   'audiomack',
   'deezer',
   'soundcloud',
+  'tidal',
+  'youtubemusic',
   'website',
   'about',
   'pricing',

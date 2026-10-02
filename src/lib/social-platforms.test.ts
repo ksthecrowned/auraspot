@@ -24,6 +24,9 @@ describe('socialPlatformOf', () => {
     ['https://www.boomplay.com/artists/42', 'boomplay'],
     ['https://audiomack.com/roga', 'audiomack'],
     ['https://www.deezer.com/fr/artist/7', 'deezer'],
+    ['https://tidal.com/artist/123', 'tidal'],
+    ['https://listen.tidal.com/album/9', 'tidal'],
+    ['https://music.youtube.com/channel/UC123', 'youtubemusic'],
     ['https://twitter.com/roga', 'twitter'],
     ['https://x.com/roga', 'twitter'],
     ['https://youtu.be/abc', 'youtube'],
@@ -138,6 +141,8 @@ describe('platformsByGroup', () => {
       'audiomack',
       'deezer',
       'soundcloud',
+      'tidal',
+      'youtubemusic',
     ]);
   });
 });

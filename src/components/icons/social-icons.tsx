@@ -22,7 +22,7 @@ import {
   FaXTwitter,
   FaYoutube,
 } from 'react-icons/fa6';
-import { SiAudiomack } from 'react-icons/si';
+import { SiAudiomack, SiTidal, SiYoutubemusic } from 'react-icons/si';
 
 // Boomplay has no icon in react-icons: a generic music note stands for it.
 const ICONS: Record<SocialPlatform, IconType> = {
@@ -42,6 +42,8 @@ const ICONS: Record<SocialPlatform, IconType> = {
   audiomack: SiAudiomack,
   deezer: FaDeezer,
   soundcloud: FaSoundcloud,
+  tidal: SiTidal,
+  youtubemusic: SiYoutubemusic,
   twitch: FaTwitch,
   discord: FaDiscord,
   github: FaGithub,

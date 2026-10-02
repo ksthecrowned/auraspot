@@ -337,15 +337,6 @@ export default function ActionBar() {
             </PopoverContent>
           </Popover>
 
-          <button
-            type="button"
-            className={btnClass}
-            title="Réseaux sociaux"
-            onClick={() => setSocialsOpen(true)}
-          >
-            <Share2 size={20} />
-          </button>
-
           <ThemeSettingsModal>
             <button
               type="button"
