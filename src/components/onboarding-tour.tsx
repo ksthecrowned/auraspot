@@ -16,35 +16,37 @@ type TourStep = {
 const TOUR_STEPS: TourStep[] = [
   {
     target: '[data-tour="profile-header"]',
-    title: 'Your profile',
+    title: 'Votre profil',
     description:
-      'Click on your name or bio to edit them directly. Tap your avatar to change it.',
+      'Cliquez sur le nom ou la bio pour les modifier. Touchez l’avatar pour le changer.',
     placement: 'bottom',
   },
   {
     target: '[data-tour="preview-toggle"]',
-    title: 'Preview mode',
+    title: 'Aperçu',
     description:
-      'See how visitors see your page. Toggle back to edit mode to make changes.',
+      'Voyez la page comme un visiteur. Revenez en édition pour modifier.',
     placement: 'bottom',
   },
   {
     target: '[data-tour="viewport-switcher"]',
-    title: 'Device preview',
-    description: 'Preview your profile on desktop or in a phone frame.',
+    title: 'Aperçu appareil',
+    description:
+      'Prévisualisez le profil sur ordinateur ou dans un cadre téléphone.',
     placement: 'bottom',
   },
   {
     target: '[data-tour="add-card"]',
-    title: 'Add cards',
-    description: 'Build your page with links, images, music, and notes.',
+    title: 'Ajouter des blocs',
+    description:
+      'Composez la page avec des liens, des images, de la musique et des notes.',
     placement: 'top',
   },
   {
     target: '[data-tour="theme-settings"]',
-    title: 'Make it yours',
+    title: 'À votre image',
     description:
-      'Pick a theme, toggle dark mode, set accent colors, and customize your footer text.',
+      'Choisissez un thème, le mode sombre, les couleurs d’accent et le texte du pied de page.',
     placement: 'top',
   },
 ];
@@ -165,7 +167,7 @@ function Tooltip({
           className="h-7 rounded-lg px-3 text-xs"
           onClick={onNext}
         >
-          {isLast ? 'Done' : 'Next'}
+          {isLast ? 'Terminer' : 'Suivant'}
         </Button>
       </div>
     </div>
