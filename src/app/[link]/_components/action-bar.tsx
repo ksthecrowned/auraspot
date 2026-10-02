@@ -175,7 +175,7 @@ export default function ActionBar() {
                 }}
               >
                 <Link size={14} className="shrink-0" />
-                Link
+                Lien
               </button>
               <button
                 type="button"
@@ -230,7 +230,7 @@ export default function ActionBar() {
                 }
               >
                 <Mail size={14} className="shrink-0" />
-                Email Collect
+                Newsletter
               </button>
               <button
                 type="button"
@@ -245,7 +245,7 @@ export default function ActionBar() {
                 }
               >
                 <Timer size={14} className="shrink-0" />
-                Countdown
+                Compte à rebours
               </button>
               <button
                 type="button"
@@ -260,7 +260,7 @@ export default function ActionBar() {
                 }
               >
                 <CloudSun size={14} className="shrink-0" />
-                Weather
+                Météo
               </button>
               <button
                 type="button"
@@ -274,7 +274,7 @@ export default function ActionBar() {
                 }
               >
                 <FaXTwitter size={14} className="shrink-0" />
-                Tweet
+                Post
               </button>
               <button
                 type="button"
@@ -288,7 +288,7 @@ export default function ActionBar() {
                 }
               >
                 <Calendar size={14} className="shrink-0" />
-                Booking
+                Réservation
               </button>
               <button
                 type="button"
@@ -331,7 +331,7 @@ export default function ActionBar() {
                   }
                 >
                   <Eye size={14} className="shrink-0" />
-                  Profile Views
+                  Vues
                 </button>
               )}
             </PopoverContent>

@@ -78,6 +78,14 @@ function lastPathSegment(url: URL) {
   return segments.at(-1);
 }
 
+function hostLabel(url: string) {
+  try {
+    return new URL(url).hostname.replace(LEADING_WWW_RE, '');
+  } catch {
+    return url;
+  }
+}
+
 function getTitle(url: string, metadata?: Metadata) {
   const platform = platformOf(url);
   // Handle-based profiles read as @handle; music and invite links keep the
@@ -88,7 +96,9 @@ function getTitle(url: string, metadata?: Metadata) {
       return handle.startsWith('@') ? handle : `@${handle}`;
     }
   }
-  return metadata?.title ?? (platform ? PLATFORMS[platform].label : undefined);
+  return (
+    metadata?.title || (platform ? PLATFORMS[platform].label : hostLabel(url))
+  );
 }
 
 function getDescription(url: string, metadata?: Metadata) {
@@ -98,16 +108,17 @@ function getDescription(url: string, metadata?: Metadata) {
     const host = parsed.hostname.replace(LEADING_WWW_RE, '');
     return `${host}${parsed.pathname.replace(TRAILING_SLASH_RE, '')}`;
   }
-  return metadata?.description ?? null;
+  if (metadata?.description) {
+    return metadata.description;
+  }
+  return metadata?.title ? hostLabel(url) : null;
 }
 
 // A span, not a button: the whole card is already the link.
 function ActionPill({ url }: { url: string }) {
   const platform = platformOf(url);
-  if (!platform) {
-    return null;
-  }
-  const { action, color } = PLATFORMS[platform];
+  const action = platform ? PLATFORMS[platform].action : 'Visiter';
+  const color = platform ? PLATFORMS[platform].color : null;
   const lightBrand = color ? isLightColor(color) : false;
   return (
     <span
