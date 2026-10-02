@@ -5,29 +5,24 @@ import {
   PLATFORMS,
   type SocialPlatform,
   isSocialPlatform,
+  socialListRank,
   socialPlatformOf,
 } from '@/lib/social-platforms';
 import { type RouterOutputs, api } from '@/trpc/react';
 import { useParams } from 'next/navigation';
 
 // The full list stays available as blocks in the profile space.
-const MAX_SOCIALS = 5;
+const MAX_SOCIALS = 6;
 
 type ProfileLinkData = NonNullable<RouterOutputs['profileLink']['getByLink']>;
 
-// Quick-access icons for the social networks already present as link blocks
-// (in grid order), plus any official link saved on the profile. No separate
-// editor: adding a social block adds its icon here.
+// Quick-access icons for networks already present as link blocks or official
+// links. Social networks (WhatsApp, Facebook, Instagram, LinkedIn, …) come
+// first when they exist; music and other platforms fill the remaining slots.
 function collectSocials(profileLink: ProfileLinkData) {
-  const fromBlocks = [...profileLink.bento]
-    .sort(
-      (a, b) =>
-        (a.position.md?.y ?? 0) - (b.position.md?.y ?? 0) ||
-        (a.position.md?.x ?? 0) - (b.position.md?.x ?? 0)
-    )
-    .flatMap((block) =>
-      block.type === 'link' && block.href ? [block.href] : []
-    );
+  const fromBlocks = profileLink.bento.flatMap((block) =>
+    block.type === 'link' && block.href ? [block.href] : []
+  );
   // Official links keep the platform they were saved with (a website too).
   const fromProfile = profileLink.socialLinks.map((social) => ({
     url: social.url,
@@ -48,6 +43,9 @@ function collectSocials(profileLink: ProfileLinkData) {
       socials.push({ platform, url });
     }
   }
+  socials.sort(
+    (a, b) => socialListRank(a.platform) - socialListRank(b.platform)
+  );
   return socials;
 }
 

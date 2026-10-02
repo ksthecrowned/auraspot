@@ -258,6 +258,32 @@ export function platformsByGroup(group: SocialGroup) {
   );
 }
 
+// Profile icon row: social networks first, in this order, then the rest.
+const SOCIAL_LIST_HEAD: readonly SocialPlatform[] = [
+  'whatsapp',
+  'facebook',
+  'instagram',
+  'linkedin',
+];
+
+const SOCIAL_LIST_RANK = new Map<SocialPlatform, number>(
+  [
+    ...SOCIAL_LIST_HEAD,
+    ...SOCIAL_PLATFORMS.filter(
+      (platform) =>
+        PLATFORMS[platform].group === 'social' &&
+        !SOCIAL_LIST_HEAD.includes(platform)
+    ),
+    ...SOCIAL_PLATFORMS.filter(
+      (platform) => PLATFORMS[platform].group !== 'social'
+    ),
+  ].map((platform, index) => [platform, index])
+);
+
+export function socialListRank(platform: SocialPlatform) {
+  return SOCIAL_LIST_RANK.get(platform) ?? SOCIAL_PLATFORMS.length;
+}
+
 export type PlatformSyncAction =
   | { kind: 'create'; href: string }
   | { kind: 'update'; id: string; href: string }

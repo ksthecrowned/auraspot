@@ -5,6 +5,7 @@ import {
   normalizeSocialLinks,
   planPlatformLinkSync,
   platformsByGroup,
+  socialListRank,
   socialPlatformOf,
   toSocialUrl,
 } from './social-platforms';
@@ -129,6 +130,22 @@ describe('normalizeSocialLinks', () => {
         { platform: 'twitter', value: 'a_two' },
       ])
     ).toEqual({ ok: false, index: 1, reason: 'duplicate' });
+  });
+});
+
+describe('socialListRank', () => {
+  test('puts WhatsApp, Facebook, Instagram and LinkedIn before the rest', () => {
+    const order = [...SOCIAL_PLATFORMS].sort(
+      (a, b) => socialListRank(a) - socialListRank(b)
+    );
+    expect(order.slice(0, 4)).toEqual([
+      'whatsapp',
+      'facebook',
+      'instagram',
+      'linkedin',
+    ]);
+    expect(order.indexOf('tiktok')).toBeLessThan(order.indexOf('spotify'));
+    expect(order.indexOf('linkedin')).toBeLessThan(order.indexOf('github'));
   });
 });
 
