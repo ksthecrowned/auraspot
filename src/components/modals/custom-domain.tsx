@@ -47,21 +47,24 @@ function DnsRecord({
 }) {
   const copyValue = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
-      toast({ title: 'Copied', description: `"${text}" copied to clipboard` });
+      toast({
+        title: 'Copié',
+        description: `« ${text} » copié dans le presse-papiers`,
+      });
     });
   };
 
   return (
     <div className="rounded-xl border border-border bg-muted/50 p-4">
       <p className="mb-3 text-muted-foreground text-xs">
-        Add this record in your DNS provider:
+        Ajoutez cet enregistrement chez votre fournisseur DNS :
       </p>
       <div className="grid grid-cols-[60px_1fr_auto] items-center gap-x-3 gap-y-2 font-mono text-xs">
         <span className="text-muted-foreground">Type</span>
         <span className="font-semibold">{type}</span>
         <div />
 
-        <span className="text-muted-foreground">Name</span>
+        <span className="text-muted-foreground">Nom</span>
         <span className="font-semibold">{name}</span>
         <button
           type="button"
@@ -71,7 +74,7 @@ function DnsRecord({
           <Copy className="h-3 w-3" />
         </button>
 
-        <span className="text-muted-foreground">Value</span>
+        <span className="text-muted-foreground">Valeur</span>
         <span className="truncate font-semibold">{value}</span>
         <button
           type="button"
@@ -96,7 +99,7 @@ function DomainStatus({
     return (
       <div className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-green-700 dark:border-green-900 dark:bg-green-950/30 dark:text-green-400">
         <CheckCircle2 className="h-4 w-4 shrink-0" />
-        <p className="text-sm">Domain is configured and verified</p>
+        <p className="text-sm">Le domaine est configuré et vérifié</p>
       </div>
     );
   }
@@ -106,8 +109,8 @@ function DomainStatus({
       <AlertCircle className="h-4 w-4 shrink-0" />
       <p className="text-sm">
         {configured
-          ? 'DNS configured but domain not yet verified'
-          : 'DNS not configured yet — add the record below'}
+          ? 'DNS configuré, domaine pas encore vérifié'
+          : 'DNS pas encore configuré. Ajoutez l’enregistrement ci-dessous.'}
       </p>
     </div>
   );
@@ -150,15 +153,15 @@ export default function CustomDomainModal({
         queryClient.profileLink.checkDomain.invalidate();
         router.refresh();
         toast({
-          title: 'Domain updated',
+          title: 'Domaine mis à jour',
           description: domain
-            ? 'Custom domain saved. Configure your DNS to complete setup.'
-            : 'Custom domain removed.',
+            ? 'Domaine enregistré. Configurez le DNS pour terminer.'
+            : 'Domaine personnalisé retiré.',
         });
       },
       onError: (err) => {
         toast({
-          title: 'Error',
+          title: 'Erreur',
           description: err.message,
         });
       },
@@ -199,13 +202,15 @@ export default function CustomDomainModal({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-cal text-xl">Custom Domain</DialogTitle>
+          <DialogTitle className="font-cal text-xl">
+            Domaine personnalisé
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="custom-domain" className="font-medium text-sm">
-              Domain
+              Domaine
             </Label>
             <Input
               id="custom-domain"
@@ -215,13 +220,13 @@ export default function CustomDomainModal({
               className="rounded-xl border border-border bg-card p-3"
             />
             <p className="text-muted-foreground text-xs">
-              Enter your domain without http:// or trailing slashes.
+              Saisissez le domaine sans http:// ni barre finale.
             </p>
           </div>
 
           {cleaned && (
             <div className="space-y-3">
-              <Label className="font-medium text-sm">DNS Configuration</Label>
+              <Label className="font-medium text-sm">Configuration DNS</Label>
 
               {hasDomain && !domainChanged && domainCheck && (
                 <DomainStatus
@@ -253,7 +258,7 @@ export default function CustomDomainModal({
                   ) : (
                     <RefreshCw className="h-3.5 w-3.5" />
                   )}
-                  Check DNS
+                  Vérifier le DNS
                 </Button>
               )}
             </div>
@@ -276,23 +281,23 @@ export default function CustomDomainModal({
               className="rounded-xl px-6"
               onClick={() => setOpen(false)}
             >
-              Cancel
+              Annuler
             </Button>
             <Button
               onClick={save}
               className={cn('rounded-xl px-6', !domainChanged && 'opacity-50')}
               disabled={isPending || !domainChanged}
             >
-              {isPending ? 'Saving...' : 'Save changes'}
+              {isPending ? 'Enregistrement…' : 'Enregistrer'}
             </Button>
           </div>
 
           <p className="text-muted-foreground text-xs">
-            Your subdomain{' '}
+            Le sous-domaine{' '}
             <span className="font-medium text-foreground">
               {link}.{ROOT_DOMAIN}
             </span>{' '}
-            will always work alongside your custom domain.
+            reste disponible à côté du domaine personnalisé.
           </p>
         </div>
       </DialogContent>
