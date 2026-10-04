@@ -2,6 +2,7 @@ import { AuraAvatar } from '@/components/aura-avatar';
 import { AURA_CARD_CLASS } from '@/components/forms/aura-fields';
 import {
   CancelRecurringButton,
+  SupportMessageEditor,
   SupportPrivacyToggle,
 } from '@/components/forms/supporter-history-actions';
 import PersonalityPageShell from '@/components/personality-page-shell';
@@ -175,6 +176,10 @@ export default async function SupporterHistoryPage() {
                   <SupportPrivacyToggle
                     supportId={item.id}
                     isPublic={item.isPublic}
+                  />
+                  <SupportMessageEditor
+                    supportId={item.id}
+                    message={item.message}
                   />
                   <Link
                     href={`/support/${item.personality.slug}?amount=${item.amount}`}

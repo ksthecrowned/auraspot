@@ -1,10 +1,14 @@
 import PersonalityPageShell from '@/components/personality-page-shell';
+import { auth } from '@/lib/auth';
+import { db } from '@/server/db/db';
+import { isProfileLinkEditor } from '@/server/db/utils/link';
 import {
   DEDICATION_PAGE_SIZE,
   getSupportPage,
   listVisibleDedications,
 } from '@/server/db/utils/support';
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import MessageList from './message-list';
 
@@ -44,7 +48,22 @@ export default async function MessagesPage({
     notFound();
   }
   const page = pageNumber(query.page);
-  const dedications = await listVisibleDedications(personality.id, { page });
+  const session = await auth.api.getSession({ headers: await headers() });
+  const owner = session
+    ? await db.query.link.findFirst({
+        where: (table, { eq: equals }) => equals(table.id, personality.id),
+        columns: { userId: true },
+      })
+    : null;
+  const [dedications, canEdit] = await Promise.all([
+    listVisibleDedications(personality.id, { page }),
+    session
+      ? isProfileLinkEditor(session.user.id, {
+          id: personality.id,
+          userId: owner?.userId ?? '',
+        })
+      : Promise.resolve(false),
+  ]);
 
   return (
     <PersonalityPageShell
@@ -62,6 +81,7 @@ export default async function MessagesPage({
         total={dedications.total}
         page={page}
         pageSize={DEDICATION_PAGE_SIZE}
+        canEdit={canEdit}
       />
     </PersonalityPageShell>
   );

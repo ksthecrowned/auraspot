@@ -1,6 +1,8 @@
 'use client';
 
+import { AURA_TEXTAREA } from '@/components/forms/aura-fields';
 import { Switch } from '@/components/ui/switch';
+import { DEDICATION_MAX_LENGTH } from '@/lib/dedication';
 import { api } from '@/trpc/react';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -37,6 +39,53 @@ export function SupportPrivacyToggle({
       Afficher mon nom
       {setVisibility.isPending && <Loader2 className="size-3 animate-spin" />}
     </label>
+  );
+}
+
+export function SupportMessageEditor({
+  supportId,
+  message,
+}: {
+  supportId: string;
+  message: string | null;
+}) {
+  const router = useRouter();
+  const edit = api.support.editMessage.useMutation();
+  const [value, setValue] = useState(message ?? '');
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <textarea
+        value={value}
+        maxLength={DEDICATION_MAX_LENGTH}
+        placeholder="Votre message, facultatif"
+        onChange={(event) => setValue(event.target.value)}
+        className={AURA_TEXTAREA}
+      />
+      <button
+        type="button"
+        disabled={edit.isPending}
+        className="inline-flex items-center gap-1.5 self-start font-medium text-sm underline-offset-4 hover:underline disabled:opacity-50"
+        onClick={async () => {
+          setError(null);
+          try {
+            await edit.mutateAsync({ supportId, message: value });
+            router.refresh();
+          } catch (submitError) {
+            setError(
+              submitError instanceof Error
+                ? submitError.message
+                : 'Le message n’a pas pu être enregistré.'
+            );
+          }
+        }}
+      >
+        {edit.isPending && <Loader2 className="size-3.5 animate-spin" />}
+        {value.trim() ? 'Enregistrer le message' : 'Retirer le message'}
+      </button>
+      {error && <p className="text-destructive text-xs">{error}</p>}
+    </div>
   );
 }
 

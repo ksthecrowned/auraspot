@@ -36,6 +36,32 @@ export const SetSupportVisibilitySchema = z.object({
   isPublic: z.boolean(),
 });
 
+export const ThankSupportSchema = z.object({
+  supportId: z.string().uuid(),
+  thankYouReply: z
+    .string()
+    .trim()
+    .max(140)
+    .optional()
+    .or(z.literal(''))
+    .transform((value) => value || undefined),
+});
+
+export const HideSupportMessageSchema = z.object({
+  supportId: z.string().uuid(),
+});
+
+export const EditSupportMessageSchema = z.object({
+  supportId: z.string().uuid(),
+  message: z
+    .string()
+    .trim()
+    .max(280)
+    .optional()
+    .or(z.literal(''))
+    .transform((value) => value || undefined),
+});
+
 export const CancelRecurringSupportSchema = z.object({
   recurringSupportId: z.string().uuid(),
 });

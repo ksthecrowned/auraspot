@@ -10,27 +10,33 @@ import { renewDuePlans } from '@/server/db/utils/recurring';
 import {
   cancelRecurringSupport,
   createSupportCheckout,
+  editSupportMessage,
   getCheckout,
   getSupportPage,
   getSupporterHistory,
   getWithdrawalPage,
+  hideSupportMessage,
   listVisibleDedications,
   requestWithdrawal,
   setSupportVisibility,
   startMobileMoneyPayment,
   startNyolePayment,
   syncPayment,
+  thankSupport,
 } from '@/server/db/utils/support';
 import { TRPCError } from '@trpc/server';
 import {
   CancelRecurringSupportSchema,
   CheckoutPaymentSchema,
   CreateSupportSchema,
+  EditSupportMessageSchema,
+  HideSupportMessageSchema,
   PayCheckoutSchema,
   RequestWithdrawalSchema,
   SetSupportVisibilitySchema,
   SupportMessagesSchema,
   SupportSlugSchema,
+  ThankSupportSchema,
 } from '../schemas/support';
 
 const rateLimitedSupport = createRateLimitedProcedure(supportCreateLimit);
@@ -163,6 +169,63 @@ export const supportRouter = createTRPCRouter({
     await renewDuePlans({ userId: ctx.user.id });
     return getSupporterHistory(ctx.user.id);
   }),
+
+  thank: protectedProcedure
+    .input(ThankSupportSchema)
+    .mutation(async ({ ctx, input }) => {
+      const result = await thankSupport({
+        userId: ctx.user.id,
+        supportId: input.supportId,
+        thankYouReply: input.thankYouReply,
+      });
+      if ('error' in result) {
+        throw new TRPCError({
+          code: result.error === 'forbidden' ? 'FORBIDDEN' : 'NOT_FOUND',
+          message:
+            result.error === 'forbidden'
+              ? 'Vous ne pouvez pas remercier ce soutien.'
+              : 'Ce soutien est introuvable.',
+        });
+      }
+      return result.support;
+    }),
+
+  hideMessage: protectedProcedure
+    .input(HideSupportMessageSchema)
+    .mutation(async ({ ctx, input }) => {
+      const result = await hideSupportMessage({
+        userId: ctx.user.id,
+        email: ctx.user.email,
+        supportId: input.supportId,
+      });
+      if ('error' in result) {
+        throw new TRPCError({
+          code: result.error === 'forbidden' ? 'FORBIDDEN' : 'NOT_FOUND',
+          message:
+            result.error === 'forbidden'
+              ? 'Vous ne pouvez pas masquer ce message.'
+              : 'Ce soutien est introuvable.',
+        });
+      }
+      return result.support;
+    }),
+
+  editMessage: protectedProcedure
+    .input(EditSupportMessageSchema)
+    .mutation(async ({ ctx, input }) => {
+      const result = await editSupportMessage({
+        userId: ctx.user.id,
+        supportId: input.supportId,
+        message: input.message,
+      });
+      if ('error' in result) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Ce soutien est introuvable.',
+        });
+      }
+      return result.support;
+    }),
 
   setVisibility: protectedProcedure
     .input(SetSupportVisibilitySchema)

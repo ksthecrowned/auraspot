@@ -1,6 +1,7 @@
 import { initialsOf } from '@/lib/personality';
 import type { DedicationItem } from '@/server/db/utils/support';
 import { Heart } from 'lucide-react';
+import DedicationActions from './dedication-actions';
 
 export const AVATAR_COLORS = [
   '#F75FC0',
@@ -33,9 +34,11 @@ function relativeTimeFr(date: Date, now = new Date()) {
 export default function DedicationCard({
   item,
   index,
+  canEdit = false,
 }: {
   item: DedicationItem;
   index: number;
+  canEdit?: boolean;
 }) {
   return (
     <article className="flex gap-3">
@@ -72,6 +75,7 @@ export default function DedicationCard({
             <span>{item.thankYouReply?.trim() || 'Remercié'}</span>
           </p>
         )}
+        {canEdit && <DedicationActions supportId={item.id} />}
       </div>
     </article>
   );

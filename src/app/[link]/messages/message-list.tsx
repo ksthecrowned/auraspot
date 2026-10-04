@@ -8,12 +8,14 @@ export default function MessageList({
   total,
   page,
   pageSize,
+  canEdit = false,
 }: {
   slug: string;
   items: DedicationItem[];
   total: number;
   page: number;
   pageSize: number;
+  canEdit?: boolean;
 }) {
   if (items.length === 0) {
     return (
@@ -33,6 +35,7 @@ export default function MessageList({
           key={item.id}
           item={item}
           index={(page - 1) * pageSize + index}
+          canEdit={canEdit}
         />
       ))}
       {(hasPrevious || hasNext) && (

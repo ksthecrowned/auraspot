@@ -1,4 +1,5 @@
 import { env } from '@/env.mjs';
+import { isAdminEmail } from '@/lib/admin';
 import { clampDedicationLines, dedicationForCreate } from '@/lib/dedication';
 import {
   MAX_SUPPORT_AMOUNT,
@@ -48,6 +49,7 @@ import {
   support,
   withdrawal,
 } from '../schema';
+import { isProfileLinkEditor } from './link';
 
 const TRAILING_SLASH_RE = /\/$/;
 import { fromStoredPhone, toMsisdn } from '@/lib/phone-countries';
@@ -1100,6 +1102,7 @@ export const getSupporterHistory = async (userId: string) => {
         amount: true,
         displayName: true,
         isPublic: true,
+        message: true,
         createdAt: true,
         recurringSupportId: true,
       },
@@ -1168,6 +1171,92 @@ export const setSupportVisibility = async (input: {
       and(eq(support.id, input.supportId), eq(support.userId, input.userId))
     )
     .returning({ id: support.id, isPublic: support.isPublic });
+  if (!updated[0]) {
+    return { error: 'not-found' as const };
+  }
+  return { support: updated[0] };
+};
+
+async function supportWithPersonality(supportId: string) {
+  return db.query.support.findFirst({
+    where: (table, { eq: equals }) => equals(table.id, supportId),
+    columns: { id: true, personalityId: true, isPublic: true },
+    with: {
+      personality: { columns: { id: true, userId: true } },
+    },
+  });
+}
+
+export const thankSupport = async (input: {
+  userId: string;
+  supportId: string;
+  thankYouReply?: string;
+}) => {
+  const row = await supportWithPersonality(input.supportId);
+  if (!row?.personality) {
+    return { error: 'not-found' as const };
+  }
+  const allowed = await isProfileLinkEditor(input.userId, {
+    id: row.personality.id,
+    userId: row.personality.userId ?? '',
+  });
+  if (!allowed) {
+    return { error: 'forbidden' as const };
+  }
+  const updated = await db
+    .update(support)
+    .set({
+      thankedAt: new Date(),
+      thankYouReply: input.thankYouReply ?? null,
+    })
+    .where(eq(support.id, row.id))
+    .returning({ id: support.id, thankedAt: support.thankedAt });
+  if (!updated[0]) {
+    return { error: 'not-found' as const };
+  }
+  return { support: updated[0] };
+};
+
+export const hideSupportMessage = async (input: {
+  userId: string;
+  email?: string | null;
+  supportId: string;
+}) => {
+  const row = await supportWithPersonality(input.supportId);
+  if (!row?.personality) {
+    return { error: 'not-found' as const };
+  }
+  const editor = await isProfileLinkEditor(input.userId, {
+    id: row.personality.id,
+    userId: row.personality.userId ?? '',
+  });
+  if (!(editor || isAdminEmail(input.email))) {
+    return { error: 'forbidden' as const };
+  }
+  const updated = await db
+    .update(support)
+    .set({ messageHiddenAt: new Date() })
+    .where(eq(support.id, row.id))
+    .returning({ id: support.id });
+  if (!updated[0]) {
+    return { error: 'not-found' as const };
+  }
+  return { support: updated[0] };
+};
+
+export const editSupportMessage = async (input: {
+  userId: string;
+  supportId: string;
+  message?: string;
+}) => {
+  const text = input.message?.trim() ?? '';
+  const updated = await db
+    .update(support)
+    .set({ message: text || null })
+    .where(
+      and(eq(support.id, input.supportId), eq(support.userId, input.userId))
+    )
+    .returning({ id: support.id, message: support.message });
   if (!updated[0]) {
     return { error: 'not-found' as const };
   }

@@ -152,6 +152,7 @@ export default async function Page({ params }: Props) {
                         slug={profileLink.link}
                         supporters={profileLink.supporters}
                         dedications={profileLink.dedications}
+                        canEdit={profileLink.canEdit}
                       />
                       <ProfileAbout profileLink={profileLink} />
                       <ProfileSpace profileLink={profileLink} />

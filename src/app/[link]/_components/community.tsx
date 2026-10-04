@@ -8,11 +8,13 @@ export default function Community({
   slug,
   supporters,
   dedications,
+  canEdit = false,
 }: {
   name: string;
   slug: string;
   supporters: { count: number; recent: { displayName: string }[] };
   dedications: { items: DedicationItem[]; total: number };
+  canEdit?: boolean;
 }) {
   const names = supporters.recent.map((item) => item.displayName);
 
@@ -24,7 +26,12 @@ export default function Community({
       {dedications.items.length > 0 && (
         <div className="flex flex-col gap-4">
           {dedications.items.map((item, index) => (
-            <DedicationCard key={item.id} item={item} index={index} />
+            <DedicationCard
+              key={item.id}
+              item={item}
+              index={index}
+              canEdit={canEdit}
+            />
           ))}
           {dedications.total > 3 && (
             <Link
