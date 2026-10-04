@@ -1,6 +1,7 @@
 import { shareCardHeadline, shareCardSizes } from '@/lib/share-card';
 import { ROOT_DOMAIN } from '@/lib/site';
 import { db } from '@/server/db/db';
+import { getGoalSnapshot } from '@/server/db/utils/support-goal';
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'nodejs';
@@ -22,7 +23,7 @@ export async function GET(
     columns: { status: true },
     with: {
       support: {
-        columns: { isPublic: true, displayName: true },
+        columns: { isPublic: true, displayName: true, goalId: true },
         with: {
           personality: {
             columns: { name: true, link: true, image: true, status: true },
@@ -44,6 +45,9 @@ export async function GET(
     displayName: row.support.displayName,
     personalityName: personality.name,
   });
+  const goal = row.support.goalId
+    ? await getGoalSnapshot(row.support.goalId)
+    : null;
   const format = new URL(req.url).searchParams.get('format');
   const { width, height } = shareCardSizes(format);
   const portrait = height > width;
@@ -112,6 +116,18 @@ export async function GET(
       >
         {headline}
       </div>
+      {goal && (
+        <div
+          style={{
+            display: 'flex',
+            marginTop: 24,
+            fontSize: portrait ? 32 : 24,
+            opacity: 0.9,
+          }}
+        >
+          {`${goal.title} · ${goal.percent} %`}
+        </div>
+      )}
       <div
         style={{
           display: 'flex',

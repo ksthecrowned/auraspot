@@ -7,6 +7,7 @@ import OnboardingTour from '@/components/onboarding-tour';
 import { parseViewSource } from '@/lib/share-card';
 import { SITE_URL } from '@/lib/site';
 import { canReceiveSupport } from '@/lib/support-eligibility';
+import { activeCollected, getPublicGoal } from '@/server/db/utils/support-goal';
 import { api } from '@/trpc/server';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -14,6 +15,7 @@ import { type CSSProperties, Suspense, cache } from 'react';
 import ActionBar from './_components/action-bar';
 import { BentoHistoryProvider } from './_components/bento-history';
 import Community from './_components/community';
+import GoalManager from './_components/goal-manager';
 import OfficialSocials from './_components/official-socials';
 import { PreviewProvider } from './_components/preview-context';
 import ProfileAbout from './_components/profile-about';
@@ -23,6 +25,7 @@ import ProfileSpace from './_components/profile-space';
 import ProfileTopBar from './_components/profile-top-bar';
 import StripViewSource from './_components/strip-view-source';
 import SupportButton from './_components/support-button';
+import SupportGoalCard from './_components/support-goal-card';
 import ThemeWrapper from './_components/theme-wrapper';
 import ViewportContainer from './_components/viewport-container';
 
@@ -94,6 +97,16 @@ export default async function Page({ params, searchParams }: Props) {
     notFound();
   }
 
+  const published = profileLink.status !== 'suspended';
+  const [goal, collected] = published
+    ? await Promise.all([
+        getPublicGoal(profileLink.id),
+        profileLink.canEdit
+          ? activeCollected(profileLink.id)
+          : Promise.resolve(null),
+      ])
+    : [null, null];
+
   const bio = (profileLink.bio ?? '').replace(HTML_TAG_RE, '');
   const profileUrl = `${SITE_URL}/${profileLink.link}`;
 
@@ -149,6 +162,26 @@ export default async function Page({ params, searchParams }: Props) {
                   <div className="mt-8 grid @4xl:grid-cols-[340px_minmax(0,1fr)] @4xl:gap-12 gap-8">
                     <aside className="@4xl:sticky @4xl:top-8 flex flex-col gap-5 @4xl:self-start">
                       <ProfileHero profileLink={profileLink} />
+                      {goal && (
+                        <SupportGoalCard
+                          goal={goal}
+                          collected={collected === null ? undefined : collected}
+                        />
+                      )}
+                      {published && profileLink.canEdit && (
+                        <GoalManager
+                          slug={profileLink.link}
+                          hasGoal={Boolean(goal)}
+                        />
+                      )}
+                      {published && (goal || profileLink.canEdit) && (
+                        <a
+                          href={`/${profileLink.link}/objectifs`}
+                          className="text-muted-foreground text-sm underline-offset-4 hover:underline"
+                        >
+                          Historique des objectifs
+                        </a>
+                      )}
                       <OfficialSocials profileLink={profileLink} />
                       {canDonate && (
                         <SupportButton

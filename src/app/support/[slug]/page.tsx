@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth';
 import { MAX_SUPPORT_AMOUNT, MIN_SUPPORT_AMOUNT } from '@/lib/money';
 import { firstNameOf } from '@/lib/personality';
 import { getSupportPage } from '@/server/db/utils/support';
+import { getPublicGoal } from '@/server/db/utils/support-goal';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
@@ -47,6 +48,7 @@ export default async function SupportPage({ params, searchParams }: PageProps) {
     notFound();
   }
   const session = await auth.api.getSession({ headers: await headers() });
+  const goal = await getPublicGoal(personality.id);
 
   return (
     <PersonalityPageShell
@@ -65,6 +67,7 @@ export default async function SupportPage({ params, searchParams }: PageProps) {
           initialAmount={initialAmount(query.amount)}
           defaultDisplayName={session?.user.name}
           firstName={firstNameOf(personality.name)}
+          goalTitle={goal?.title}
         />
       ) : (
         <p className={`${AURA_NOTICE} text-center text-muted-foreground`}>

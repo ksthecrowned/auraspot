@@ -37,6 +37,7 @@ export default function CreateSupportForm({
   initialAmount,
   defaultDisplayName,
   firstName,
+  goalTitle,
 }: {
   slug: string;
   signedIn: boolean;
@@ -44,6 +45,7 @@ export default function CreateSupportForm({
   // Signed-in donor's name, used to prefill the name field.
   defaultDisplayName?: string;
   firstName: string;
+  goalTitle?: string;
 }) {
   const router = useRouter();
   const createSupport = api.support.create.useMutation();
@@ -93,6 +95,9 @@ export default function CreateSupportForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      {goalTitle && (
+        <p className={AURA_NOTICE}>Votre don compte pour : {goalTitle}</p>
+      )}
       <div className="flex flex-col gap-3">
         <Label htmlFor="amount">Montant</Label>
         <div className="grid grid-cols-4 gap-2">
