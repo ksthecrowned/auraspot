@@ -1,6 +1,12 @@
-import { afterEach, describe, expect, test } from 'bun:test';
+import { afterEach, describe, expect, mock, test } from 'bun:test';
 import { createHmac } from 'node:crypto';
-import {
+
+// env.mjs freezes process.env at import time. Replace it before nyole.ts loads
+// so these tests do not depend on a local .env.
+const testEnv: { NYOLE_SECRET_KEY?: string; NYOLE_BASE_URL?: string } = {};
+mock.module('@/env.mjs', () => ({ env: testEnv }));
+
+const {
   NYOLE_PENDING_PREFIX,
   createNyoleSession,
   getNyoleSessionStatus,
@@ -8,7 +14,7 @@ import {
   nyoleWebhookTarget,
   toPaymentStatus,
   verifyNyoleSignature,
-} from './nyole';
+} = await import('./nyole');
 
 const SECRET = 'af_test_sec_unit';
 const BODY = '{"type":"payment.completed","data":{"id":"cs_1"}}';
@@ -144,7 +150,6 @@ describe('nyoleWebhookTarget', () => {
 // stale-payment cron: every request carries an abort signal.
 describe('Nyole requests', () => {
   const realFetch = globalThis.fetch;
-  const originalKey = process.env.NYOLE_SECRET_KEY;
   let seen: RequestInit | undefined;
 
   function stubFetch(body: unknown) {
@@ -158,12 +163,12 @@ describe('Nyole requests', () => {
 
   afterEach(() => {
     globalThis.fetch = realFetch;
-    process.env.NYOLE_SECRET_KEY = originalKey;
+    testEnv.NYOLE_SECRET_KEY = undefined;
     seen = undefined;
   });
 
   test('session creation has a timeout', async () => {
-    process.env.NYOLE_SECRET_KEY = 'af_test_sec_unit';
+    testEnv.NYOLE_SECRET_KEY = 'af_test_sec_unit';
     stubFetch({ id: 'cs_1', url: 'https://app.nyole.com/checkout/cs_1' });
     await createNyoleSession({
       paymentId: '6f1c2b8e-4a53-4c1e-9a0b-2f3d4e5f6a7b',
@@ -175,7 +180,7 @@ describe('Nyole requests', () => {
   });
 
   test('status reads have a timeout', async () => {
-    process.env.NYOLE_SECRET_KEY = 'af_test_sec_unit';
+    testEnv.NYOLE_SECRET_KEY = 'af_test_sec_unit';
     stubFetch({ status: 'PENDING' });
     await getNyoleSessionStatus('cs_1');
     expect(seen?.signal).toBeInstanceOf(AbortSignal);
