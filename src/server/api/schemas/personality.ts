@@ -1,3 +1,4 @@
+import { MAX_GOAL_AMOUNT, MIN_GOAL_AMOUNT } from '@/lib/support-goal';
 import * as z from 'zod';
 
 export const PersonalitySlugSchema = z.object({
@@ -71,4 +72,29 @@ export const SearchPersonalitiesSchema = z.object({
     .transform((value) => value || undefined),
   location: optionalSearchText,
   limit: z.number().int().min(1).max(48).default(24),
+});
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+export const CreateSupportGoalSchema = z.object({
+  slug: z.string().trim().min(1).max(80),
+  title: z.string().trim().min(1).max(80),
+  description: z
+    .string()
+    .trim()
+    .max(280)
+    .optional()
+    .or(z.literal(''))
+    .transform((value) => value || undefined),
+  targetAmount: z.number().int().min(MIN_GOAL_AMOUNT).max(MAX_GOAL_AMOUNT),
+  endsAt: z
+    .string()
+    .regex(DATE_RE)
+    .optional()
+    .or(z.literal(''))
+    .transform((value) => value || undefined),
+});
+
+export const SupportGoalSlugSchema = z.object({
+  slug: z.string().trim().min(1).max(80),
 });

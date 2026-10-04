@@ -16,6 +16,7 @@ import {
   startMobileMoneyPayment,
   syncPayment,
 } from './support';
+import { activeGoalId, closeExpiredGoals } from './support-goal';
 
 // Mobile money cannot debit a wallet without the payer's PIN, so a monthly
 // support is renewed by *requesting* a payment each month: a USSD push to
@@ -106,6 +107,7 @@ async function renewPlan(plan: {
       currency: SUPPORT_CURRENCY,
       displayName: plan.displayName,
       isPublic: plan.isPublic,
+      goalId: await activeGoalId(plan.personalityId),
     })
     .returning({ id: support.id });
   if (!supportRow) {
@@ -183,6 +185,7 @@ export async function renewDuePlans(filter: { userId?: string } = {}) {
 
 export async function runRecurringRenewals() {
   const closed = await closeStalePendingPayments();
+  const goalsClosed = await closeExpiredGoals();
   const renewals = await renewDuePlans();
-  return { closed, ...renewals };
+  return { closed, goalsClosed, ...renewals };
 }

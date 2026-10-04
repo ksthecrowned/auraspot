@@ -8,6 +8,7 @@ import {
   splitWithdrawal,
   supportCommissionBps,
 } from '@/lib/money';
+import { redis } from '@/lib/redis';
 import {
   MobileMoneyError,
   type MobileMoneyOperator,
@@ -50,6 +51,7 @@ import {
   withdrawal,
 } from '../schema';
 import { isProfileLinkEditor } from './link';
+import { activeGoalId } from './support-goal';
 
 const TRAILING_SLASH_RE = /\/$/;
 import { fromStoredPhone, toMsisdn } from '@/lib/phone-countries';
@@ -401,6 +403,7 @@ export const createSupportCheckout = async (input: {
         message: input.message,
         isPublic: input.isPublic,
       }),
+      goalId: await activeGoalId(personalityRow.id),
     })
     .returning({ id: support.id });
   const supportRow = insertedSupport[0];
@@ -576,7 +579,11 @@ export const applyPaymentEvent = async (input: {
     },
     with: {
       support: {
-        columns: { personalityId: true, recurringSupportId: true },
+        columns: {
+          personalityId: true,
+          recurringSupportId: true,
+          goalId: true,
+        },
       },
     },
   });
@@ -634,6 +641,9 @@ export const applyPaymentEvent = async (input: {
     await handlePlanPaymentFailure(planId);
   }
   await recordPaymentEvent(input);
+  if (row.support.goalId) {
+    await redis.del(`support-goal:${row.support.goalId}`);
+  }
   return { ok: true as const, duplicate: false as const };
 };
 
