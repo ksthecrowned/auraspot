@@ -23,23 +23,20 @@ export default function Community({
       <h2 className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
         Communauté
       </h2>
-      {dedications.items.length > 0 && (
+      {dedications.items[0] && (
         <div className="flex flex-col gap-4">
-          {dedications.items.map((item, index) => (
-            <DedicationCard
-              key={item.id}
-              item={item}
-              index={index}
-              slug={slug}
-              canEdit={canEdit}
-            />
-          ))}
-          {dedications.total > 3 && (
+          <DedicationCard
+            item={dedications.items[0]}
+            index={0}
+            slug={slug}
+            canEdit={canEdit}
+          />
+          {dedications.total > 1 && (
             <Link
               href={`/${slug}/messages`}
               className="text-sm underline-offset-4 hover:underline"
             >
-              Voir les {dedications.total} messages
+              Afficher tous
             </Link>
           )}
         </div>

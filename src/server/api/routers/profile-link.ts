@@ -152,7 +152,7 @@ export const profileLinkRouter = createTRPCRouter({
         await Promise.all([
           getProfileDetails(profileLink.id),
           getSupportersPreview(profileLink.id),
-          listVisibleDedications(profileLink.id, { page: 1, pageSize: 3 }),
+          listVisibleDedications(profileLink.id, { page: 1, pageSize: 1 }),
           canEdit
             ? getProfileLinkViewsSince(profileLink.id, 30)
             : Promise.resolve(undefined),

@@ -16,39 +16,51 @@ export default function DedicationActions({
   const thank = api.support.thank.useMutation();
   const hide = api.support.hideMessage.useMutation();
   const [reply, setReply] = useState('');
+  const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pending = thank.isPending || hide.isPending;
 
+  const sendThanks = async () => {
+    setError(null);
+    try {
+      await thank.mutateAsync({
+        supportId,
+        thankYouReply: reply,
+      });
+      setReply('');
+      setOpen(false);
+      router.refresh();
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : 'Le remerciement n’a pas abouti.'
+      );
+    }
+  };
+
   return (
     <div className="mt-2 flex flex-col gap-2">
-      <textarea
-        value={reply}
-        maxLength={THANK_YOU_MAX_LENGTH}
-        placeholder="Un mot de remerciement, facultatif"
-        onChange={(event) => setReply(event.target.value)}
-        className={AURA_TEXTAREA}
-      />
+      {open && (
+        <textarea
+          value={reply}
+          maxLength={THANK_YOU_MAX_LENGTH}
+          placeholder="Un mot de remerciement, facultatif"
+          onChange={(event) => setReply(event.target.value)}
+          className={AURA_TEXTAREA}
+        />
+      )}
       <div className="flex flex-wrap gap-3 text-sm">
         <button
           type="button"
           disabled={pending}
           className="inline-flex items-center gap-1.5 font-medium underline-offset-4 hover:underline disabled:opacity-50"
           onClick={async () => {
-            setError(null);
-            try {
-              await thank.mutateAsync({
-                supportId,
-                thankYouReply: reply,
-              });
-              setReply('');
-              router.refresh();
-            } catch (submitError) {
-              setError(
-                submitError instanceof Error
-                  ? submitError.message
-                  : 'Le remerciement n’a pas abouti.'
-              );
+            if (!open) {
+              setOpen(true);
+              return;
             }
+            await sendThanks();
           }}
         >
           {thank.isPending ? (
