@@ -5,6 +5,11 @@ export const SupportSlugSchema = z.object({
   slug: z.string().trim().min(1).max(80),
 });
 
+export const SupportMessagesSchema = z.object({
+  slug: z.string().trim().min(1).max(80),
+  page: z.number().int().min(1).default(1),
+});
+
 export const CreateSupportSchema = z.object({
   slug: z.string().trim().min(1).max(80),
   amount: z.number().int().min(MIN_SUPPORT_AMOUNT).max(MAX_SUPPORT_AMOUNT),

@@ -14,6 +14,7 @@ import {
   getSupportPage,
   getSupporterHistory,
   getWithdrawalPage,
+  listVisibleDedications,
   requestWithdrawal,
   setSupportVisibility,
   startMobileMoneyPayment,
@@ -28,6 +29,7 @@ import {
   PayCheckoutSchema,
   RequestWithdrawalSchema,
   SetSupportVisibilitySchema,
+  SupportMessagesSchema,
   SupportSlugSchema,
 } from '../schemas/support';
 
@@ -51,6 +53,19 @@ export const supportRouter = createTRPCRouter({
   page: publicProcedure.input(SupportSlugSchema).query(({ input }) => {
     return getSupportPage(input.slug);
   }),
+
+  messages: rateLimitedPolling
+    .input(SupportMessagesSchema)
+    .query(async ({ input }) => {
+      const personality = await getSupportPage(input.slug);
+      if (!personality) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Cette fiche est introuvable.',
+        });
+      }
+      return listVisibleDedications(personality.id, { page: input.page });
+    }),
 
   create: rateLimitedSupport
     .input(CreateSupportSchema)

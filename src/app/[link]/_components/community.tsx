@@ -1,13 +1,18 @@
 import { firstNameOf, initialsOf, supportersSummary } from '@/lib/personality';
-
-const AVATAR_COLORS = ['#F75FC0', '#B43CF0', '#5B6CFF', '#FDBA8C', '#3FD8FF'];
+import type { DedicationItem } from '@/server/db/utils/support';
+import Link from 'next/link';
+import DedicationCard, { AVATAR_COLORS } from './dedication-card';
 
 export default function Community({
   name,
+  slug,
   supporters,
+  dedications,
 }: {
   name: string;
+  slug: string;
   supporters: { count: number; recent: { displayName: string }[] };
+  dedications: { items: DedicationItem[]; total: number };
 }) {
   const names = supporters.recent.map((item) => item.displayName);
 
@@ -16,6 +21,21 @@ export default function Community({
       <h2 className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
         Communauté
       </h2>
+      {dedications.items.length > 0 && (
+        <div className="flex flex-col gap-4">
+          {dedications.items.map((item, index) => (
+            <DedicationCard key={item.id} item={item} index={index} />
+          ))}
+          {dedications.total > 3 && (
+            <Link
+              href={`/${slug}/messages`}
+              className="text-sm underline-offset-4 hover:underline"
+            >
+              Voir les {dedications.total} messages
+            </Link>
+          )}
+        </div>
+      )}
       <div className="flex items-center gap-3">
         {names.length > 0 && (
           <div className="-space-x-2 flex">

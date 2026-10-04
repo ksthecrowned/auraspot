@@ -1,5 +1,5 @@
 import { env } from '@/env.mjs';
-import { dedicationForCreate } from '@/lib/dedication';
+import { clampDedicationLines, dedicationForCreate } from '@/lib/dedication';
 import {
   MAX_SUPPORT_AMOUNT,
   MIN_SUPPORT_AMOUNT,
@@ -28,10 +28,20 @@ import {
 } from '@/server/payments/nyole';
 import { getCheckoutProvider } from '@/server/payments/provider';
 import { canTransition } from '@/server/payments/transitions';
-import { and, desc, eq, gte, inArray, isNotNull, sql } from 'drizzle-orm';
+import {
+  and,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  sql,
+} from 'drizzle-orm';
 import { db } from '../db';
 import {
   ledgerEntry,
+  link,
   payment,
   paymentEvent,
   recurringSupport,
@@ -93,6 +103,82 @@ export const getSupportPage = async (slug: string) => {
   }
   const { link: rowSlug, ...rest } = row;
   return { ...rest, slug: rowSlug, canReceive: canReceiveSupport(row) };
+};
+
+export const DEDICATION_PAGE_SIZE = 20;
+
+export type DedicationItem = {
+  id: string;
+  displayName: string;
+  message: string;
+  createdAt: Date;
+  isMonthly: boolean;
+  thankedAt: Date | null;
+  thankYouReply: string | null;
+};
+
+function visibleDedicationFilters(personalityId: string) {
+  return and(
+    eq(support.personalityId, personalityId),
+    eq(support.isPublic, true),
+    isNotNull(support.message),
+    isNull(support.messageHiddenAt),
+    eq(payment.status, 'success'),
+    eq(link.status, 'active')
+  );
+}
+
+export const listVisibleDedications = async (
+  personalityId: string,
+  { page, pageSize = DEDICATION_PAGE_SIZE }: { page: number; pageSize?: number }
+): Promise<{ items: DedicationItem[]; total: number }> => {
+  const where = visibleDedicationFilters(personalityId);
+  const [countRows, rows] = await Promise.all([
+    db
+      .select({ count: sql<number>`count(distinct ${support.id})` })
+      .from(support)
+      .innerJoin(payment, eq(payment.supportId, support.id))
+      .innerJoin(link, eq(link.id, support.personalityId))
+      .where(where),
+    db
+      .selectDistinct({
+        id: support.id,
+        displayName: support.displayName,
+        message: support.message,
+        createdAt: support.createdAt,
+        recurringSupportId: support.recurringSupportId,
+        thankedAt: support.thankedAt,
+        thankYouReply: support.thankYouReply,
+      })
+      .from(support)
+      .innerJoin(payment, eq(payment.supportId, support.id))
+      .innerJoin(link, eq(link.id, support.personalityId))
+      .where(where)
+      .orderBy(desc(support.createdAt))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize),
+  ]);
+
+  return {
+    total: Number(countRows[0]?.count ?? 0),
+    items: rows.flatMap((row) => {
+      if (!row.message) {
+        return [];
+      }
+      const name = row.displayName?.trim();
+      return [
+        {
+          id: row.id,
+          displayName: name || 'Quelqu’un',
+          message: clampDedicationLines(row.message),
+          createdAt: row.createdAt,
+          isMonthly: row.recurringSupportId !== null,
+          thankedAt: row.thankedAt,
+          thankYouReply: row.thankYouReply,
+        },
+      ];
+    }),
+  };
 };
 
 // The fiche a payment is for can still receive donations: it may have lost

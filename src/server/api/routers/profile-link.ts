@@ -49,7 +49,10 @@ import {
   updateProfileLink,
   updateProfileLinkBento,
 } from '@/server/db';
-import { getSupportersPreview } from '@/server/db/utils/support';
+import {
+  getSupportersPreview,
+  listVisibleDedications,
+} from '@/server/db/utils/support';
 import { resolveVideoUrl } from '@/server/video';
 import type { LinkBento } from '@/types';
 import { TRPCError } from '@trpc/server';
@@ -142,18 +145,21 @@ export const profileLinkRouter = createTRPCRouter({
         ? await isProfileLinkEditor(authedUserId, profileLink)
         : false;
 
-      const [details, supporters, monthlyViews] = await Promise.all([
-        getProfileDetails(profileLink.id),
-        getSupportersPreview(profileLink.id),
-        canEdit
-          ? getProfileLinkViewsSince(profileLink.id, 30)
-          : Promise.resolve(undefined),
-      ]);
+      const [details, supporters, dedications, monthlyViews] =
+        await Promise.all([
+          getProfileDetails(profileLink.id),
+          getSupportersPreview(profileLink.id),
+          listVisibleDedications(profileLink.id, { page: 1, pageSize: 3 }),
+          canEdit
+            ? getProfileLinkViewsSince(profileLink.id, 30)
+            : Promise.resolve(undefined),
+        ]);
 
       return {
         ...profileLink,
         ...details,
         supporters,
+        dedications,
         ...(monthlyViews === undefined ? {} : { monthlyViews }),
         canEdit,
         isPremium: true,

@@ -149,7 +149,9 @@ export default async function Page({ params }: Props) {
                     <main className="flex min-w-0 flex-col gap-8">
                       <Community
                         name={profileLink.name}
+                        slug={profileLink.link}
                         supporters={profileLink.supporters}
+                        dedications={profileLink.dedications}
                       />
                       <ProfileAbout profileLink={profileLink} />
                       <ProfileSpace profileLink={profileLink} />
