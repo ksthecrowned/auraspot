@@ -4,9 +4,11 @@ import {
 } from '@/components/forms/aura-fields';
 import MobileMoneyCheckout from '@/components/forms/mobile-money-checkout';
 import NyolePending from '@/components/forms/nyole-pending';
+import ShareSupportCard from '@/components/forms/share-support-card';
 import PersonalityPageShell from '@/components/personality-page-shell';
 import { auth } from '@/lib/auth';
 import { formatFcfa } from '@/lib/money';
+import { shareCardHeadline } from '@/lib/share-card';
 import { cn } from '@/lib/utils';
 import { getCheckout } from '@/server/db/utils/support';
 import {
@@ -138,6 +140,19 @@ export default async function CheckoutPage({ params }: PageProps) {
             Refaire un don
           </Link>
         )}
+
+        {checkout.status === 'success' &&
+          checkout.personalityStatus !== 'suspended' && (
+            <ShareSupportCard
+              paymentId={checkout.id}
+              slug={checkout.personalitySlug}
+              headline={shareCardHeadline({
+                isPublic: checkout.isPublic,
+                displayName: checkout.displayName,
+                personalityName: checkout.personalityName,
+              })}
+            />
+          )}
 
         {session && (
           <Link

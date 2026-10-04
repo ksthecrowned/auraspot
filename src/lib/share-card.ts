@@ -1,4 +1,5 @@
 const VIEW_SOURCES = ['carte', 'qr', 'bio'] as const;
+const TRAILING_SLASH_RE = /\/$/;
 
 export type ViewSource = (typeof VIEW_SOURCES)[number];
 
@@ -33,6 +34,6 @@ export function shareCardSizes(format: string | null) {
 }
 
 export function shareCardUrl(origin: string, slug: string) {
-  const base = origin.replace(/\/$/, '');
+  const base = origin.replace(TRAILING_SLASH_RE, '');
   return `${base}/${slug}?src=carte`;
 }

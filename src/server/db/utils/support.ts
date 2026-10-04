@@ -434,9 +434,11 @@ export const getCheckout = async (paymentId: string) => {
     },
     with: {
       support: {
-        columns: { id: true },
+        columns: { id: true, isPublic: true, displayName: true },
         with: {
-          personality: { columns: { name: true, link: true } },
+          personality: {
+            columns: { name: true, link: true, image: true, status: true },
+          },
         },
       },
     },
@@ -452,6 +454,10 @@ export const getCheckout = async (paymentId: string) => {
     currency: row.currency,
     personalityName: row.support.personality.name,
     personalitySlug: row.support.personality.link,
+    personalityImage: row.support.personality.image,
+    personalityStatus: row.support.personality.status,
+    isPublic: row.support.isPublic,
+    displayName: row.support.displayName,
     // No provider chosen yet: the payer can pick MTN MoMo, Airtel or Nyole.
     canPay: row.provider === 'sandbox' && row.status === 'pending',
     // Nyole chosen: resume the open session, or retry if none was created.
