@@ -5,7 +5,7 @@ import {
   MIN_GOAL_AMOUNT,
   goalDisplayPercent,
 } from '@/lib/support-goal';
-import { and, desc, eq, isNotNull, sql } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
 import { db } from '../db';
 import { payment, support, supportGoal } from '../schema';
 import { isProfileLinkEditor } from './link';
@@ -296,6 +296,50 @@ export async function closeExpiredGoals() {
     .returning({ id: supportGoal.id });
   await Promise.all(rows.map((row) => redis.del(`support-goal:${row.id}`)));
   return rows.length;
+}
+
+export async function claimReachedGoal(goalId: string) {
+  const row = await db.query.supportGoal.findFirst({
+    where: (table, { eq: equals }) => equals(table.id, goalId),
+    columns: {
+      id: true,
+      title: true,
+      targetAmount: true,
+      personalityId: true,
+      reachedNotifiedAt: true,
+    },
+  });
+  if (!row || row.reachedNotifiedAt) {
+    return null;
+  }
+  const progress = await progressOf(row.id);
+  const percent = goalDisplayPercent(progress.collected, row.targetAmount);
+  if (percent < 100) {
+    return null;
+  }
+  const [claimed] = await db
+    .update(supportGoal)
+    .set({ reachedNotifiedAt: new Date() })
+    .where(
+      and(eq(supportGoal.id, row.id), isNull(supportGoal.reachedNotifiedAt))
+    )
+    .returning({ id: supportGoal.id });
+  if (!claimed) {
+    return null;
+  }
+  return {
+    personalityId: row.personalityId,
+    title: row.title,
+    targetAmount: row.targetAmount,
+    percent,
+  };
+}
+
+export async function releaseReachedClaim(goalId: string) {
+  await db
+    .update(supportGoal)
+    .set({ reachedNotifiedAt: null })
+    .where(eq(supportGoal.id, goalId));
 }
 
 export async function personalityIdForSlug(slug: string) {

@@ -51,6 +51,7 @@ import {
   withdrawal,
 } from '../schema';
 import { isProfileLinkEditor } from './link';
+import { notifyGoalReached, notifySupportThanked } from './support-emails';
 import { activeGoalId } from './support-goal';
 
 const TRAILING_SLASH_RE = /\/$/;
@@ -643,6 +644,9 @@ export const applyPaymentEvent = async (input: {
   await recordPaymentEvent(input);
   if (row.support.goalId) {
     await redis.del(`support-goal:${row.support.goalId}`);
+    if (input.status === 'success') {
+      await notifyGoalReached(row.support.goalId).catch(() => null);
+    }
   }
   return { ok: true as const, duplicate: false as const };
 };
@@ -1230,6 +1234,7 @@ export const thankSupport = async (input: {
   if (!updated[0]) {
     return { error: 'not-found' as const };
   }
+  await notifySupportThanked(row.id).catch(() => null);
   return { support: updated[0] };
 };
 

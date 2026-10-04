@@ -16,6 +16,7 @@ import {
   startMobileMoneyPayment,
   syncPayment,
 } from './support';
+import { sendDedicationDigests } from './support-emails';
 import { activeGoalId, closeExpiredGoals } from './support-goal';
 
 // Mobile money cannot debit a wallet without the payer's PIN, so a monthly
@@ -187,5 +188,6 @@ export async function runRecurringRenewals() {
   const closed = await closeStalePendingPayments();
   const goalsClosed = await closeExpiredGoals();
   const renewals = await renewDuePlans();
-  return { closed, goalsClosed, ...renewals };
+  const dedicationEmails = await sendDedicationDigests();
+  return { closed, goalsClosed, dedicationEmails, ...renewals };
 }

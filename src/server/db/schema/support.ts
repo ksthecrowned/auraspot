@@ -121,6 +121,9 @@ export const support = pgTable(
     messageHiddenAt: timestamp('message_hidden_at', { withTimezone: true }),
     thankedAt: timestamp('thanked_at', { withTimezone: true }),
     thankYouReply: text('thank_you_reply'),
+    messageNotifiedAt: timestamp('message_notified_at', {
+      withTimezone: true,
+    }),
     goalId: uuid('goal_id').references(() => supportGoal.id, {
       onDelete: 'set null',
     }),
