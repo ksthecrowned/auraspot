@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 
 type PageProps = {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export async function generateMetadata({
@@ -19,12 +20,21 @@ export async function generateMetadata({
   };
 }
 
-export default async function ReportPersonalityPage({ params }: PageProps) {
+function firstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function ReportPersonalityPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { slug } = await params;
+  const query = await searchParams;
   const personality = await getPublicPersonalityBySlug(slug);
   if (!personality) {
     notFound();
   }
+  const supportId = firstParam(query.supportId);
 
   return (
     <PersonalityPageShell
@@ -32,7 +42,10 @@ export default async function ReportPersonalityPage({ params }: PageProps) {
       title={`Signaler ${personality.name}`}
       subtitle="Un signalement n’enlève pas la fiche. La suspension est une décision séparée."
     >
-      <ReportPersonalityForm slug={personality.slug} />
+      <ReportPersonalityForm
+        slug={personality.slug}
+        supportId={supportId || undefined}
+      />
     </PersonalityPageShell>
   );
 }

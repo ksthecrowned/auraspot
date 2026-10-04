@@ -92,6 +92,7 @@ export const personalityRouter = createTRPCRouter({
         slug: input.slug,
         reason: input.reason,
         details: input.details,
+        supportId: input.supportId,
         reporterUserId: ctx.session?.user?.id ?? null,
       });
       if (!result.ok) {

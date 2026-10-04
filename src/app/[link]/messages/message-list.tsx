@@ -35,6 +35,7 @@ export default function MessageList({
           key={item.id}
           item={item}
           index={(page - 1) * pageSize + index}
+          slug={slug}
           canEdit={canEdit}
         />
       ))}

@@ -1,6 +1,7 @@
 import { initialsOf } from '@/lib/personality';
 import type { DedicationItem } from '@/server/db/utils/support';
 import { Heart } from 'lucide-react';
+import Link from 'next/link';
 import DedicationActions from './dedication-actions';
 
 export const AVATAR_COLORS = [
@@ -34,10 +35,12 @@ function relativeTimeFr(date: Date, now = new Date()) {
 export default function DedicationCard({
   item,
   index,
+  slug,
   canEdit = false,
 }: {
   item: DedicationItem;
   index: number;
+  slug: string;
   canEdit?: boolean;
 }) {
   return (
@@ -76,6 +79,12 @@ export default function DedicationCard({
           </p>
         )}
         {canEdit && <DedicationActions supportId={item.id} />}
+        <Link
+          href={`/report/${slug}?supportId=${item.id}`}
+          className="mt-2 inline-block text-muted-foreground text-xs underline-offset-4 hover:underline"
+        >
+          Signaler
+        </Link>
       </div>
     </article>
   );

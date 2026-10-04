@@ -13,6 +13,7 @@ import { category } from './category';
 import { link } from './link';
 import { linkClick } from './link-click';
 import { linkView } from './link-view';
+import { support } from './support';
 import { user } from './user';
 
 export const managerRoles = ['owner', 'manager'] as const;
@@ -108,6 +109,7 @@ export const personalityClaim = pgTable(
 export const reportReasons = [
   'impersonation',
   'inappropriate',
+  'inappropriate_message',
   'other',
 ] as const;
 
@@ -125,6 +127,9 @@ export const personalityReport = pgTable(
     }),
     reason: text('reason', { enum: reportReasons }).notNull(),
     details: text('details').notNull(),
+    supportId: uuid('support_id').references(() => support.id, {
+      onDelete: 'set null',
+    }),
     status: text('status', { enum: reportStatuses }).default('open').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
@@ -188,6 +193,10 @@ export const personalityReportRelations = relations(
     reporter: one(user, {
       fields: [personalityReport.reporterUserId],
       references: [user.id],
+    }),
+    support: one(support, {
+      fields: [personalityReport.supportId],
+      references: [support.id],
     }),
   })
 );

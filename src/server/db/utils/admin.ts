@@ -4,7 +4,7 @@ import {
   type SocialLinkInput,
   normalizeSocialLinks,
 } from '@/lib/social-platforms';
-import { and, count, desc, eq } from 'drizzle-orm';
+import { and, count, desc, eq, isNotNull, isNull } from 'drizzle-orm';
 import { db } from '../db';
 import {
   category,
@@ -401,8 +401,9 @@ export const listWithdrawalsForAdmin = async (status: 'pending' | 'done') => {
 
 export const createPersonalityReport = async (input: {
   slug: string;
-  reason: 'impersonation' | 'inappropriate' | 'other';
+  reason: 'impersonation' | 'inappropriate' | 'inappropriate_message' | 'other';
   details: string;
+  supportId?: string;
   reporterUserId?: string | null;
 }) => {
   const personalityRow = await db.query.link.findFirst({
@@ -417,6 +418,27 @@ export const createPersonalityReport = async (input: {
   if (!personalityRow) {
     return { ok: false as const, error: 'not-found' as const };
   }
+  if (input.reason === 'inappropriate_message') {
+    if (!input.supportId) {
+      return { ok: false as const, error: 'not-found' as const };
+    }
+    const [dedication] = await db
+      .select({ id: support.id })
+      .from(support)
+      .where(
+        and(
+          eq(support.id, input.supportId),
+          eq(support.personalityId, personalityRow.id),
+          eq(support.isPublic, true),
+          isNotNull(support.message),
+          isNull(support.messageHiddenAt)
+        )
+      )
+      .limit(1);
+    if (!dedication) {
+      return { ok: false as const, error: 'not-found' as const };
+    }
+  }
   const inserted = await db
     .insert(personalityReport)
     .values({
@@ -424,6 +446,8 @@ export const createPersonalityReport = async (input: {
       reporterUserId: input.reporterUserId ?? null,
       reason: input.reason,
       details: input.details,
+      supportId:
+        input.reason === 'inappropriate_message' ? input.supportId : null,
     })
     .returning({ id: personalityReport.id });
   const row = inserted[0];
@@ -441,6 +465,7 @@ export const listReportsForAdmin = async () => {
       reason: true,
       details: true,
       status: true,
+      supportId: true,
       createdAt: true,
     },
     with: {
@@ -464,13 +489,16 @@ export const listReportsForAdmin = async () => {
 
 export const reviewPersonalityReport = async (input: {
   reportId: string;
-  decision: 'dismissed' | 'suspend';
+  decision: 'dismissed' | 'suspend' | 'hide_message';
 }) => {
   const report = await db.query.personalityReport.findFirst({
     where: (table, { eq: equals }) => equals(table.id, input.reportId),
-    columns: { id: true, status: true, personalityId: true },
+    columns: { id: true, status: true, personalityId: true, supportId: true },
   });
   if (!report || report.status !== 'open') {
+    return { ok: false as const, error: 'not-found' as const };
+  }
+  if (input.decision === 'hide_message' && !report.supportId) {
     return { ok: false as const, error: 'not-found' as const };
   }
   if (input.decision === 'suspend') {
@@ -480,10 +508,16 @@ export const reviewPersonalityReport = async (input: {
       .where(eq(link.id, report.personalityId));
     await invalidateProfileLinkCache(report.personalityId);
   }
+  if (input.decision === 'hide_message' && report.supportId) {
+    await db
+      .update(support)
+      .set({ messageHiddenAt: new Date() })
+      .where(eq(support.id, report.supportId));
+  }
   const updated = await db
     .update(personalityReport)
     .set({
-      status: input.decision === 'suspend' ? 'resolved' : 'dismissed',
+      status: input.decision === 'dismissed' ? 'dismissed' : 'resolved',
       updatedAt: new Date(),
     })
     .where(

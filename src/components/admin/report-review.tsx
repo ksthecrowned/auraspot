@@ -12,6 +12,7 @@ type Report = RouterOutputs['admin']['reports'][number];
 const REASON_LABEL = {
   impersonation: 'Usurpation',
   inappropriate: 'Contenu inapproprié',
+  inappropriate_message: 'Message inapproprié',
   other: 'Autre',
 } as const;
 
@@ -30,7 +31,7 @@ function ReportCard({ report }: { report: Report }) {
   const reviewReport = api.admin.reviewReport.useMutation();
   const [error, setError] = useState<string | null>(null);
 
-  const decide = async (decision: 'dismissed' | 'suspend') => {
+  const decide = async (decision: 'dismissed' | 'suspend' | 'hide_message') => {
     setError(null);
     try {
       await reviewReport.mutateAsync({ reportId: report.id, decision });
@@ -69,6 +70,16 @@ function ReportCard({ report }: { report: Report }) {
         >
           Classer
         </Button>
+        {report.supportId && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={reviewReport.isPending}
+            onClick={() => decide('hide_message')}
+          >
+            Masquer le message
+          </Button>
+        )}
         <Button
           type="button"
           variant="outline"

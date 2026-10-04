@@ -22,15 +22,31 @@ export const UpdateCategorySchema = z.object({
   sortOrder: z.number().int().min(0).max(999),
 });
 
-export const CreatePersonalityReportSchema = z.object({
-  slug: z.string().trim().min(1).max(80),
-  reason: z.enum(['impersonation', 'inappropriate', 'other']),
-  details: z.string().trim().min(10).max(2000),
-});
+export const CreatePersonalityReportSchema = z
+  .object({
+    slug: z.string().trim().min(1).max(80),
+    reason: z.enum([
+      'impersonation',
+      'inappropriate',
+      'inappropriate_message',
+      'other',
+    ]),
+    details: z.string().trim().min(10).max(2000),
+    supportId: z.string().uuid().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.reason === 'inappropriate_message' && !value.supportId) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['supportId'],
+        message: 'Le message signalé est manquant.',
+      });
+    }
+  });
 
 export const ReviewPersonalityReportSchema = z.object({
   reportId: z.string().uuid(),
-  decision: z.enum(['dismissed', 'suspend']),
+  decision: z.enum(['dismissed', 'suspend', 'hide_message']),
 });
 
 const FicheFieldsSchema = z.object({

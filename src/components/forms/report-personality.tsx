@@ -18,10 +18,17 @@ const REASONS = [
   { value: 'other', label: 'Autre' },
 ] as const;
 
-export default function ReportPersonalityForm({ slug }: { slug: string }) {
+export default function ReportPersonalityForm({
+  slug,
+  supportId,
+}: {
+  slug: string;
+  supportId?: string;
+}) {
   const report = api.personality.report.useMutation();
-  const [reason, setReason] =
-    useState<(typeof REASONS)[number]['value']>('impersonation');
+  const [reason, setReason] = useState<
+    (typeof REASONS)[number]['value'] | 'inappropriate_message'
+  >(supportId ? 'inappropriate_message' : 'impersonation');
   const [details, setDetails] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
@@ -34,7 +41,12 @@ export default function ReportPersonalityForm({ slug }: { slug: string }) {
       return;
     }
     try {
-      await report.mutateAsync({ slug, reason, details });
+      await report.mutateAsync({
+        slug,
+        reason,
+        details,
+        supportId: reason === 'inappropriate_message' ? supportId : undefined,
+      });
       setSent(true);
     } catch (submitError) {
       setError(
@@ -58,11 +70,15 @@ export default function ReportPersonalityForm({ slug }: { slug: string }) {
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="flex flex-col gap-3">
         <span className="font-medium text-sm">Motif</span>
-        <SegmentedControl
-          options={REASONS}
-          value={reason}
-          onChange={setReason}
-        />
+        {supportId ? (
+          <p className={AURA_NOTICE}>Message inapproprié</p>
+        ) : (
+          <SegmentedControl
+            options={REASONS}
+            value={reason === 'inappropriate_message' ? 'other' : reason}
+            onChange={setReason}
+          />
+        )}
       </div>
       <div className="flex flex-col gap-3">
         <Label htmlFor="details">Détails</Label>

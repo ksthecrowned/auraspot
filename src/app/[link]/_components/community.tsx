@@ -30,6 +30,7 @@ export default function Community({
               key={item.id}
               item={item}
               index={index}
+              slug={slug}
               canEdit={canEdit}
             />
           ))}
