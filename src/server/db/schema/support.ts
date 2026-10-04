@@ -88,6 +88,10 @@ export const support = pgTable(
     currency: text('currency').default('XAF').notNull(),
     displayName: text('display_name'),
     isPublic: boolean('is_public').default(false).notNull(),
+    message: text('message'),
+    messageHiddenAt: timestamp('message_hidden_at', { withTimezone: true }),
+    thankedAt: timestamp('thanked_at', { withTimezone: true }),
+    thankYouReply: text('thank_you_reply'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -96,6 +100,9 @@ export const support = pgTable(
     index('support_personality_id_idx').on(table.personalityId),
     index('support_user_id_idx').on(table.userId),
     index('support_recurring_support_id_idx').on(table.recurringSupportId),
+    index('support_personality_message_idx')
+      .on(table.personalityId, table.createdAt)
+      .where(sql`${table.message} is not null`),
   ]
 );
 
