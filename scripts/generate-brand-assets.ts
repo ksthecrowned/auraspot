@@ -49,4 +49,3 @@ const frames = await Promise.all(
   [16, 32, 48].map(async (size) => ({ size, data: await render(icon, size) }))
 );
 writeFileSync('public/favicon.ico', toIco(frames));
-
