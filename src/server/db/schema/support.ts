@@ -72,6 +72,35 @@ export const recurringSupport = pgTable(
   ]
 );
 
+export const supportGoalStatuses = ['active', 'closed'] as const;
+
+export const supportGoal = pgTable(
+  'support_goal',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    personalityId: uuid('personality_id')
+      .notNull()
+      .references(() => link.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    description: text('description'),
+    targetAmount: integer('target_amount').notNull(),
+    status: text('status', { enum: supportGoalStatuses })
+      .default('active')
+      .notNull(),
+    endsAt: timestamp('ends_at', { withTimezone: true }),
+    closedAt: timestamp('closed_at', { withTimezone: true }),
+    reachedNotifiedAt: timestamp('reached_notified_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex('support_goal_one_active_idx')
+      .on(table.personalityId)
+      .where(sql`${table.status} = 'active'`),
+  ]
+);
+
 export const support = pgTable(
   'support',
   {
@@ -92,6 +121,9 @@ export const support = pgTable(
     messageHiddenAt: timestamp('message_hidden_at', { withTimezone: true }),
     thankedAt: timestamp('thanked_at', { withTimezone: true }),
     thankYouReply: text('thank_you_reply'),
+    goalId: uuid('goal_id').references(() => supportGoal.id, {
+      onDelete: 'set null',
+    }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -226,10 +258,22 @@ export const recurringSupportRelations = relations(
   })
 );
 
+export const supportGoalRelations = relations(supportGoal, ({ one, many }) => ({
+  personality: one(link, {
+    fields: [supportGoal.personalityId],
+    references: [link.id],
+  }),
+  supports: many(support),
+}));
+
 export const supportRelations = relations(support, ({ one, many }) => ({
   personality: one(link, {
     fields: [support.personalityId],
     references: [link.id],
+  }),
+  goal: one(supportGoal, {
+    fields: [support.goalId],
+    references: [supportGoal.id],
   }),
   user: one(user, {
     fields: [support.userId],
