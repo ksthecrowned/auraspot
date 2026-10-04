@@ -1,10 +1,7 @@
 # Bento Card System
 
 ## Types
-- `link` — URL card with metadata. Fields: id, type, href, clicks, size, position
-- `note` — Text card. Fields: id, type, text, size, position
-- `image` — Image card. Fields: id, type, url, caption?, size, position
-- `video` — Video card. Fields: id, type, url, caption?, size, position
+Defined in `src/types.ts`: `link`, `note`, `image`, `video`, `map`, `github`, `email-collect`, `countdown`, `weather`, `twitter`, `music`, `video-embed`, `calendar`, `views`.
 
 ## Sizes: 2x2, 4x1, 2x4, 4x2, 4x4 (separate sm/md breakpoints)
 ## Grid: react-grid-layout, 2 cols mobile, 4 cols desktop

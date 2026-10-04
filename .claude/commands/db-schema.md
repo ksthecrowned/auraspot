@@ -7,11 +7,14 @@
 - Config: `drizzle.config.ts`
 
 ## Tables
-- user (Better Auth managed + plan, stripeCustomerId, subscriptionId, subscriptionEndsAt)
-- session, account, verification (Better Auth managed)
-- link (profile pages with bento JSON)
-- link_view (analytics)
+- user, session, account, verification (Better Auth; `user.emailDigest`)
+- link (fiche, bento JSON, `claimStatus`, `verificationStatus`)
+- link_view, link_click (analytics)
+- email_subscriber
+- category
+- social_link, personality_manager, personality_claim (`personality.ts`)
+- support, recurring_support, payment, payment_event, ledger_entry, withdrawal (`support.ts`)
 
 ## Workflow: Edit schema -> `bun run db:generate` -> `bun run db:push`
-## Primary keys: text type (Better Auth generates string IDs)
+## Primary keys: text for Better Auth ids, uuid elsewhere
 ## Timestamps: always withTimezone: true

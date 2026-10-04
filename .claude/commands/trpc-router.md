@@ -1,5 +1,8 @@
 # Adding tRPC Routers
 
+## Current routers
+`admin`, `personality`, `profileLink`, `support`, `user` in `src/server/api/root.ts`.
+
 ## Files
 - Init: `src/server/api/trpc.ts`
 - Root: `src/server/api/root.ts`

@@ -21,6 +21,9 @@ const { data: session } = useSession();
 ## tRPC: protectedProcedure guarantees ctx.user
 ## Middleware: Cookie check via getSessionCookie()
 
+## Configured provider
+Google only (`socialProviders.google` in `src/lib/auth.ts`).
+
 ## Adding Social Provider
 1. Add env vars in src/env.mjs
 2. Add to socialProviders in src/lib/auth.ts
