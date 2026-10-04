@@ -69,7 +69,7 @@ export default function DedicationCard({
             </span>
           )}
         </div>
-        <p className="mt-1 whitespace-pre-wrap break-words text-sm">
+        <p className="mt-1 whitespace-pre-wrap wrap-break-word text-sm">
           {item.message}
         </p>
         {item.thankedAt && (

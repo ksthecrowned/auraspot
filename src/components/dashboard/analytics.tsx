@@ -174,7 +174,7 @@ function TrendChart({
   const config = { value: { label, color } } satisfies ChartConfig;
 
   return (
-    <ChartContainer config={config} className="h-[240px] w-full">
+    <ChartContainer config={config} className="h-60 w-full">
       <AreaChart data={data} margin={{ left: 4, right: 4 }}>
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
