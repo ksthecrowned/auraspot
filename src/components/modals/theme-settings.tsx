@@ -76,7 +76,7 @@ export default function ThemeSettingsModal({
         showClose
       >
         <DialogHeader>
-          <DialogTitle className="font-cal text-xl">Customize</DialogTitle>
+          <DialogTitle className="font-cal text-xl">Personnaliser</DialogTitle>
         </DialogHeader>
 
         <div
@@ -88,7 +88,7 @@ export default function ThemeSettingsModal({
             <div className="space-y-3">
               <SectionHeader
                 icon={<Palette className="h-4 w-4" />}
-                title="Theme"
+                title="Thème"
               />
               <div className="grid grid-cols-2 gap-2">
                 {THEME_PRESETS.map((preset) => {
@@ -141,7 +141,7 @@ export default function ThemeSettingsModal({
               <div className="flex items-center justify-between">
                 <SectionHeader
                   icon={<Moon className="h-4 w-4" />}
-                  title="Dark Mode"
+                  title="Mode sombre"
                 />
                 <Switch
                   checked={darkMode}
@@ -156,7 +156,7 @@ export default function ThemeSettingsModal({
             <div className="space-y-3">
               <SectionHeader
                 icon={<Paintbrush className="h-4 w-4" />}
-                title="Accent Color"
+                title="Couleur d’accent"
               />
               <div className="flex items-center gap-2">
                 <div className="relative">
@@ -186,7 +186,7 @@ export default function ThemeSettingsModal({
                     className="shrink-0 rounded-xl text-xs"
                     onClick={() => setAccentColor('')}
                   >
-                    Reset
+                    Réinitialiser
                   </Button>
                 )}
               </div>
@@ -196,12 +196,12 @@ export default function ThemeSettingsModal({
             <div className="space-y-3">
               <SectionHeader
                 icon={<Type className="h-4 w-4" />}
-                title="Footer Text"
+                title="Texte du pied de page"
               />
               <input
                 type="text"
                 className="h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"
-                placeholder="Made with AuraSpot"
+                placeholder="Fait avec AuraSpot"
                 value={customFooter}
                 maxLength={100}
                 onChange={(e) => {
@@ -209,7 +209,7 @@ export default function ThemeSettingsModal({
                 }}
               />
               <p className="text-muted-foreground text-xs">
-                Shown at the bottom of your profile page.
+                Affiché en bas de la fiche.
               </p>
             </div>
           </div>
@@ -222,14 +222,14 @@ export default function ThemeSettingsModal({
             className="rounded-xl px-6"
             onClick={() => setOpen(false)}
           >
-            Cancel
+            Annuler
           </Button>
           <Button
             onClick={save}
             disabled={isPending}
             className="rounded-xl px-6"
           >
-            {isPending ? 'Saving...' : 'Save changes'}
+            {isPending ? 'Enregistrement…' : 'Enregistrer'}
           </Button>
         </div>
       </DialogContent>
