@@ -4,6 +4,7 @@ import {
   twitterMetadata,
 } from '@/app/shared-metadata';
 import OnboardingTour from '@/components/onboarding-tour';
+import { parseViewSource } from '@/lib/share-card';
 import { SITE_URL } from '@/lib/site';
 import { canReceiveSupport } from '@/lib/support-eligibility';
 import { api } from '@/trpc/server';
@@ -20,6 +21,7 @@ import ProfileFooter from './_components/profile-footer';
 import ProfileHero from './_components/profile-hero';
 import ProfileSpace from './_components/profile-space';
 import ProfileTopBar from './_components/profile-top-bar';
+import StripViewSource from './_components/strip-view-source';
 import SupportButton from './_components/support-button';
 import ThemeWrapper from './_components/theme-wrapper';
 import ViewportContainer from './_components/viewport-container';
@@ -28,18 +30,28 @@ type Props = {
   params: Promise<{
     link: string;
   }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-const getProfileLink = cache((link: string) => {
-  return api.profileLink.getByLink({ link });
+function viewSource(value: string | string[] | undefined) {
+  const raw = Array.isArray(value) ? value[0] : value;
+  return parseViewSource(raw) ?? undefined;
+}
+
+const getProfileLink = cache((link: string, src?: string) => {
+  return api.profileLink.getByLink({ link, src });
 });
 
 const HTML_TAG_RE = /<[^>]*>/g;
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: Props): Promise<Metadata> {
   const { link } = await params;
+  const query = await searchParams;
 
-  const profileLink = await getProfileLink(link);
+  const profileLink = await getProfileLink(link, viewSource(query.src));
 
   const title = profileLink?.name ?? defaultMetadata.title;
   const description = profileLink
@@ -69,9 +81,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function Page({ params }: Props) {
+export default async function Page({ params, searchParams }: Props) {
   const { link } = await params;
-  const profileLink = await getProfileLink(link);
+  const query = await searchParams;
+  const profileLink = await getProfileLink(link, viewSource(query.src));
 
   if (!profileLink) {
     notFound();
@@ -130,6 +143,7 @@ export default async function Page({ params }: Props) {
             <BentoHistoryProvider>
               <ViewportContainer>
                 <div className="@container animate-fade-in" style={accentStyle}>
+                  <StripViewSource />
                   <ProfileTopBar profileLink={profileLink} />
 
                   <div className="mt-8 grid @4xl:grid-cols-[340px_minmax(0,1fr)] @4xl:gap-12 gap-8">

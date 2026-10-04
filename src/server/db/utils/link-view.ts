@@ -45,11 +45,13 @@ export const recordLinkView = async (
     userAgent,
     referrer,
     country,
+    source,
   }: {
     ip: string;
     userAgent: string;
     referrer?: string;
     country?: string;
+    source?: string | null;
   }
 ) => {
   const exists = await db.query.linkView.findFirst({
@@ -71,6 +73,7 @@ export const recordLinkView = async (
       userAgent,
       referrer,
       country,
+      source,
     });
 
     await Promise.all([

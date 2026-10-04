@@ -24,6 +24,7 @@ export const CreateLinkSchema = z.object({
 
 export const GetByLinkSchema = z.object({
   link: z.string(),
+  src: z.string().max(32).optional(),
 });
 
 export const GetLinkViewsSchema = z.object({

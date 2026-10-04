@@ -9,6 +9,7 @@ export const linkView = pgTable('link_view', {
   userAgent: text('user_agent').notNull(),
   referrer: text('referrer'),
   country: varchar('country', { length: 2 }), // ISO 3166-1 alpha-2
+  source: text('source'),
 
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),

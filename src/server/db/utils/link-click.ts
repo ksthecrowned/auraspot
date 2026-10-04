@@ -133,6 +133,20 @@ export const getTopCards = async (linkId: string, days: number) => {
   return result;
 };
 
+export const countShareCardViews = async (linkId: string, days: number) => {
+  const rows = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(linkView)
+    .where(
+      and(
+        eq(linkView.linkId, linkId),
+        eq(linkView.source, 'carte'),
+        gte(linkView.createdAt, sql`now() - ${`${days} days`}::interval`)
+      )
+    );
+  return Number(rows[0]?.count ?? 0);
+};
+
 export const getTopReferrers = async (linkId: string, days: number) => {
   const cacheKey = `analytics:top-referrers:${linkId}:${days}`;
   const cached =

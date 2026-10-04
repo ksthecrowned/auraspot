@@ -1,6 +1,7 @@
 import { getMetadata } from '@/lib/metadata';
 import { fetchMusicMetadata } from '@/lib/music';
 import { fetchLimit, generalLimit, subscribeLimit } from '@/lib/ratelimit';
+import { parseViewSource } from '@/lib/share-card';
 import { PLATFORMS, normalizeSocialLinks } from '@/lib/social-platforms';
 import { fetchTweet } from '@/lib/twitter';
 import {
@@ -24,6 +25,7 @@ import {
   addProfileLinkBento,
   assertCanEditProfileLink,
   canModifyProfileLink,
+  countShareCardViews,
   createProfileLink,
   deleteProfileLink,
   deleteProfileLinkBento,
@@ -138,6 +140,7 @@ export const profileLinkRouter = createTRPCRouter({
           userAgent: ctx.req.headers.get('user-agent') ?? 'Unknown',
           referrer: ctx.req.headers.get('referer') ?? undefined,
           country,
+          source: parseViewSource(input.src),
         })
       );
 
@@ -240,6 +243,7 @@ export const profileLinkRouter = createTRPCRouter({
         topReferrers,
         deviceBreakdown,
         geoBreakdown,
+        shareCardViews,
       ] = await Promise.all([
         getProfileLinkViews(input.linkId),
         getProfileLinkUniqueViews(input.linkId),
@@ -250,6 +254,7 @@ export const profileLinkRouter = createTRPCRouter({
         getTopReferrers(input.linkId, input.days),
         getDeviceBreakdown(input.linkId, input.days),
         getGeoBreakdown(input.linkId, input.days),
+        countShareCardViews(input.linkId, input.days),
       ]);
 
       return {
@@ -262,6 +267,7 @@ export const profileLinkRouter = createTRPCRouter({
         topReferrers,
         deviceBreakdown,
         geoBreakdown,
+        shareCardViews,
       };
     }),
 

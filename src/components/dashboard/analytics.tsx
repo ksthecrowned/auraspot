@@ -25,6 +25,7 @@ import {
   Monitor,
   MousePointerClick,
   Percent,
+  Share2,
   Users,
 } from 'lucide-react';
 import { type ReactNode, useId, useState } from 'react';
@@ -364,6 +365,11 @@ export default function Analytics({ linkId }: { linkId: string }) {
                   ? `${Math.round((data.clicks / data.views) * 100)} %`
                   : '0 %'
               }
+            />
+            <StatTile
+              icon={Share2}
+              label="Visites venues des cartes de partage"
+              value={formatThousands(data.shareCardViews)}
             />
           </div>
 
