@@ -60,6 +60,7 @@ export const supportRouter = createTRPCRouter({
         amount: input.amount,
         displayName: input.displayName,
         isPublic: input.isPublic,
+        message: input.message,
         userId: ctx.session?.user?.id ?? null,
         interval: input.interval,
       });

@@ -16,6 +16,13 @@ export const CreateSupportSchema = z.object({
     .or(z.literal(''))
     .transform((value) => value || undefined),
   isPublic: z.boolean().default(false),
+  message: z
+    .string()
+    .trim()
+    .max(280)
+    .optional()
+    .or(z.literal(''))
+    .transform((value) => value || undefined),
   interval: z.enum(['once', 'month']).default('once'),
 });
 

@@ -3,6 +3,7 @@ import CreateSupportForm from '@/components/forms/create-support';
 import PersonalityPageShell from '@/components/personality-page-shell';
 import { auth } from '@/lib/auth';
 import { MAX_SUPPORT_AMOUNT, MIN_SUPPORT_AMOUNT } from '@/lib/money';
+import { firstNameOf } from '@/lib/personality';
 import { getSupportPage } from '@/server/db/utils/support';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
@@ -63,6 +64,7 @@ export default async function SupportPage({ params, searchParams }: PageProps) {
           signedIn={Boolean(session)}
           initialAmount={initialAmount(query.amount)}
           defaultDisplayName={session?.user.name}
+          firstName={firstNameOf(personality.name)}
         />
       ) : (
         <p className={`${AURA_NOTICE} text-center text-muted-foreground`}>

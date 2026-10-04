@@ -1,4 +1,5 @@
 import { env } from '@/env.mjs';
+import { dedicationForCreate } from '@/lib/dedication';
 import {
   MAX_SUPPORT_AMOUNT,
   MIN_SUPPORT_AMOUNT,
@@ -260,6 +261,7 @@ export const createSupportCheckout = async (input: {
   amount: number;
   displayName?: string;
   isPublic: boolean;
+  message?: string;
   userId?: string | null;
   interval: 'once' | 'month';
 }): Promise<CheckoutResult> => {
@@ -307,6 +309,10 @@ export const createSupportCheckout = async (input: {
       currency: SUPPORT_CURRENCY,
       displayName: input.displayName,
       isPublic: input.isPublic,
+      message: dedicationForCreate({
+        message: input.message,
+        isPublic: input.isPublic,
+      }),
     })
     .returning({ id: support.id });
   const supportRow = insertedSupport[0];

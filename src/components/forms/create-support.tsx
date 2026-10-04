@@ -5,11 +5,13 @@ import {
   AURA_INPUT,
   AURA_NOTICE,
   AURA_PRIMARY_BUTTON,
+  AURA_TEXTAREA,
   SegmentedControl,
 } from '@/components/forms/aura-fields';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { DEDICATION_MAX_LENGTH } from '@/lib/dedication';
 import {
   MAX_SUPPORT_AMOUNT,
   MIN_SUPPORT_AMOUNT,
@@ -34,12 +36,14 @@ export default function CreateSupportForm({
   signedIn,
   initialAmount,
   defaultDisplayName,
+  firstName,
 }: {
   slug: string;
   signedIn: boolean;
   initialAmount?: number;
   // Signed-in donor's name, used to prefill the name field.
   defaultDisplayName?: string;
+  firstName: string;
 }) {
   const router = useRouter();
   const createSupport = api.support.create.useMutation();
@@ -50,6 +54,7 @@ export default function CreateSupportForm({
     defaultDisplayName?.slice(0, 80) ?? ''
   );
   const [isPublic, setIsPublic] = useState(false);
+  const [message, setMessage] = useState('');
   const [interval, setInterval] = useState<'once' | 'month'>('once');
   const [error, setError] = useState<string | null>(null);
 
@@ -71,6 +76,7 @@ export default function CreateSupportForm({
         amount: parsed,
         displayName,
         isPublic,
+        message,
         interval,
       });
       router.push(result.checkoutPath);
@@ -165,6 +171,27 @@ export default function CreateSupportForm({
             onCheckedChange={setIsPublic}
           />
         </label>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="message">Votre message pour {firstName}</Label>
+          <textarea
+            id="message"
+            value={message}
+            maxLength={DEDICATION_MAX_LENGTH}
+            disabled={!isPublic}
+            placeholder="Un mot qui restera sur la fiche"
+            onChange={(event) => setMessage(event.target.value)}
+            className={AURA_TEXTAREA}
+          />
+          {isPublic ? (
+            <span className="text-muted-foreground text-xs">
+              {message.trim().length}/{DEDICATION_MAX_LENGTH}
+            </span>
+          ) : (
+            <span className="text-muted-foreground text-xs">
+              Les messages accompagnent un soutien public.
+            </span>
+          )}
+        </div>
       </div>
 
       {error && <p className={AURA_ERROR}>{error}</p>}
