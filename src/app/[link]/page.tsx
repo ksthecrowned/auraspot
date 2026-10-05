@@ -174,14 +174,6 @@ export default async function Page({ params, searchParams }: Props) {
                           hasGoal={Boolean(goal)}
                         />
                       )}
-                      {published && (goal || profileLink.canEdit) && (
-                        <a
-                          href={`/${profileLink.link}/objectifs`}
-                          className="text-muted-foreground text-sm underline-offset-4 hover:underline"
-                        >
-                          Historique des objectifs
-                        </a>
-                      )}
                       <OfficialSocials profileLink={profileLink} />
                       {canDonate && (
                         <SupportButton

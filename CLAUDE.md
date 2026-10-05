@@ -4,7 +4,7 @@ Annuaire de personnalités, dérivé d'OpenBio (AGPL-3.0). Fiches publiques à `
 
 ## Tech Stack
 
-- **Framework** : Next.js 16 (App Router, Turbopack)
+- **Framework** : Next.js 16 (App Router). Le serveur de développement utilise webpack : Turbopack entre dans une boucle de plantage sous Windows (`Next.js package not found`).
 - **Language** : TypeScript 5.7+ (mode strict, `noUncheckedIndexedAccess`)
 - **Runtime** : Bun
 - **Styling** : Tailwind CSS 4 (configuration CSS dans `src/styles/globals.css`)
@@ -24,7 +24,7 @@ Annuaire de personnalités, dérivé d'OpenBio (AGPL-3.0). Fiches publiques à `
 ## Commands
 
 ```bash
-bun dev              # Serveur de développement (Turbopack)
+bun dev              # Serveur de développement (webpack)
 bun run build        # Build de production
 bun run lint         # Lint Biome
 bun run lint:fix     # Lint et corrections

@@ -4,23 +4,36 @@ import type { PublicGoal } from '@/server/db/utils/support-goal';
 export default function SupportGoalCard({
   goal,
   collected,
+  closedAt,
 }: {
   goal: PublicGoal;
   collected?: number;
+  closedAt?: Date | null;
 }) {
   const reached = goal.percent >= 100;
   return (
     <section className="flex flex-col gap-3 rounded-[1.25rem] border border-border/70 bg-card p-5">
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="font-semibold text-sm">Objectif</h2>
-        {goal.endsAt && (
+        {closedAt ? (
           <span className="text-muted-foreground text-xs">
-            Jusqu’au{' '}
-            {goal.endsAt.toLocaleDateString('fr-FR', {
+            Clôturé le{' '}
+            {closedAt.toLocaleDateString('fr-FR', {
               day: 'numeric',
               month: 'long',
+              year: 'numeric',
             })}
           </span>
+        ) : (
+          goal.endsAt && (
+            <span className="text-muted-foreground text-xs">
+              Jusqu’au{' '}
+              {goal.endsAt.toLocaleDateString('fr-FR', {
+                day: 'numeric',
+                month: 'long',
+              })}
+            </span>
+          )
         )}
       </div>
       <p className="font-bold font-brand text-lg">{goal.title}</p>

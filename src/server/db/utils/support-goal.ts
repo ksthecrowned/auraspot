@@ -160,10 +160,14 @@ export async function listClosedGoals(personalityId: string) {
     )
     .orderBy(desc(supportGoal.closedAt));
   return Promise.all(
-    rows.map(async (row) => ({
-      ...toPublic(row, await progressOf(row.id)),
-      closedAt: row.closedAt,
-    }))
+    rows.map(async (row) => {
+      const progress = await progressOf(row.id);
+      return {
+        ...toPublic(row, progress),
+        collected: progress.collected,
+        closedAt: row.closedAt,
+      };
+    })
   );
 }
 

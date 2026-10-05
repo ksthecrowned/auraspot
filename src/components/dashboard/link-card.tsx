@@ -31,6 +31,7 @@ import {
   Loader2,
   MoreHorizontal,
   QrCode,
+  Target,
   Trash2,
   Wallet,
 } from 'lucide-react';
@@ -185,6 +186,13 @@ export function DashboardLinkCard({ link }: { link: ProfileLink }) {
           title="Retraits"
         >
           <Wallet className="size-4" />
+        </Link>
+        <Link
+          href={`/${link.link}/objectifs`}
+          className={ICON_BUTTON}
+          title="Historique des objectifs"
+        >
+          <Target className="size-4" />
         </Link>
         <LinkQRModal linkSlug={link.link}>
           <button type="button" className={ICON_BUTTON} title="QR code">
