@@ -40,7 +40,8 @@ export const env = createEnv({
     AIRTEL_CLIENT_SECRET: z.string().min(1).optional(),
     AIRTEL_COUNTRY: z.string().min(1).optional(),
     AIRTEL_CURRENCY: z.string().min(1).optional(),
-    // Bearer token Vercel Cron sends to /api/cron/* (required for the crons to run).
+    // Bearer token for /api/cron/*. Vercel sends Authorization: Bearer <value>
+    // only when this is set; the routes return 401 otherwise. Min 16 chars.
     CRON_SECRET: z.string().min(16).optional(),
     PAYMENTS_WEBHOOK_SECRET: z.string().min(16).optional(),
     // Nyole hosted checkout (card + mobile money). Secret key af_(test|live)_sec_…

@@ -168,7 +168,7 @@ Produit et paiements :
 - `ADMIN_EMAILS` — e-mails administrateurs, séparés par des virgules
 - `SUPPORT_COMMISSION_BPS` — commission au retrait, en points de base (défaut 1000 = 10 %)
 - `PAYMENTS_WEBHOOK_SECRET` — secret des webhooks paiements et retraits
-- `CRON_SECRET` — protection de `/api/cron/*`
+- `CRON_SECRET` — jeton Bearer de `/api/cron/digest` et `/api/cron/recurring` (au moins 16 caractères). Le générer avec `openssl rand -base64 32`. Vercel ne l'envoie dans `Authorization: Bearer <CRON_SECRET>` que si la variable est définie sur le projet. Sans elle, les deux routes répondent 401 et le travail planifié ne s'exécute pas. La poser sur Production, puis redéployer. En local : `curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/recurring`
 - `NYOLE_SECRET_KEY`, `NYOLE_BASE_URL`
 - `MOMO_BASE_URL`, `MOMO_TARGET_ENVIRONMENT`, `MOMO_COLLECTION_SUBSCRIPTION_KEY`, `MOMO_API_USER`, `MOMO_API_KEY`, `MOMO_CURRENCY`, `MOMO_COUNTRY`
 - `AIRTEL_BASE_URL`, `AIRTEL_CLIENT_ID`, `AIRTEL_CLIENT_SECRET`, `AIRTEL_COUNTRY`, `AIRTEL_CURRENCY`
