@@ -8,7 +8,8 @@ import {
 import Background from '@/components/background';
 import { TailwindIndicator } from '@/components/tailwind-indicator';
 import { Toaster } from '@/components/ui/toaster';
-import { Analytics } from '@vercel/analytics/react';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata, Viewport } from 'next';
 import { Geist, Outfit } from 'next/font/google';
 import LocalFont from 'next/font/local';
@@ -63,6 +64,7 @@ export default function RootLayout({
         <Toaster />
         <TailwindIndicator />
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
