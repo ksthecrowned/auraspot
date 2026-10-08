@@ -24,16 +24,22 @@ export default function SupportButton({
   const button = (
     <Link
       href={`/support/${slug}`}
+      aria-label={`Faire un don à ${name}`}
       className="aura-cta flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 font-brand font-semibold text-base shadow-[0_10px_30px_-10px_rgba(180,60,240,0.6)] transition-transform hover:scale-[1.02] active:scale-[0.98]"
     >
       <Heart className="size-4 fill-current" />
-      {/* Soutenir {firstNameOf(name)} */}
       Faire un don
     </Link>
   );
 
   if (variant === 'inline') {
-    return <div className="@4xl:block hidden">{button}</div>;
+    // Visitors already get the sticky bar below the large layout. Editors
+    // never see that bar, so their button stays in the column at every width.
+    return (
+      <div className={canEdit && !preview ? undefined : 'hidden @4xl:block'}>
+        {button}
+      </div>
+    );
   }
 
   return (

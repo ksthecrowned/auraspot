@@ -158,6 +158,14 @@ export default async function Page({ params, searchParams }: Props) {
                   <div className="mt-8 grid @4xl:grid-cols-[340px_minmax(0,1fr)] @4xl:gap-12 gap-8">
                     <aside className="@4xl:sticky @4xl:top-8 flex flex-col gap-5 @4xl:self-start">
                       <ProfileHero profileLink={profileLink} />
+                      {canDonate && (
+                        <SupportButton
+                          slug={profileLink.link}
+                          name={profileLink.name}
+                          canEdit={profileLink.canEdit}
+                          variant="inline"
+                        />
+                      )}
                       {goal && (
                         <SupportGoalCard
                           goal={goal}
@@ -171,14 +179,6 @@ export default async function Page({ params, searchParams }: Props) {
                         />
                       )}
                       <OfficialSocials profileLink={profileLink} />
-                      {canDonate && (
-                        <SupportButton
-                          slug={profileLink.link}
-                          name={profileLink.name}
-                          canEdit={profileLink.canEdit}
-                          variant="inline"
-                        />
-                      )}
                     </aside>
 
                     <main className="flex min-w-0 flex-col gap-8">

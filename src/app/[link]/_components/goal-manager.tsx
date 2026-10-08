@@ -94,13 +94,18 @@ export default function GoalManager({
 
   if (!open) {
     return (
-      <button
-        type="button"
-        className={AURA_SECONDARY_BUTTON}
-        onClick={() => setOpen(true)}
-      >
-        Lancer un objectif
-      </button>
+      <div className="flex flex-col gap-2">
+        <button
+          type="button"
+          className={AURA_SECONDARY_BUTTON}
+          onClick={() => setOpen(true)}
+        >
+          Lancer un objectif
+        </button>
+        <p className="text-muted-foreground text-xs">
+          Les dons restent possibles sans objectif.
+        </p>
+      </div>
     );
   }
 
