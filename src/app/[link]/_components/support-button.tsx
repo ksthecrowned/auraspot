@@ -36,7 +36,7 @@ export default function SupportButton({
     // Visitors already get the sticky bar below the large layout. Editors
     // never see that bar, so their button stays in the column at every width.
     return (
-      <div className={canEdit && !preview ? undefined : 'hidden @4xl:block'}>
+      <div className={canEdit && !preview ? undefined : '@4xl:block hidden'}>
         {button}
       </div>
     );
