@@ -18,6 +18,10 @@ export default function Community({
 }) {
   const names = supporters.recent.map((item) => item.displayName);
 
+  if (supporters.count === 0) {
+    return null;
+  }
+
   return (
     <section className="flex flex-col gap-3">
       <h2 className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">

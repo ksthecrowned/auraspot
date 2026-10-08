@@ -43,7 +43,7 @@ export default function SupportButton({
   }
 
   return (
-    <div className="sticky bottom-0 z-40 mt-6 @4xl:hidden bg-linear-to-t from-35% from-background to-transparent px-1 pt-6 pb-4">
+    <div className="sticky bottom-0 z-40 @4xl:hidden bg-linear-to-t from-35% from-background to-transparent px-1 pb-4">
       {button}
     </div>
   );
