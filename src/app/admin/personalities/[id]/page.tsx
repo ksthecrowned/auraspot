@@ -1,6 +1,8 @@
 import { FichePhoto } from '@/components/admin/fiche-photo';
+import { FounderToggle } from '@/components/admin/founder-toggle';
 import { PersonalityFicheForm } from '@/components/admin/personality-fiche-form';
 import { VerificationToggle } from '@/components/admin/verification-toggle';
+import { founderOfferEndsAt } from '@/lib/money';
 import { api } from '@/trpc/server';
 import { TRPCError } from '@trpc/server';
 import Link from 'next/link';
@@ -12,6 +14,15 @@ type PageProps = {
 };
 
 const UUID_RE = /^[0-9a-f-]{36}$/i;
+
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(date);
+}
 
 export function generateMetadata() {
   return adminPageMetadata('Modifier la fiche');
@@ -68,11 +79,23 @@ export default async function EditPersonalityPage({ params }: PageProps) {
               Voir la fiche
             </Link>
           </p>
+          {fiche.founderSince && (
+            <p className="mt-2 text-muted-foreground text-sm">
+              Fondateur depuis le {formatDate(fiche.founderSince)}, 0 % jusqu’au{' '}
+              {formatDate(founderOfferEndsAt(fiche.founderSince))}
+            </p>
+          )}
         </div>
-        <VerificationToggle
-          personalityId={fiche.id}
-          verified={fiche.verificationStatus === 'verified'}
-        />
+        <div className="flex flex-wrap items-start gap-2">
+          <VerificationToggle
+            personalityId={fiche.id}
+            verified={fiche.verificationStatus === 'verified'}
+          />
+          <FounderToggle
+            personalityId={fiche.id}
+            founder={fiche.founderSince !== null}
+          />
+        </div>
       </div>
       <div className="mt-8 flex flex-col gap-8">
         <FichePhoto

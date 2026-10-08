@@ -4,6 +4,7 @@ import {
   twitterMetadata,
 } from '@/app/shared-metadata';
 import OnboardingTour from '@/components/onboarding-tour';
+import { bioPlainText } from '@/lib/admin-fiche';
 import { parseViewSource } from '@/lib/share-card';
 import { SITE_URL } from '@/lib/site';
 import { canReceiveSupport } from '@/lib/support-eligibility';
@@ -45,8 +46,6 @@ const getProfileLink = cache((link: string, src?: string) => {
   return api.profileLink.getByLink({ link, src });
 });
 
-const HTML_TAG_RE = /<[^>]*>/g;
-
 export async function generateMetadata({
   params,
   searchParams,
@@ -58,10 +57,7 @@ export async function generateMetadata({
 
   const title = profileLink?.name ?? defaultMetadata.title;
   const description = profileLink
-    ? (profileLink.bio ?? `This is ${profileLink.name}'s profile.`).replace(
-        HTML_TAG_RE,
-        ''
-      )
+    ? bioPlainText(profileLink.bio) || `This is ${profileLink.name}'s profile.`
     : defaultMetadata.description;
   const image = `/api/og?title=${encodeURIComponent(title)}&description=${encodeURIComponent(description)}`;
 
@@ -107,7 +103,7 @@ export default async function Page({ params, searchParams }: Props) {
       ])
     : [null, null];
 
-  const bio = (profileLink.bio ?? '').replace(HTML_TAG_RE, '');
+  const bio = bioPlainText(profileLink.bio);
   const profileUrl = `${SITE_URL}/${profileLink.link}`;
 
   const jsonLd = {

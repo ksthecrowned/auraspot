@@ -54,6 +54,7 @@ export const link = pgTable(
     })
       .default('unverified')
       .notNull(),
+    founderSince: timestamp('founder_since', { withTimezone: true }),
     status: text('publication_status', { enum: linkPublicationStatuses })
       .default('active')
       .notNull(),

@@ -17,6 +17,7 @@ import {
 import {
   listClaimsForReview,
   reviewPersonalityClaim,
+  setPersonalityFounder,
   setPersonalityVerification,
 } from '@/server/db/utils/personality';
 import { reviewWithdrawal } from '@/server/db/utils/support';
@@ -35,6 +36,7 @@ import {
 } from '../schemas/admin';
 import {
   ReviewPersonalityClaimSchema,
+  SetPersonalityFounderSchema,
   SetPersonalityVerificationSchema,
 } from '../schemas/personality';
 
@@ -237,6 +239,19 @@ export const adminRouter = createTRPCRouter({
     .input(SetPersonalityVerificationSchema)
     .mutation(async ({ input }) => {
       const result = await setPersonalityVerification(input);
+      if ('error' in result) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Cette fiche est introuvable.',
+        });
+      }
+      return result.personality;
+    }),
+
+  setFounder: adminProcedure
+    .input(SetPersonalityFounderSchema)
+    .mutation(async ({ input }) => {
+      const result = await setPersonalityFounder(input);
       if ('error' in result) {
         throw new TRPCError({
           code: 'NOT_FOUND',

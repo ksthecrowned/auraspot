@@ -7,7 +7,11 @@ import {
 import { PhoneField } from '@/components/forms/mobile-money-checkout';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MIN_SUPPORT_AMOUNT, formatFcfa } from '@/lib/money';
+import {
+  MAX_WITHDRAWAL_AMOUNT,
+  MIN_SUPPORT_AMOUNT,
+  formatFcfa,
+} from '@/lib/money';
 import { PHONE_COUNTRIES } from '@/lib/phone-countries';
 import { cn } from '@/lib/utils';
 import { type RouterOutputs, api } from '@/trpc/react';
@@ -59,6 +63,12 @@ export default function RequestWithdrawalForm({ page }: { page: PageData }) {
     const parsed = Number(amount);
     if (!Number.isInteger(parsed) || parsed < MIN_SUPPORT_AMOUNT) {
       setError('Indiquez un montant en francs CFA.');
+      return;
+    }
+    if (parsed > MAX_WITHDRAWAL_AMOUNT) {
+      setError(
+        `Un retrait ne peut pas dépasser ${formatFcfa(MAX_WITHDRAWAL_AMOUNT)} pendant la bêta.`
+      );
       return;
     }
     try {

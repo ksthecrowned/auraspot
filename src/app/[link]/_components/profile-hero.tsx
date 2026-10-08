@@ -1,6 +1,12 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { formatThousands } from '@/lib/money';
 import { type RouterOutputs, api } from '@/trpc/react';
 import { AlertTriangle, BarChart3, MapPin, Pencil, Tag } from 'lucide-react';
@@ -19,11 +25,13 @@ function HeroName({
   name,
   onChange,
   verified,
+  founder,
 }: {
   name: string;
   // Set when the viewer can edit: the name becomes an input.
   onChange?: (name: string) => void;
   verified: boolean;
+  founder: boolean;
 }) {
   if (onChange) {
     return (
@@ -39,6 +47,7 @@ function HeroName({
           className="min-w-0 max-w-full bg-transparent @4xl:text-left text-center font-bold font-brand @4xl:text-4xl text-3xl leading-tight outline-none [field-sizing:content]"
         />
         {verified && <PersonalityVerificationBadge />}
+        {founder && <FounderBadge />}
       </div>
     );
   }
@@ -51,7 +60,29 @@ function HeroName({
           <PersonalityVerificationBadge />
         </span>
       )}
+      {founder && (
+        <span className="ml-2 inline-block align-middle">
+          <FounderBadge />
+        </span>
+      )}
     </h1>
+  );
+}
+
+function FounderBadge() {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 font-medium text-primary text-xs">
+            Fondateur
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Parmi les premiers créateurs d’AuraSpot.</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
@@ -113,6 +144,7 @@ export default function ProfileHero({
         name={isEditable ? name : profileLink.name}
         onChange={isEditable ? setName : undefined}
         verified={profileLink.verificationStatus === 'verified'}
+        founder={Boolean(profileLink.founderSince)}
       />
 
       {(category || location || isEditable) && (

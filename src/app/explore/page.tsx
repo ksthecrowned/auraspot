@@ -2,7 +2,9 @@ import PersonalityVerificationBadge from '@/app/[link]/_components/personality-v
 import { AuraAvatar } from '@/components/aura-avatar';
 import { AuraOrb } from '@/components/brand';
 import { AURA_CARD_CLASS } from '@/components/forms/aura-fields';
+import { InlineMarkup } from '@/components/inline-markup';
 import SiteHeader from '@/components/site-header';
+import { plainTextFromBio } from '@/lib/admin-fiche';
 import { formatThousands } from '@/lib/money';
 import { cn } from '@/lib/utils';
 import {
@@ -22,7 +24,6 @@ export const metadata: Metadata = {
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 const CATEGORY_SLUG_RE = /^[a-z0-9-]+$/;
-const HTML_TAG_RE = /<[^>]*>/g;
 
 function firstParam(value: string | string[] | undefined) {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -185,7 +186,7 @@ export default async function PersonalitiesPage({
         ) : (
           <ul className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {personalities.map((personality) => {
-              const bio = personality.bio?.replace(HTML_TAG_RE, '').trim();
+              const bio = plainTextFromBio(personality.bio);
               return (
                 <li key={personality.id}>
                   <Link
@@ -237,7 +238,7 @@ export default async function PersonalitiesPage({
 
                     {bio && (
                       <p className="line-clamp-2 text-muted-foreground text-sm leading-relaxed">
-                        {bio}
+                        <InlineMarkup text={bio} />
                       </p>
                     )}
                   </Link>

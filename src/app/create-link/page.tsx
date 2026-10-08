@@ -1,10 +1,12 @@
 'use client';
 
 import { SocialIcon } from '@/components/icons/social-icons';
+import { InlineMarkup } from '@/components/inline-markup';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { bioFromPlainText } from '@/lib/admin-fiche';
 import { ROOT_DOMAIN } from '@/lib/site';
 import {
   PLATFORMS,
@@ -96,7 +98,7 @@ export default function Page() {
       await createLink({
         link,
         name: name || undefined,
-        bio: bio || undefined,
+        bio: bioFromPlainText(bio) ?? undefined,
         socials: filledSocials,
       });
       router.push(`/${link}`);
@@ -243,7 +245,7 @@ export default function Page() {
                     </p>
                     {bio && (
                       <p className="mt-1.5 line-clamp-2 max-w-55 text-[10px] text-muted-foreground leading-relaxed">
-                        {bio}
+                        <InlineMarkup text={bio} />
                       </p>
                     )}
                   </div>

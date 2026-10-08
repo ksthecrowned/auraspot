@@ -1,3 +1,4 @@
+import { InlineMarkup } from '@/components/inline-markup';
 import { formatFcfa } from '@/lib/money';
 import type { PublicGoal } from '@/server/db/utils/support-goal';
 
@@ -38,8 +39,8 @@ export default function SupportGoalCard({
       </div>
       <p className="font-bold font-brand text-lg">{goal.title}</p>
       {goal.description && (
-        <p className="whitespace-pre-wrap text-muted-foreground text-sm">
-          {goal.description}
+        <p className="wrap-break-word text-muted-foreground text-sm">
+          <InlineMarkup text={goal.description} />
         </p>
       )}
       <div className="h-2 overflow-hidden rounded-full bg-muted">

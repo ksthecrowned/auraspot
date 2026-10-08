@@ -3,10 +3,15 @@ import { isAdminEmail } from '@/lib/admin';
 import { clampDedicationLines, dedicationForCreate } from '@/lib/dedication';
 import {
   MAX_SUPPORT_AMOUNT,
+  MAX_WITHDRAWAL_AMOUNT,
   MIN_SUPPORT_AMOUNT,
+  NYOLE_HOLD_DAYS,
   SUPPORT_CURRENCY,
+  commissionBpsFor,
+  founderOfferEndsAt,
   splitWithdrawal,
   supportCommissionBps,
+  withdrawableBalance,
 } from '@/lib/money';
 import { redis } from '@/lib/redis';
 import {
@@ -871,23 +876,19 @@ export const syncPayment = async (
   return status;
 };
 
-async function ledgerBalance(personalityId: string) {
+async function ledgerEntries(personalityId: string) {
   const entries = await db
     .select({
       entryType: ledgerEntry.entryType,
       amount: ledgerEntry.amount,
+      createdAt: ledgerEntry.createdAt,
+      paymentId: ledgerEntry.paymentId,
+      provider: payment.provider,
     })
     .from(ledgerEntry)
+    .leftJoin(payment, eq(ledgerEntry.paymentId, payment.id))
     .where(eq(ledgerEntry.personalityId, personalityId));
-  let balance = 0;
-  for (const entry of entries) {
-    if (entry.entryType === 'credit') {
-      balance += entry.amount;
-    } else {
-      balance -= entry.amount;
-    }
-  }
-  return balance;
+  return entries;
 }
 
 export const getWithdrawalPage = async (slug: string, userId: string) => {
@@ -898,7 +899,13 @@ export const getWithdrawalPage = async (slug: string, userId: string) => {
         equals(table.status, 'active'),
         equals(table.isPublic, true)
       ),
-    columns: { id: true, link: true, name: true, userId: true },
+    columns: {
+      id: true,
+      link: true,
+      name: true,
+      userId: true,
+      founderSince: true,
+    },
   });
   if (!personalityRow) {
     return null;
@@ -925,7 +932,22 @@ export const getWithdrawalPage = async (slug: string, userId: string) => {
       )
     );
   const reserved = pendingRows.reduce((sum, row) => sum + row.grossAmount, 0);
-  const available = (await ledgerBalance(personalityRow.id)) - reserved;
+  const now = new Date();
+  const balance = withdrawableBalance(
+    (await ledgerEntries(personalityRow.id)).map((entry) => ({
+      entryType: entry.entryType,
+      amount: entry.amount,
+      createdAt: entry.createdAt,
+      paymentId: entry.paymentId,
+      held: entry.provider === NYOLE_PROVIDER,
+    })),
+    reserved,
+    now,
+    NYOLE_HOLD_DAYS
+  );
+  const offerEndsAt = personalityRow.founderSince
+    ? founderOfferEndsAt(personalityRow.founderSince)
+    : null;
   const requests = await db.query.withdrawal.findMany({
     where: (table, { eq: equals }) =>
       equals(table.personalityId, personalityRow.id),
@@ -955,8 +977,13 @@ export const getWithdrawalPage = async (slug: string, userId: string) => {
       slug: personalityRow.link,
       name: personalityRow.name,
     },
-    available,
-    commissionBps: supportCommissionBps(),
+    ...balance,
+    founderOfferEndsAt: offerEndsAt && now < offerEndsAt ? offerEndsAt : null,
+    commissionBps: commissionBpsFor(
+      personalityRow.founderSince,
+      now,
+      supportCommissionBps()
+    ),
     withdrawals: requests,
     lastPayout:
       last?.payoutOperator &&
@@ -990,6 +1017,7 @@ export const requestWithdrawal = async (input: {
   if (
     !Number.isInteger(input.grossAmount) ||
     input.grossAmount < MIN_SUPPORT_AMOUNT ||
+    input.grossAmount > MAX_WITHDRAWAL_AMOUNT ||
     parts.netAmount <= 0 ||
     input.grossAmount > page.available
   ) {

@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMarkup } from '@/components/inline-markup';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -195,12 +196,13 @@ export function PersonalityFicheForm({
           }}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
         />
-        {fiche && (
-          <p className="text-muted-foreground text-xs">
-            Texte simple. La mise en forme du propriétaire n’est remplacée que
-            si vous modifiez la bio.
-          </p>
-        )}
+        <p className="text-muted-foreground text-xs">
+          Les retours à la ligne sont conservés, et{' '}
+          <InlineMarkup text="**ceci**" /> s’affiche en gras.
+          {fiche
+            ? ' La mise en forme du propriétaire n’est remplacée que si vous modifiez la bio.'
+            : ''}
+        </p>
       </div>
 
       <fieldset className="flex min-w-0 flex-col gap-2">

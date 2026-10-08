@@ -30,6 +30,21 @@ describe('RequestWithdrawalSchema', () => {
         .success
     ).toBe(false);
   });
+
+  test('caps an individual withdrawal at 250,000 FCFA', () => {
+    expect(
+      RequestWithdrawalSchema.safeParse({
+        ...base,
+        grossAmount: 250_000,
+      }).success
+    ).toBe(true);
+    expect(
+      RequestWithdrawalSchema.safeParse({
+        ...base,
+        grossAmount: 250_001,
+      }).success
+    ).toBe(false);
+  });
 });
 
 describe('ReviewWithdrawalSchema', () => {

@@ -127,6 +127,10 @@ export default function GoalManager({
         onChange={(event) => setDescription(event.target.value)}
         className={AURA_TEXTAREA}
       />
+      <p className="text-muted-foreground text-xs">
+        Les retours à la ligne sont conservés. Entourez un passage de ** pour le
+        mettre en gras.
+      </p>
       <div className="flex flex-col gap-2">
         <Label htmlFor="goal-amount">Montant cible (FCFA)</Label>
         <input

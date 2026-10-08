@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { db } from '../db';
 import { link, personalityClaim, personalityManager } from '../schema';
 import { invalidateProfileLinkCache } from './link';
@@ -618,6 +618,28 @@ export const setPersonalityVerification = async (input: {
       id: link.id,
       verificationStatus: link.verificationStatus,
     });
+  const row = updated[0];
+  if (!row) {
+    return { error: 'not-found' as const };
+  }
+  await invalidateProfileLinkCache(row.id);
+  return { personality: row };
+};
+
+export const setPersonalityFounder = async (input: {
+  personalityId: string;
+  founder: boolean;
+}) => {
+  const updated = await db
+    .update(link)
+    .set({
+      founderSince: input.founder
+        ? sql`coalesce(${link.founderSince}, now())`
+        : null,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(link.id, input.personalityId), eq(link.status, 'active')))
+    .returning({ id: link.id, founderSince: link.founderSince });
   const row = updated[0];
   if (!row) {
     return { error: 'not-found' as const };

@@ -51,6 +51,11 @@ export const SetPersonalityVerificationSchema = z.object({
   verified: z.boolean(),
 });
 
+export const SetPersonalityFounderSchema = z.object({
+  personalityId: z.string().uuid(),
+  founder: z.boolean(),
+});
+
 const optionalSearchText = z
   .string()
   .trim()

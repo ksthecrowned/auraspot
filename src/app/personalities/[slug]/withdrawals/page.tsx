@@ -16,6 +16,15 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(date);
+}
+
 export default async function WithdrawalsPage({ params }: PageProps) {
   const { slug } = await params;
   const session = await auth.api.getSession({ headers: await headers() });
@@ -34,16 +43,26 @@ export default async function WithdrawalsPage({ params }: PageProps) {
     <PersonalityPageShell
       slug={page.personality.slug}
       title="Retraits"
-      subtitle={`Commission : ${page.commissionBps / 100} %. Une demande ne verse pas encore l’argent.`}
+      subtitle={
+        page.founderOfferEndsAt
+          ? `Commission : 0 % jusqu’au ${formatDate(page.founderOfferEndsAt)} (offre fondateur).`
+          : `Commission : ${page.commissionBps / 100} %. Une demande ne verse pas encore l’argent.`
+      }
     >
       <div className="flex flex-col gap-6">
         <div className="flex flex-col items-center gap-1 text-center">
-          <span className="text-muted-foreground text-sm">
-            Solde disponible
-          </span>
+          <span className="text-muted-foreground text-sm">Disponible</span>
           <span className="font-bold font-brand text-4xl">
             {formatFcfa(page.available)}
           </span>
+          {page.held > 0 && (
+            <p className="text-muted-foreground text-sm">
+              En attente : {formatFcfa(page.held)}. Les dons par Nyole sont
+              disponibles 14 jours après leur réception.
+              {page.nextReleaseAt &&
+                ` Prochain déblocage le ${formatDate(page.nextReleaseAt)}.`}
+            </p>
+          )}
         </div>
         <RequestWithdrawalForm page={page} />
       </div>

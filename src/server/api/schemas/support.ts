@@ -1,4 +1,8 @@
-import { MAX_SUPPORT_AMOUNT, MIN_SUPPORT_AMOUNT } from '@/lib/money';
+import {
+  MAX_SUPPORT_AMOUNT,
+  MAX_WITHDRAWAL_AMOUNT,
+  MIN_SUPPORT_AMOUNT,
+} from '@/lib/money';
 import * as z from 'zod';
 
 export const SupportSlugSchema = z.object({
@@ -80,7 +84,11 @@ export const PayCheckoutSchema = z.object({
 
 export const RequestWithdrawalSchema = z.object({
   slug: z.string().trim().min(1).max(80),
-  grossAmount: z.number().int().min(MIN_SUPPORT_AMOUNT).max(MAX_SUPPORT_AMOUNT),
+  grossAmount: z
+    .number()
+    .int()
+    .min(MIN_SUPPORT_AMOUNT)
+    .max(MAX_WITHDRAWAL_AMOUNT),
   // Where the net amount is sent. The number is checked per country by
   // toMsisdn() (src/lib/phone-countries.ts).
   payoutOperator: z.enum(['mtn_momo', 'airtel_money']),

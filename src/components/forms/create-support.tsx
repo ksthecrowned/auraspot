@@ -15,6 +15,7 @@ import { DEDICATION_MAX_LENGTH } from '@/lib/dedication';
 import {
   MAX_SUPPORT_AMOUNT,
   MIN_SUPPORT_AMOUNT,
+  formatFcfa,
   formatThousands,
 } from '@/lib/money';
 import { cn } from '@/lib/utils';
@@ -69,7 +70,9 @@ export default function CreateSupportForm({
       parsed < MIN_SUPPORT_AMOUNT ||
       parsed > MAX_SUPPORT_AMOUNT
     ) {
-      setError('Indiquez un montant en francs CFA, entre 100 et 2 000 000.');
+      setError(
+        `Le montant doit être compris entre ${formatFcfa(MIN_SUPPORT_AMOUNT)} et ${formatFcfa(MAX_SUPPORT_AMOUNT)}.`
+      );
       return;
     }
     try {

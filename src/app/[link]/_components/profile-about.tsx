@@ -1,5 +1,6 @@
 'use client';
 
+import { bioForDisplay } from '@/lib/admin-fiche';
 import { type RouterOutputs, api } from '@/trpc/react';
 import Highlight from '@tiptap/extension-highlight';
 import TiptapLink from '@tiptap/extension-link';
@@ -50,12 +51,12 @@ export default function ProfileAbout({
   const editor = useEditor({
     immediatelyRender: false,
     extensions,
-    content: initialData.bio,
+    content: bioForDisplay(initialData.bio),
     editable: isEditable,
     editorProps: {
       attributes: {
         class:
-          'prose prose-sm dark:prose-invert max-w-none text-foreground/80 focus:outline-none prose-p:my-1',
+          'prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap text-foreground/80 focus:outline-none [&_b]:font-bold [&_p+p]:mt-3 [&_strong]:font-bold prose-p:my-1',
       },
     },
     onUpdate: ({ editor: current }) => setBio(current.getHTML()),

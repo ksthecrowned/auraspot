@@ -160,6 +160,7 @@ export const getPersonalityForAdmin = async (personalityId: string) => {
       isPublic: true,
       claimStatus: true,
       verificationStatus: true,
+      founderSince: true,
     },
     with: {
       socialLinks: {
