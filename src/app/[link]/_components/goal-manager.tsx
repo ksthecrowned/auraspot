@@ -102,9 +102,6 @@ export default function GoalManager({
         >
           Lancer un objectif
         </button>
-        <p className="text-muted-foreground text-xs">
-          Les dons restent possibles sans objectif.
-        </p>
       </div>
     );
   }

@@ -129,6 +129,15 @@
   }
 }
 
+/* Tiptap placeholder: empty bio and notes otherwise show a blank line. */
+.tiptap p.is-editor-empty:first-child::before {
+  float: left;
+  height: 0;
+  color: var(--muted-foreground);
+  content: attr(data-placeholder);
+  pointer-events: none;
+}
+
 /* Match bento card rounding on drag placeholder */
 .react-grid-placeholder {
   border-radius: 1rem !important;

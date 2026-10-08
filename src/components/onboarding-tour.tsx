@@ -18,7 +18,7 @@ const TOUR_STEPS: TourStep[] = [
     target: '[data-tour="profile-header"]',
     title: 'Votre profil',
     description:
-      'Cliquez sur le nom ou la bio pour les modifier. Touchez l’avatar pour le changer.',
+      'Cliquez sur le nom pour le modifier. Le bouton à côté de « À propos » ouvre la bio. Touchez l’avatar pour le changer.',
     placement: 'bottom',
   },
   {

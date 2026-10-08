@@ -1,6 +1,8 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import { bioForDisplay } from '@/lib/admin-fiche';
+import { cn } from '@/lib/utils';
 import { type RouterOutputs, api } from '@/trpc/react';
 import Highlight from '@tiptap/extension-highlight';
 import TiptapLink from '@tiptap/extension-link';
@@ -9,6 +11,7 @@ import { Color, TextStyle } from '@tiptap/extension-text-style';
 import TiptapUnderline from '@tiptap/extension-underline';
 import { EditorContent, type Extension, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { Pencil } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import BioToolbar from './bio-toolbar';
@@ -19,6 +22,7 @@ const extensions = [
   Placeholder.configure({
     placeholder: 'Présentez-vous en quelques lignes…',
     showOnlyWhenEditable: true,
+    showOnlyCurrent: false,
   }),
   TiptapLink.configure({ openOnClick: false }),
   TiptapUnderline,
@@ -45,7 +49,9 @@ export default function ProfileAbout({
   const { mutate: updateProfileLink } = api.profileLink.update.useMutation();
 
   const [bio, setBio] = useState(initialData.bio ?? '');
+  const [toolbarOpen, setToolbarOpen] = useState(false);
   const lastSavedBio = useRef(initialData.bio ?? '');
+  const sectionRef = useRef<HTMLElement>(null);
   const isEditable = Boolean(profileLink?.canEdit) && !preview;
 
   const editor = useEditor({
@@ -60,6 +66,14 @@ export default function ProfileAbout({
       },
     },
     onUpdate: ({ editor: current }) => setBio(current.getHTML()),
+    onFocus: () => setToolbarOpen(true),
+    onBlur: ({ event }) => {
+      const next = event.relatedTarget;
+      if (next instanceof Node && sectionRef.current?.contains(next)) {
+        return;
+      }
+      setToolbarOpen(false);
+    },
   });
 
   useEffect(() => {
@@ -87,17 +101,40 @@ export default function ProfileAbout({
   }
 
   return (
-    <section className="flex flex-col gap-2">
-      <h2 className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
-        À propos
-      </h2>
-      <div className="group/bio relative">
-        <EditorContent editor={editor} />
-        {isEditable && editor && (
-          <div className="invisible absolute left-0 z-40 mt-1 group-focus-within/bio:visible">
-            <BioToolbar editor={editor} />
-          </div>
+    <section ref={sectionRef} className="flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+          À propos
+        </h2>
+        {isEditable && (
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="h-7 rounded-full px-2.5 text-xs"
+            onClick={() => {
+              setToolbarOpen(true);
+              editor?.commands.focus('end');
+            }}
+          >
+            <Pencil className="mr-1 size-3.5" />
+            {hasBio ? 'Modifier' : 'Ajouter une bio'}
+          </Button>
         )}
+      </div>
+      {isEditable && toolbarOpen && editor && (
+        // biome-ignore lint/nursery/noStaticElementInteractions: keeps the caret in the bio while a format button is pressed
+        <div onMouseDown={(event) => event.preventDefault()}>
+          <BioToolbar editor={editor} />
+        </div>
+      )}
+      <div
+        className={cn(
+          isEditable &&
+            'cursor-text rounded-xl px-3 py-2 ring-1 ring-border/70 focus-within:ring-foreground/25'
+        )}
+      >
+        <EditorContent editor={editor} />
       </div>
     </section>
   );

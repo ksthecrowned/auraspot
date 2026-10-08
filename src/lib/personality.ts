@@ -16,12 +16,12 @@ export function slugifyPersonalityName(name: string): string {
 }
 
 export function firstNameOf(name: string): string {
-  const trimmed = name.trim();
-  const [first] = trimmed.split(WHITESPACE_RE);
-  if (!first || first === trimmed || first.length < 3) {
-    return trimmed;
-  }
-  return first;
+  // const trimmed = name.trim();
+  // const [first] = trimmed.split(WHITESPACE_RE);
+  // if (!first || first === trimmed || first.length < 3) {
+  //   return trimmed;
+  // }
+  return name;
 }
 
 export function initialsOf(name: string): string {
